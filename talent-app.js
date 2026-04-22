@@ -215,16 +215,20 @@ function renderOrders() {
 function listenOrders() {
   if (!_docId) return;
   // Realtime listen order pending untuk talent ini
-  import('https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js').then(({ collection, query, where, onSnapshot, orderBy }) => {
+  import('https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js').then(({ collection, query, where, onSnapshot }) => {
+    // Query hanya by talentId, filter status di client (hindari butuh composite index)
     const q = query(
       collection(db, 'orders'),
-      where('talentId', '==', _docId),
-      where('status', '==', 'pending')
+      where('talentId', '==', _docId)
     );
     if (_orderListener) _orderListener();
     _orderListener = onSnapshot(q, snap => {
       const orders = [];
-      snap.forEach(d => orders.push({ id: d.id, ...d.data() }));
+      snap.forEach(d => {
+        const data = d.data();
+        // Hanya tampilkan yang pending
+        if (data.status === 'pending') orders.push({ id: d.id, ...data });
+      });
       renderOrderList(orders);
       // Update badge
       const badge = document.getElementById('order-badge');
