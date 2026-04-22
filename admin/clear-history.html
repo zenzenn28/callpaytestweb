@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Hapus Riwayat Point — CallPay Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Pacifico&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="admin.css?v=11">
+  <style>
+    .danger-card{background:var(--surface);border:1px solid rgba(255,92,92,.2);border-radius:var(--rl);padding:28px 32px;max-width:560px}
+    .danger-icon{width:56px;height:56px;border-radius:16px;background:rgba(255,92,92,.1);border:1px solid rgba(255,92,92,.25);display:flex;align-items:center;justify-content:center;font-size:1.6rem;margin-bottom:18px}
+    .danger-title{font-size:1.15rem;font-weight:900;margin-bottom:6px}
+    .danger-desc{font-size:.85rem;color:var(--muted);font-weight:600;line-height:1.7;margin-bottom:24px}
+    .danger-warning{background:rgba(255,184,0,.06);border:1px solid rgba(255,184,0,.2);border-radius:10px;padding:12px 16px;margin-bottom:24px;font-size:.82rem;font-weight:700;color:var(--yellow);line-height:1.6}
+    .confirm-label{font-size:.75rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+    .confirm-input{width:100%;padding:11px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-family:'Nunito',sans-serif;font-size:.95rem;font-weight:700;outline:none;transition:border-color .2s;margin-bottom:18px}
+    .confirm-input:focus{border-color:var(--red)}
+    .btn-del{width:100%;padding:13px;border-radius:99px;border:none;background:var(--red);color:#fff;font-weight:800;font-size:.95rem;cursor:pointer;transition:opacity .2s;box-shadow:0 4px 16px rgba(255,92,92,.3)}
+    .btn-del:hover{opacity:.88}
+    .btn-del:disabled{opacity:.35;cursor:not-allowed;box-shadow:none}
+
+    /* Progress */
+    .progress-section{display:none;margin-top:20px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);padding:16px}
+    .progress-track{height:8px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden;margin-bottom:10px}
+    .progress-fill{height:100%;width:0%;border-radius:99px;background:linear-gradient(90deg,var(--red),#ff8a8a);transition:width .4s}
+    .progress-text{font-size:.82rem;font-weight:700;color:var(--muted)}
+    .progress-log{margin-top:12px;max-height:200px;overflow-y:auto;font-size:.75rem;line-height:2}
+    .log-ok{color:var(--green)}
+    .log-info{color:var(--muted)}
+    .log-done{color:var(--green);font-weight:800;font-size:.85rem}
+    @media(max-width:600px){
+      .danger-card{padding:20px 16px}
+      .danger-icon{width:46px;height:46px;font-size:1.3rem;border-radius:12px}
+      .danger-title{font-size:1rem}
+      .progress-log{font-size:.72rem}
+    }
+  </style>
+<script>
+function toggleSidebar(){const sb=document.querySelector('.sidebar'),ov=document.getElementById('sidebar-overlay'),btn=document.getElementById('hamburger-btn');if(!sb||!ov||!btn)return;const open=sb.classList.toggle('open');ov.classList.toggle('open',open);btn.textContent=open?'✕':'☰';}
+function closeSidebar(){const sb=document.querySelector('.sidebar'),ov=document.getElementById('sidebar-overlay'),btn=document.getElementById('hamburger-btn');if(!sb||!ov||!btn)return;sb.classList.remove('open');ov.classList.remove('open');btn.textContent='☰';}
+</script>
+<script>
+if (sessionStorage.getItem('cp_admin_v2') !== '1') {
+  document.addEventListener('DOMContentLoaded', function() { window.location.href = 'index.html'; });
+}
+</script>
+</head>
+<body>
+<div class="app">
+  <div class="mobile-topbar"><span class="mobile-logo">CallPay</span><button class="hamburger" onclick="toggleSidebar()" id="hamburger-btn">☰</button></div>
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+  <aside class="sidebar">
+    <div class="sidebar-logo"><div class="sidebar-logo-text">CallPay</div><div class="sidebar-logo-sub">Admin Panel</div></div>
+    <nav class="sidebar-nav">
+      <a href="talents.html"       class="nav-item"><span class="nav-icon">⭐</span>Point Talent</a>
+      <a href="status.html"        class="nav-item"><span class="nav-icon">🟢</span>Talent Online</a>
+      <a href="clear-history.html" class="nav-item active"><span class="nav-icon">🗑️</span>Hapus Riwayat Point</a>
+      <a href="../index.html"      class="nav-item" id="back-web"><span class="nav-icon">🌐</span>Lihat Website</a>
+    </nav>
+    <div class="sidebar-footer"><button class="logout-btn" id="logout-btn">Logout →</button></div>
+  </aside>
+  <main class="main">
+    <div class="page-header">
+      <h1>Hapus Riwayat Point 🗑️</h1>
+      <p>Hapus semua riwayat perubahan point talent dari database</p>
+    </div>
+
+    <div class="danger-card">
+      <div class="danger-icon">🗑️</div>
+      <div class="danger-title">Hapus Semua Riwayat Point</div>
+      <div class="danger-desc">
+        Seluruh riwayat perubahan point dari <strong>semua talent</strong> akan dihapus permanen dari Firestore.<br>
+        Point talent <strong>tidak akan berubah</strong> — hanya catatan riwayatnya yang dihapus.
+      </div>
+      <div class="danger-warning">
+        ⚠️ Tindakan ini <strong>tidak bisa dibatalkan</strong>. Pastikan kamu yakin sebelum melanjutkan.
+      </div>
+      <div class="confirm-label">Ketik HAPUS untuk konfirmasi</div>
+      <input type="text" id="confirm-input" class="confirm-input" placeholder="Ketik HAPUS di sini" oninput="checkInput(this)">
+      <button class="btn-del" id="btn-del" onclick="doDelete()" disabled>🗑️ Hapus Semua Riwayat Point</button>
+
+      <div class="progress-section" id="progress-section">
+        <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+        <div class="progress-text" id="progress-text">Memproses...</div>
+        <div class="progress-log" id="progress-log"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { DB } from './data.js?v=11';
+import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js';
+import { getFirestore, collection, getDocs, deleteDoc, doc } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js';
+
+const FIREBASE_CONFIG = {
+  apiKey:'AIzaSyBLPe_yx28LyefI856Ysxz3YEPnwA0ENFU',
+  authDomain:'callpay-28a28.firebaseapp.com',
+  projectId:'callpay-28a28',
+  storageBucket:'callpay-28a28.firebasestorage.app',
+  messagingSenderId:'44722427776',
+  appId:'1:44722427776:web:29d1a297746cd83d685365'
+};
+const _app = getApps().length ? getApps()[0] : initializeApp(FIREBASE_CONFIG);
+const _db  = getFirestore(_app);
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast show';
+  clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+function log(msg, cls='log-info') {
+  const el = document.getElementById('progress-log');
+  el.innerHTML += `<div class="${cls}">${msg}</div>`;
+  el.scrollTop = el.scrollHeight;
+}
+
+window.checkInput = (el) => {
+  document.getElementById('btn-del').disabled = el.value.trim().toUpperCase() !== 'HAPUS';
+};
+
+window.doDelete = async () => {
+  const btn = document.getElementById('btn-del');
+  btn.disabled = true;
+  btn.textContent = 'Menghapus...';
+
+  const progressSection = document.getElementById('progress-section');
+  const progressFill    = document.getElementById('progress-fill');
+  const progressText    = document.getElementById('progress-text');
+  progressSection.style.display = 'block';
+  document.getElementById('progress-log').innerHTML = '';
+
+  try {
+    log('📋 Mengambil data semua talent...');
+    const talentsSnap = await getDocs(collection(_db, 'talents'));
+    const talentDocs  = talentsSnap.docs;
+    log(`👥 Ditemukan ${talentDocs.length} talent`, 'log-info');
+
+    let totalDeleted = 0;
+    for (let i = 0; i < talentDocs.length; i++) {
+      const t       = talentDocs[i];
+      const name    = t.data().name || t.id;
+      const histSnap = await getDocs(collection(_db, 'talents', t.id, 'point_history'));
+
+      if (histSnap.empty) {
+        log(`⚪ ${name} — tidak ada riwayat`, 'log-info');
+      } else {
+        for (const h of histSnap.docs) {
+          await deleteDoc(doc(_db, 'talents', t.id, 'point_history', h.id));
+          totalDeleted++;
+        }
+        log(`✅ ${name} — ${histSnap.size} riwayat dihapus`, 'log-ok');
+      }
+
+      const pct = Math.round(((i + 1) / talentDocs.length) * 100);
+      progressFill.style.width = pct + '%';
+      progressText.textContent = `Memproses ${i + 1}/${talentDocs.length} talent...`;
+    }
+
+    progressFill.style.width = '100%';
+    progressText.textContent = `✅ Selesai! ${totalDeleted} riwayat dihapus.`;
+    log(`\n🎉 Total: ${totalDeleted} riwayat berhasil dihapus dari semua talent.`, 'log-done');
+    document.getElementById('confirm-input').value = '';
+    toast(`✅ ${totalDeleted} riwayat point berhasil dihapus!`);
+
+  } catch(e) {
+    progressText.textContent = '❌ Gagal: ' + e.message;
+    toast('❌ Gagal: ' + e.message);
+    btn.disabled = false;
+    btn.textContent = '🗑️ Hapus Semua Riwayat Point';
+  }
+};
+
+document.getElementById('logout-btn').onclick = () => { sessionStorage.removeItem('cp_admin_v2'); window.location.href = 'index.html'; };
+document.getElementById('back-web').addEventListener('click', (e) => { e.preventDefault(); window.open('../index.html','_blank'); });
+document.addEventListener('DOMContentLoaded', async () => {
+  await DB.getSettingsAsync();
+  document.querySelectorAll('.nav-item').forEach(a => a.addEventListener('click', () => { if(window.innerWidth<=768) closeSidebar(); }));
+});
+</script>
+</body>
+</html>

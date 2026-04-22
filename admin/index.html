@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Admin — CallPay</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Pacifico&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="admin.css?v=11">
+<script>
+function toggleSidebar(){const sb=document.querySelector('.sidebar'),ov=document.getElementById('sidebar-overlay'),btn=document.getElementById('hamburger-btn');if(!sb||!ov||!btn)return;const open=sb.classList.toggle('open');ov.classList.toggle('open',open);btn.textContent=open?'✕':'☰';}
+function closeSidebar(){const sb=document.querySelector('.sidebar'),ov=document.getElementById('sidebar-overlay'),btn=document.getElementById('hamburger-btn');if(!sb||!ov||!btn)return;sb.classList.remove('open');ov.classList.remove('open');btn.textContent='☰';}
+</script>
+<script>
+(function(){
+  var ok = sessionStorage.getItem('cp_admin_v2') === '1';
+  document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('login-page').style.display = ok ? 'none' : 'flex';
+    if (ok) {
+      var dash = document.getElementById('dashboard');
+      if (dash) dash.style.display = 'flex';
+    }
+  });
+})();
+</script>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-page" id="login-page" style="display:none">
+  <div class="login-card">
+    <div class="login-brand">
+      <div class="login-logo">CallPay</div>
+      <div class="login-sub">Admin Panel</div>
+    </div>
+    <div class="login-field">
+      <label>Username</label>
+      <input type="text" id="u" placeholder="Username" autocomplete="username">
+    </div>
+    <div class="login-field">
+      <label>Password</label>
+      <input type="password" id="p" placeholder="Password" autocomplete="current-password">
+    </div>
+    <p class="login-err" id="err">❌ Username atau password salah.</p>
+    <button class="login-submit" id="login-btn">Masuk</button>
+    <p class="login-hint"><a href="../index.html" style="color:var(--pink)">← Kembali ke website</a></p>
+    <div style="margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,.07);display:flex;flex-direction:column;gap:10px;align-items:center">
+      <a href="../owner/index.html" style="display:inline-flex;align-items:center;gap:6px;padding:9px 20px;border-radius:99px;border:1px solid rgba(255,209,102,.3);color:#FFD166;font-size:.82rem;font-weight:800;text-decoration:none;transition:background .2s" onmouseover="this.style.background='rgba(255,209,102,.08)'" onmouseout="this.style.background='transparent'">
+        👑 Login sebagai Owner
+      </a>
+      <a href="../talent.html" style="display:inline-flex;align-items:center;gap:6px;padding:9px 20px;border-radius:99px;border:1px solid rgba(249,168,201,.25);color:#F9A8C9;font-size:.82rem;font-weight:800;text-decoration:none;transition:background .2s" onmouseover="this.style.background='rgba(249,168,201,.08)'" onmouseout="this.style.background='transparent'">
+        🌸 Login ke Talent Portal
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="app" id="dashboard" style="display:none">
+  <div class="mobile-topbar"><span class="mobile-logo">CallPay</span><button class="hamburger" onclick="toggleSidebar()" id="hamburger-btn">☰</button></div>
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+  <aside class="sidebar">
+    <div class="sidebar-logo"><div class="sidebar-logo-text">CallPay</div><div class="sidebar-logo-sub">Admin Panel</div></div>
+    <nav class="sidebar-nav">
+      <a href="talents.html" class="nav-item"><span class="nav-icon">⭐</span>Point Talent</a>
+      <a href="status.html"  class="nav-item"><span class="nav-icon">🟢</span>Talent Online</a>
+      <a href="review-testimoni.html" class="nav-item"><span class="nav-icon">💬</span>Review Testimoni</a>
+      <a href="clear-history.html" class="nav-item"><span class="nav-icon">🗑️</span>Hapus Riwayat Point</a>
+      <a href="../index.html" class="nav-item" id="back-web"><span class="nav-icon">🌐</span>Lihat Website</a>
+    </nav>
+    <div class="sidebar-footer"><button class="logout-btn" id="logout-btn">Logout →</button></div>
+  </aside>
+  <main class="main">
+    <div class="page-header">
+      <h1>Admin Panel 👋</h1>
+      <p id="dash-sub">Selamat datang</p>
+    </div>
+    <div class="dash-cards">
+      <a href="talents.html" style="text-decoration:none">
+        <div class="panel" style="cursor:pointer;transition:border-color .2s,transform .2s;border:1px solid var(--border);height:100%" onmouseover="this.style.borderColor='var(--pink)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='var(--border)';this.style.transform='translateY(0)'">
+          <div style="font-size:2.2rem;margin-bottom:12px">⭐</div>
+          <div style="font-weight:900;font-size:1rem;margin-bottom:4px">Point Talent</div>
+          <div style="font-size:.8rem;color:var(--muted);font-weight:600">Lihat daftar semua talent</div>
+        </div>
+      </a>
+      <a href="status.html" style="text-decoration:none">
+        <div class="panel" style="cursor:pointer;transition:border-color .2s,transform .2s;border:1px solid var(--border);height:100%" onmouseover="this.style.borderColor='var(--pink)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='var(--border)';this.style.transform='translateY(0)'">
+          <div style="font-size:2.2rem;margin-bottom:12px">🟢</div>
+          <div style="font-weight:900;font-size:1rem;margin-bottom:4px">Talent Online</div>
+          <div style="font-size:.8rem;color:var(--muted);font-weight:600">Monitor status & kelola talent online</div>
+        </div>
+      </a>
+      <a href="review-testimoni.html" style="text-decoration:none">
+        <div class="panel" style="cursor:pointer;transition:border-color .2s,transform .2s;border:1px solid var(--border);height:100%" onmouseover="this.style.borderColor='var(--pink)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='var(--border)';this.style.transform='translateY(0)'">
+          <div style="font-size:2.2rem;margin-bottom:12px">💬</div>
+          <div style="font-weight:900;font-size:1rem;margin-bottom:4px">Review Testimoni</div>
+          <div style="font-size:.8rem;color:var(--muted);font-weight:600">Review & setujui testimoni pelanggan</div>
+        </div>
+      </a>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+<script type="module">
+import { DB } from './data.js?v=11';
+
+
+const SESSION_KEY = 'cp_admin_v2';
+
+function isAdminLoggedIn() { return sessionStorage.getItem(SESSION_KEY) === '1'; }
+function setAdminLogin(v)  { v ? sessionStorage.setItem(SESSION_KEY,'1') : sessionStorage.removeItem(SESSION_KEY); }
+
+async function doLogin() {
+  const cfg = await DB.getSettingsAsync();
+  const u = document.getElementById('u').value.trim();
+  const p = document.getElementById('p').value;
+  document.getElementById('err').style.display = 'none';
+  if (u === (cfg.username || 'admin') && p === (cfg.password || 'callpay2021')) {
+    setAdminLogin(true);
+    showDash();
+  } else {
+    document.getElementById('err').style.display = 'block';
+    document.getElementById('p').value = '';
+  }
+}
+
+function showDash() {
+  document.getElementById('login-page').style.display = 'none';
+  document.getElementById('dashboard').style.display = 'flex';
+  const cfg = DB.getSettings();
+  document.getElementById('dash-sub').textContent = `Selamat datang, ${cfg.username || 'Admin'}`;
+}
+
+document.getElementById('login-btn').onclick = doLogin;
+['u','p'].forEach(id => document.getElementById(id).addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); }));
+document.getElementById('logout-btn').onclick = () => {
+  setAdminLogin(false);
+  document.getElementById('dashboard').style.display = 'none';
+  document.getElementById('login-page').style.display = 'flex';
+};
+document.getElementById('back-web').addEventListener('click', (e) => { e.preventDefault(); window.open('../index.html','_blank'); });
+
+document.addEventListener('DOMContentLoaded', async () => {
+  await DB.getSettingsAsync();
+  if (isAdminLoggedIn()) showDash();
+  document.querySelectorAll('.nav-item').forEach(a => a.addEventListener('click', () => { if(window.innerWidth<=768) closeSidebar(); }));
+});
+
+</script>
+</body>
+</html>

@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Detail Talent — CallPay Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Pacifico&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="admin.css?v=11">
+<script>
+function toggleSidebar(){const sb=document.querySelector('.sidebar'),ov=document.getElementById('sidebar-overlay'),btn=document.getElementById('hamburger-btn');if(!sb||!ov||!btn)return;const open=sb.classList.toggle('open');ov.classList.toggle('open',open);btn.textContent=open?'✕':'☰';}
+function closeSidebar(){const sb=document.querySelector('.sidebar'),ov=document.getElementById('sidebar-overlay'),btn=document.getElementById('hamburger-btn');if(!sb||!ov||!btn)return;sb.classList.remove('open');ov.classList.remove('open');btn.textContent='☰';}
+</script>
+<script>
+if (sessionStorage.getItem('cp_admin_v2') !== '1') {
+  document.addEventListener('DOMContentLoaded', function() {
+    window.location.href = 'index.html';
+  });
+}
+</script>
+</head>
+<body>
+<div class="app">
+  <div class="mobile-topbar"><span class="mobile-logo">CallPay</span><button class="hamburger" onclick="toggleSidebar()" id="hamburger-btn">☰</button></div>
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+  <aside class="sidebar">
+    <div class="sidebar-logo"><div class="sidebar-logo-text">CallPay</div><div class="sidebar-logo-sub">Admin Panel</div></div>
+        <nav class="sidebar-nav">
+      <a href="talents.html" class="nav-item active"><span class="nav-icon">⭐</span>Point Talent</a>
+      <a href="status.html"  class="nav-item"><span class="nav-icon">🟢</span>Talent Online</a>
+      <a href="review-testimoni.html" class="nav-item"><span class="nav-icon">💬</span>Review Testimoni</a>
+      <a href="clear-history.html" class="nav-item"><span class="nav-icon">🗑️</span>Hapus Riwayat Point</a>
+      <a href="../index.html" class="nav-item" id="back-web"><span class="nav-icon">🌐</span>Lihat Website</a>
+    </nav>
+    <div class="sidebar-footer"><button class="logout-btn" id="logout-btn">Logout →</button></div>
+  </aside>
+  <main class="main">
+    <div style="margin-bottom:18px"><a href="talents.html" class="btn btn-outline btn-sm">← Kembali</a></div>
+    <div id="content"><p style="color:var(--muted)">Memuat data...</p></div>
+  </main>
+</div>
+<script type="module">
+import { DB, TALENTS } from './data.js?v=11';
+import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js';
+import { getFirestore, doc, setDoc, getDoc, updateDoc, collection, addDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js';
+
+const FIREBASE_CONFIG = {
+  apiKey:'AIzaSyBLPe_yx28LyefI856Ysxz3YEPnwA0ENFU',
+  authDomain:'callpay-28a28.firebaseapp.com',
+  projectId:'callpay-28a28',
+  storageBucket:'callpay-28a28.firebasestorage.app',
+  messagingSenderId:'44722427776',
+  appId:'1:44722427776:web:29d1a297746cd83d685365'
+};
+const _fbApp = getApps().length ? getApps()[0] : initializeApp(FIREBASE_CONFIG);
+const _db = getFirestore(_fbApp);
+
+document.getElementById('logout-btn').onclick=()=>{sessionStorage.removeItem('cp_admin_v2'); window.location.href='index.html';};
+document.getElementById('back-web').addEventListener('click', (e) => { e.preventDefault(); window.open('../index.html','_blank'); });
+
+
+let _talent = null;
+
+
+
+
+
+
+
+
+// ── POINT MANAGEMENT ──────────────────────────────────────
+let _currentPoints = 100;
+
+async function loadPoints(talent) {
+  try {
+    const snap = await getDoc(doc(_db, 'talents', talent._docId || String(talent.id)));
+    const data = snap.exists() ? snap.data() : {};
+    _currentPoints = data.points !== undefined ? data.points : 100;
+    // Jika belum ada field points, inisialisasi 100
+    if (data.points === undefined) {
+      await setDoc(doc(_db, 'talents', talent._docId || String(talent.id)), { points: 100 }, { merge: true });
+    }
+  } catch(e) {
+    _currentPoints = 100;
+  }
+  renderPointPanel();
+}
+
+function renderPointPanel() {
+  const el = document.getElementById('point-panel');
+  if (!el) return;
+  const pct = Math.min(100, Math.round((_currentPoints / 250) * 100));
+  el.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;margin-bottom:18px">
+      <div>
+        <div style="font-size:.75rem;font-weight:800;color:#a78bfa;text-transform:uppercase;letter-spacing:.07em;margin-bottom:4px">⭐ TOTAL POINT</div>
+        <div style="font-size:2.2rem;font-weight:900;color:#a78bfa" id="point-display">${_currentPoints}</div>
+        <div style="font-size:.78rem;color:var(--muted);font-weight:600">Point aktif (maks 250)</div>
+        <div style="margin-top:8px;height:6px;width:180px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden">
+          <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#7c3aed,#a78bfa);border-radius:99px"></div>
+        </div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <button onclick="adjustPoint(-10)" style="padding:8px 14px;border-radius:10px;background:rgba(255,92,92,.1);border:1px solid rgba(255,92,92,.3);color:#ff5c5c;font-weight:800;font-size:.85rem;cursor:pointer">−10</button>
+        <button onclick="adjustPoint(-1)"  style="padding:8px 12px;border-radius:10px;background:rgba(255,92,92,.1);border:1px solid rgba(255,92,92,.3);color:#ff5c5c;font-weight:800;font-size:.85rem;cursor:pointer">−1</button>
+        <button onclick="adjustPoint(1)"   style="padding:8px 12px;border-radius:10px;background:rgba(61,214,140,.08);border:1px solid rgba(61,214,140,.25);color:var(--green);font-weight:800;font-size:.85rem;cursor:pointer">+1</button>
+        <button onclick="adjustPoint(10)"  style="padding:8px 14px;border-radius:10px;background:rgba(61,214,140,.08);border:1px solid rgba(61,214,140,.25);color:var(--green);font-weight:800;font-size:.85rem;cursor:pointer">+10</button>
+      </div>
+    </div>
+    <div style="margin-bottom:10px">
+      <input type="text" id="point-reason" placeholder="✍️ Tulis alasan perubahan point... (wajib)" style="width:100%;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:10px;color:var(--text,#fff);font-family:'Nunito',sans-serif;font-size:.88rem;font-weight:600;padding:9px 14px;outline:none;transition:border-color .2s" oninput="this.style.borderColor='#a78bfa'">
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <input type="number" id="point-input" min="0" max="250" placeholder="Set angka point manual (0–250)..." style="flex:1;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:10px;color:var(--text,#fff);font-family:'Nunito',sans-serif;font-size:.9rem;font-weight:700;padding:9px 14px;outline:none;min-width:0">
+      <button onclick="setPointManual()" style="padding:9px 18px;border-radius:10px;background:linear-gradient(135deg,#a78bfa,#7c3aed);border:none;color:#fff;font-weight:800;font-size:.85rem;cursor:pointer;white-space:nowrap">Set Point</button>
+    </div>
+    <p id="point-feedback" style="font-size:.78rem;margin-top:6px;height:18px;font-weight:700"></p>`;
+}
+
+function getPointReason() {
+  const el = document.getElementById('point-reason');
+  return el ? el.value.trim() : '';
+}
+
+window.adjustPoint = async function(delta) {
+  const reason = getPointReason();
+  if (!reason) { showPointFeedback('❌ Tulis alasan perubahan point terlebih dahulu!', '#ff5c5c'); document.getElementById('point-reason').focus(); return; }
+  const newVal = Math.min(250, Math.max(0, _currentPoints + delta));
+  await savePoints(newVal, delta, reason);
+};
+
+window.setPointManual = async function() {
+  const reason = getPointReason();
+  if (!reason) { showPointFeedback('❌ Tulis alasan perubahan point terlebih dahulu!', '#ff5c5c'); document.getElementById('point-reason').focus(); return; }
+  const inp = document.getElementById('point-input');
+  const val = parseInt(inp.value);
+  if (isNaN(val) || val < 0 || val > 250) { showPointFeedback('❌ Masukkan angka valid (0–250)', '#ff5c5c'); return; }
+  const delta = val - _currentPoints;
+  await savePoints(val, delta, reason);
+  inp.value = '';
+};
+
+async function savePoints(val, delta, reason) {
+  const old = _currentPoints;
+  _currentPoints = val;
+  const dispEl = document.getElementById('point-display');
+  if (dispEl) dispEl.textContent = val;
+  try {
+    const talentDocId = _talent._docId || String(_talent.id);
+    await setDoc(doc(_db, 'talents', talentDocId), { points: val }, { merge: true });
+    // Simpan ke point_history subcollection
+    await addDoc(collection(_db, 'talents', talentDocId, 'point_history'), {
+      delta   : delta,
+      reason  : reason + ' (Admin)',
+      total   : val,
+      type    : 'admin',
+      createdAt: serverTimestamp(),
+    });
+    // Reset input alasan
+    const reasonEl = document.getElementById('point-reason');
+    if (reasonEl) reasonEl.value = '';
+    showPointFeedback('✅ Point berhasil diperbarui!', 'var(--green)');
+    // Re-render bar
+    renderPointPanel();
+  } catch(e) {
+    _currentPoints = old;
+    showPointFeedback('❌ Gagal menyimpan point', '#ff5c5c');
+  }
+}
+
+function showPointFeedback(msg, color) {
+  const el = document.getElementById('point-feedback');
+  if (!el) return;
+  el.textContent = msg;
+  el.style.color = color;
+  clearTimeout(el._t);
+  el._t = setTimeout(() => { el.textContent = ''; }, 3000);
+}
+
+document.addEventListener('DOMContentLoaded',async()=>{
+  if(sessionStorage.getItem('cp_admin_v2')!=='1'){window.location.href='index.html';return;}
+  await DB.getSettingsAsync();
+
+  const idRaw = new URLSearchParams(window.location.search).get('id');
+  // idRaw bisa berupa docId string (nama lowercase) atau angka lama
+  // Cari di TALENTS by name.toLowerCase() dulu, fallback by id angka
+  let _docId = idRaw;
+  let talentBase = TALENTS.find(t => t.name.toLowerCase() === idRaw)
+                || TALENTS.find(t => String(t.id) === String(idRaw));
+  
+  // Ambil data Firestore untuk merge
+  let fsData = {};
+  try {
+    const fsSnap = await getDoc(doc(_db, 'talents', _docId));
+    if (fsSnap.exists()) fsData = fsSnap.data();
+  } catch(e) {}
+
+  let talent;
+  if (talentBase) {
+    // Merge hardcode + Firestore
+    talent = {
+      ...talentBase,
+      ...fsData,
+      id       : talentBase.id,
+      _docId   : _docId,
+      name     : fsData.name || talentBase.name,
+      age      : fsData.age  || talentBase.age,
+      gender   : fsData.gender || talentBase.gender,
+      img      : fsData.img  || talentBase.img,
+      services : (fsData.services && fsData.services.length) ? fsData.services : talentBase.services,
+    };
+  } else if (fsData.name) {
+    // Talent murni dari Firestore (bukan hardcode)
+    talent = { id: _docId, _docId, ...fsData };
+  } else {
+    document.getElementById('content').innerHTML='<p style="color:var(--muted)">Talent tidak ditemukan.</p>';
+    return;
+  }
+  _talent = talent;
+
+  document.title=`${talent.name} — CallPay Admin`;
+
+  const gb=talent.gender==='female'
+    ?`<span style="background:rgba(249,168,201,.1);color:var(--pink);border:1px solid var(--border-pk);padding:2px 12px;border-radius:99px;font-size:.75rem;font-weight:800">Wanita</span>`
+    :`<span style="background:rgba(168,213,249,.1);color:var(--blue);border:1px solid var(--border-bl);padding:2px 12px;border-radius:99px;font-size:.75rem;font-weight:800">Pria</span>`;
+
+  document.getElementById('content').innerHTML=`
+    <div class="talent-header" style="flex-wrap:wrap">
+      <img src="${talent.img}" alt="${talent.name}" style="width:70px;height:70px;border-radius:14px;object-fit:cover;object-position:top">
+      <div><h2 style="font-size:1.2rem;font-weight:900;margin-bottom:3px">${talent.name} ${gb}</h2>
+      <p style="font-size:.83rem;color:var(--muted);font-weight:600">Umur ${talent.age} thn · ${talent.services.join(' · ')}</p></div>
+    </div>
+
+    <div class="panel" style="margin-bottom:20px">
+      <h3>⭐ Manajemen Point</h3>
+      <div id="point-panel"></div>
+    </div>
+
+    `;
+
+
+  await loadPoints(talent);
+
+  document.querySelectorAll('.nav-item').forEach(a=>a.addEventListener('click',()=>{if(window.innerWidth<=768)closeSidebar();}));
+});
+</script>
+</body>
+</html>

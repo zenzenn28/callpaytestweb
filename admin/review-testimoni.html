@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Review Testimoni — CallPay Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Pacifico&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="admin.css?v=11">
+  <style>
+    .testi-review-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px;max-width:900px}
+    .testi-review-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:20px;display:flex;flex-direction:column;gap:12px}
+    .testi-review-card:hover{border-color:var(--border-pk)}
+    .testi-target{font-size:.72rem;font-weight:800;color:var(--pink);text-transform:uppercase;letter-spacing:.05em;background:rgba(232,98,138,.08);border:1px solid var(--border-pk);padding:3px 10px;border-radius:99px;display:inline-block;margin-bottom:4px}
+    .testi-review-text{font-size:.88rem;font-weight:600;line-height:1.7;color:var(--text);flex:1}
+    .testi-review-name{font-size:.78rem;font-weight:800;color:var(--muted)}
+    .testi-review-date{font-size:.72rem;color:var(--muted);font-weight:600}
+    .testi-review-actions{display:flex;gap:8px;margin-top:4px}
+    .btn-acc{flex:1;padding:9px;border-radius:10px;background:rgba(61,214,140,.1);border:1px solid rgba(61,214,140,.3);color:var(--green);font-weight:800;font-size:.82rem;cursor:pointer;transition:all .2s}
+    .btn-acc:hover{background:rgba(61,214,140,.2)}
+    .btn-del{flex:1;padding:9px;border-radius:10px;background:rgba(255,92,92,.08);border:1px solid rgba(255,92,92,.25);color:var(--red);font-weight:800;font-size:.82rem;cursor:pointer;transition:all .2s}
+    .btn-del:hover{background:rgba(255,92,92,.18)}
+    .empty-state{color:var(--muted);font-size:.9rem;font-weight:700;padding:40px 0;text-align:center}
+    .badge-count{display:inline-flex;align-items:center;justify-content:center;background:var(--pink);color:#fff;font-size:.65rem;font-weight:900;border-radius:99px;min-width:18px;height:18px;padding:0 5px;margin-left:6px}
+    @media(max-width:600px){.testi-review-grid{grid-template-columns:1fr}}
+  </style>
+<script>
+function toggleSidebar(){const sb=document.querySelector('.sidebar'),ov=document.getElementById('sidebar-overlay'),btn=document.getElementById('hamburger-btn');if(!sb||!ov||!btn)return;const open=sb.classList.toggle('open');ov.classList.toggle('open',open);btn.textContent=open?'✕':'☰';}
+function closeSidebar(){const sb=document.querySelector('.sidebar'),ov=document.getElementById('sidebar-overlay'),btn=document.getElementById('hamburger-btn');if(!sb||!ov||!btn)return;sb.classList.remove('open');ov.classList.remove('open');btn.textContent='☰';}
+</script>
+<script>
+if (sessionStorage.getItem('cp_admin_v2') !== '1') {
+  document.addEventListener('DOMContentLoaded', function() { window.location.href = 'index.html'; });
+}
+</script>
+</head>
+<body>
+<div class="app">
+  <div class="mobile-topbar"><span class="mobile-logo">CallPay</span><button class="hamburger" onclick="toggleSidebar()" id="hamburger-btn">☰</button></div>
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+  <aside class="sidebar">
+    <div class="sidebar-logo"><div class="sidebar-logo-text">CallPay</div><div class="sidebar-logo-sub">Admin Panel</div></div>
+    <nav class="sidebar-nav">
+      <a href="index.html"              class="nav-item"><span class="nav-icon">📊</span>Dashboard</a>
+      <a href="talents.html"            class="nav-item"><span class="nav-icon">⭐</span>Point Talent</a>
+      <a href="status.html"             class="nav-item"><span class="nav-icon">🟢</span>Talent Online</a>
+      <a href="review-testimoni.html"   class="nav-item active"><span class="nav-icon">💬</span>Review Testimoni</a>
+      <a href="clear-history.html"      class="nav-item"><span class="nav-icon">🗑️</span>Hapus Riwayat Point</a>
+      <a href="../index.html"           class="nav-item" id="back-web"><span class="nav-icon">🌐</span>Lihat Website</a>
+    </nav>
+    <div class="sidebar-footer"><button class="logout-btn" id="logout-btn">Logout →</button></div>
+  </aside>
+  <main class="main">
+    <div class="page-header">
+      <h1>Review Testimoni 💬</h1>
+      <p>Setujui atau hapus testimoni dari pelanggan</p>
+    </div>
+    <div class="testi-review-grid" id="testi-grid">
+      <p class="empty-state">Memuat testimoni...</p>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { DB } from './data.js?v=11';
+import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js';
+import { getFirestore, collection, onSnapshot, doc, updateDoc, deleteDoc, query, where, orderBy } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js';
+
+const FIREBASE_CONFIG = {
+  apiKey:'AIzaSyBLPe_yx28LyefI856Ysxz3YEPnwA0ENFU',
+  authDomain:'callpay-28a28.firebaseapp.com',
+  projectId:'callpay-28a28',
+  storageBucket:'callpay-28a28.firebasestorage.app',
+  messagingSenderId:'44722427776',
+  appId:'1:44722427776:web:29d1a297746cd83d685365'
+};
+const _app = getApps().length ? getApps()[0] : initializeApp(FIREBASE_CONFIG);
+const _db  = getFirestore(_app);
+
+function toast(msg, ok=true) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast show';
+  clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 3500);
+}
+
+window.accTesti = async (id) => {
+  await updateDoc(doc(_db, 'pending_testimoni', id), { status: 'approved' });
+  toast('✅ Testimoni disetujui dan tampil di website!');
+};
+
+window.delTesti = async (id) => {
+  if (!confirm('Hapus testimoni ini?')) return;
+  await deleteDoc(doc(_db, 'pending_testimoni', id));
+  toast('🗑️ Testimoni dihapus');
+};
+
+// Realtime listener — tampilkan yang pending dulu, lalu approved
+onSnapshot(query(collection(_db, 'pending_testimoni'), orderBy('createdAt', 'desc')), snap => {
+  const pending  = [];
+  const approved = [];
+  snap.forEach(d => {
+    const data = { id: d.id, ...d.data() };
+    if (data.status === 'pending') pending.push(data);
+    else approved.push(data);
+  });
+
+  const all = [...pending, ...approved];
+  const grid = document.getElementById('testi-grid');
+
+  // Update badge count di menu
+  const menuLink = document.querySelector('a[href="review-testimoni.html"]');
+  if (menuLink) {
+    const existing = menuLink.querySelector('.badge-count');
+    if (existing) existing.remove();
+    if (pending.length > 0) {
+      const badge = document.createElement('span');
+      badge.className = 'badge-count';
+      badge.textContent = pending.length;
+      menuLink.appendChild(badge);
+    }
+  }
+
+  if (!all.length) {
+    grid.innerHTML = '<p class="empty-state">📭 Belum ada testimoni masuk.</p>';
+    return;
+  }
+
+  grid.innerHTML = all.map(d => {
+    const isPending = d.status === 'pending';
+    const date = d.createdAt?.toDate ? d.createdAt.toDate().toLocaleDateString('id-ID',{day:'numeric',month:'long',year:'numeric'}) : '-';
+    return `
+    <div class="testi-review-card" style="${isPending ? 'border-color:rgba(255,184,0,.3);background:rgba(255,184,0,.03)' : ''}">
+      <div>
+        <span class="testi-target">${d.target || 'CallPay Agency'}</span>
+        ${isPending ? '<span style="font-size:.68rem;font-weight:800;color:var(--yellow);background:rgba(255,184,0,.1);border:1px solid rgba(255,184,0,.25);padding:2px 8px;border-radius:99px;margin-left:6px">⏳ Pending</span>' : '<span style="font-size:.68rem;font-weight:800;color:var(--green);background:rgba(61,214,140,.08);border:1px solid rgba(61,214,140,.2);padding:2px 8px;border-radius:99px;margin-left:6px">✅ Live</span>'}
+      </div>
+      <p class="testi-review-text">"${d.text}"</p>
+      <div>
+        <div class="testi-review-name">— ${d.name || 'Anonim'}</div>
+        <div class="testi-review-date">${date}</div>
+      </div>
+      <div class="testi-review-actions">
+        ${isPending ? `<button class="btn-acc" onclick="accTesti('${d.id}')">✅ Setujui</button>` : '<button class="btn-acc" disabled style="opacity:.35;cursor:not-allowed">✅ Sudah Live</button>'}
+        <button class="btn-del" onclick="delTesti('${d.id}')">🗑️ Hapus</button>
+      </div>
+    </div>`;
+  }).join('');
+});
+
+document.getElementById('logout-btn').onclick = () => { sessionStorage.removeItem('cp_admin_v2'); window.location.href = 'index.html'; };
+document.getElementById('back-web').addEventListener('click', e => { e.preventDefault(); window.open('../index.html','_blank'); });
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.nav-item').forEach(a => a.addEventListener('click', () => { if(window.innerWidth<=768) closeSidebar(); }));
+});
+</script>
+</body>
+</html>

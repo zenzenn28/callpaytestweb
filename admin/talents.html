@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Talent — CallPay Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Pacifico&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="admin.css?v=11">
+  <style>
+    .talent-row{display:grid;grid-template-columns:48px 1fr 100px 24px;align-items:center;gap:16px;padding:14px 18px;border-radius:var(--r);border:1px solid var(--border);background:var(--surface);margin-bottom:10px;transition:all .2s;cursor:pointer;}
+    .talent-row:hover{border-color:var(--border-pk);background:var(--surface2)}
+    .talent-row img{width:48px;height:48px;border-radius:10px;object-fit:cover;object-position:top}
+    .tr-name{font-weight:900;font-size:.95rem;margin-bottom:3px}
+    .tr-meta{font-size:.77rem;color:var(--muted);font-weight:600}
+    .tr-stats{text-align:right}
+    .tr-stat-val{font-weight:900;font-size:1rem;color:var(--pink)}
+    .tr-stat-val.green{color:var(--green)}
+    .tr-stat-lbl{font-size:.7rem;color:var(--muted);font-weight:700;margin-top:1px}
+    .tr-arrow{text-align:center;color:var(--muted);font-size:1.1rem}
+    .gender-badge{display:inline-block;padding:2px 10px;border-radius:99px;font-size:.7rem;font-weight:800}
+    .gb-f{background:rgba(249,168,201,.1);color:var(--pink);border:1px solid var(--border-pk)}
+    .gb-m{background:rgba(168,213,249,.1);color:var(--blue);border:1px solid var(--border-bl)}
+    .tr-point{text-align:center}
+    .tr-point-val{font-weight:900;font-size:1rem;color:#a78bfa}
+    .tr-point-lbl{font-size:.7rem;color:var(--muted);font-weight:700;margin-top:1px}
+    @media(max-width:768px){.talent-row{grid-template-columns:44px 1fr auto!important;gap:10px}}
+  </style>
+<script>
+function toggleSidebar(){const sb=document.querySelector('.sidebar'),ov=document.getElementById('sidebar-overlay'),btn=document.getElementById('hamburger-btn');if(!sb||!ov||!btn)return;const open=sb.classList.toggle('open');ov.classList.toggle('open',open);btn.textContent=open?'✕':'☰';}
+function closeSidebar(){const sb=document.querySelector('.sidebar'),ov=document.getElementById('sidebar-overlay'),btn=document.getElementById('hamburger-btn');if(!sb||!ov||!btn)return;sb.classList.remove('open');ov.classList.remove('open');btn.textContent='☰';}
+</script>
+<script>
+if (sessionStorage.getItem('cp_admin_v2') !== '1') {
+  document.addEventListener('DOMContentLoaded', function() {
+    window.location.href = 'index.html';
+  });
+}
+</script>
+</head>
+<body>
+<div class="app">
+  <div class="mobile-topbar"><span class="mobile-logo">CallPay</span><button class="hamburger" onclick="toggleSidebar()" id="hamburger-btn">☰</button></div>
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+  <aside class="sidebar">
+    <div class="sidebar-logo"><div class="sidebar-logo-text">CallPay</div><div class="sidebar-logo-sub">Admin Panel</div></div>
+        <nav class="sidebar-nav">
+      <a href="talents.html" class="nav-item active"><span class="nav-icon">⭐</span>Point Talent</a>
+      <a href="status.html"  class="nav-item "><span class="nav-icon">🟢</span>Talent Online</a>
+      <a href="review-testimoni.html" class="nav-item"><span class="nav-icon">💬</span>Review Testimoni</a>
+      <a href="clear-history.html" class="nav-item"><span class="nav-icon">🗑️</span>Hapus Riwayat Point</a>
+      <a href="../index.html" class="nav-item" id="back-web"><span class="nav-icon">🌐</span>Lihat Website</a>
+    </nav>
+    <div class="sidebar-footer"><button class="logout-btn" id="logout-btn">Logout →</button></div>
+  </aside>
+  <main class="main">
+    <div class="page-header"><h1>Daftar Talent 👥</h1><p>Klik nama talent untuk melihat statistik & rekap</p></div>
+    <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
+      <button class="btn btn-pink filt" onclick="setFilt('all',this)">Semua</button>
+      <button class="btn btn-outline filt" onclick="setFilt('female',this)">🌸 Wanita</button>
+      <button class="btn btn-outline filt" onclick="setFilt('male',this)">💙 Pria</button>
+    </div>
+    <div id="talent-list"><p style="color:var(--muted)">Memuat data...</p></div>
+  </main>
+</div>
+<script type="module">
+import { DB, TALENTS } from './data.js?v=11';
+import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js';
+import { getFirestore, collection, onSnapshot } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js';
+
+const _app = getApps().length ? getApps()[0] : initializeApp({apiKey:'AIzaSyBLPe_yx28LyefI856Ysxz3YEPnwA0ENFU',authDomain:'callpay-28a28.firebaseapp.com',projectId:'callpay-28a28',storageBucket:'callpay-28a28.firebasestorage.app',messagingSenderId:'44722427776',appId:'1:44722427776:web:29d1a297746cd83d685365'});
+const _db = getFirestore(_app);
+
+let filt='all', firestoreMap={};
+
+document.getElementById('logout-btn').onclick=()=>{sessionStorage.removeItem('cp_admin_v2'); window.location.href='index.html';};
+document.getElementById('back-web').addEventListener('click', (e) => { e.preventDefault(); window.open('../index.html','_blank'); });
+
+window.setFilt=(v,el)=>{
+  filt=v;
+  document.querySelectorAll('.filt').forEach(b=>{b.className='btn btn-outline filt';});
+  el.className='btn btn-pink filt';
+  render();
+};
+
+function buildCombined() {
+  const result = [];
+  const seen = new Set(); // track by docId
+
+  // 1. Mulai dari TALENTS hardcode sebagai base
+  TALENTS.forEach(t => {
+    const docId = t.name.toLowerCase();
+    const fsData = firestoreMap[docId] || {};
+    seen.add(docId);
+    result.push({ ...t, ...fsData, id: t.id, _docId: docId,
+      name: fsData.name || t.name,
+      gender: fsData.gender || t.gender,
+      age: fsData.age || t.age,
+      services: (fsData.services && fsData.services.length) ? fsData.services : t.services,
+      img: fsData.img || t.img,
+    });
+  });
+
+  // 2. Tambah talent BARU dari Firestore yang approved & belum ada di hardcode
+  Object.entries(firestoreMap).forEach(([docId, data]) => {
+    if (!seen.has(docId) && data.status === 'approved' && data.name) {
+      seen.add(docId);
+      result.push({ id: docId, _docId: docId, ...data });
+    }
+  });
+
+  return result.filter(t => t.name);
+}
+
+function render(){
+  const combined = buildCombined();
+  let list = filt === 'all' ? combined : combined.filter(t => t.gender === filt);
+  // Sort by point tertinggi
+  list = [...list].sort((a,b) => {
+    const pa = getPoints(a);
+    const pb = getPoints(b);
+    return pb - pa;
+  });
+  if (!list.length) { document.getElementById('talent-list').innerHTML='<p style="color:var(--muted)">Belum ada talent aktif.</p>'; return; }
+  document.getElementById('talent-list').innerHTML = list.map(t => {
+    const img    = t.img || '';
+    const points = getPoints(t);
+    return `<div class="talent-row" onclick="window.location.href='talent-detail.html?id=${t._docId || t.id}'">
+      <img src="${img}" alt="${t.name}" onerror="this.style.display='none'">
+      <div><div class="tr-name">${t.name} <span class="gender-badge ${t.gender==='female'?'gb-f':'gb-m'}">${t.gender==='female'?'Wanita':'Pria'}</span></div>
+      <div class="tr-meta">Umur ${t.age||'-'} thn · ${(t.services||[]).join(', ')||'-'}</div></div>
+      <div class="tr-point"><div class="tr-point-val">⭐ ${points}</div><div class="tr-point-lbl">Point</div></div>
+      <div class="tr-arrow">›</div>
+    </div>`;
+  }).join('');
+}
+
+function getPoints(t) {
+  const fsData = firestoreMap[t._docId || t.id] || firestoreMap[String(t.id)] || {};
+  return fsData.points !== undefined ? fsData.points : 100;
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  if(sessionStorage.getItem('cp_admin_v2')!=='1'){window.location.href='index.html';return;}
+  await DB.getSettingsAsync();
+  onSnapshot(collection(_db,'talents'), snap => {
+    firestoreMap = {};
+    snap.forEach(d => { firestoreMap[d.id] = d.data(); });
+    render();
+  });
+
+  document.querySelectorAll('.nav-item').forEach(a => a.addEventListener('click', () => { if(window.innerWidth<=768) closeSidebar(); }));
+});
+</script>
+</body>
+</html>
