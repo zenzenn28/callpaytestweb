@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Talent Portal — CallPay</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Pacifico&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="talent.css?v=11">
+  <meta name="theme-color" content="#E8628A">
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-page" id="login-page">
+  <div class="login-card">
+    <div class="login-brand">
+      <div class="login-logo">CallPay</div>
+      <div class="login-sub">Talent Portal</div>
+    </div>
+    <div class="login-field">
+      <label>Username</label>
+      <input type="text" id="t-user" placeholder="Username kamu" autocomplete="username">
+    </div>
+    <div class="login-field">
+      <label>Password</label>
+      <input type="password" id="t-pass" placeholder="Password kamu" autocomplete="current-password">
+    </div>
+    <p class="login-err" id="t-err"></p>
+    <button class="login-submit" id="t-login-btn">Masuk</button>
+    <p class="login-hint"><a href="index.html" style="color:var(--pink)">← Kembali ke website</a></p>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div class="dashboard" id="dashboard">
+  <div class="topbar">
+    <div class="topbar-logo">CallPay</div>
+    <div class="topbar-user">
+      <div class="talent-avatar" id="t-avatar">N</div>
+      <div class="talent-name-top" id="t-name-top">Talent</div>
+      <button class="logout-btn-top" id="t-logout-btn">Logout</button>
+    </div>
+  </div>
+  <div class="dash-content">
+    <div id="status-banner"></div>
+    <div id="talent-point-box"></div>
+    <div class="status-bar">
+      <div class="status-dot online" id="status-dot"></div>
+      <div class="status-text" id="status-text">Memuat status...</div>
+      <button class="status-toggle active" id="status-toggle">Set Offline</button>
+    </div>
+    <div class="tabs">
+      <button class="tab-btn active" id="tab-settings">⚙️ Setting Profil</button>
+    </div>
+    <div id="settings-section">
+      <div id="settings-content"></div>
+    </div>
+  </div>
+</div>
+
+<!-- POINT HISTORY MODAL -->
+<div id="point-modal" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px;">
+  <div style="background:#13131F;border:1px solid rgba(167,139,250,.25);border-radius:20px;width:100%;max-width:520px;max-height:85vh;overflow-y:auto;padding:24px 20px;animation:fadeScaleIn .25s ease">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <div>
+        <div style="font-size:1rem;font-weight:900">⭐ Riwayat Point</div>
+        <div style="font-size:.75rem;color:rgba(240,235,248,.45);font-weight:600;margin-top:2px">Semua perubahan point kamu</div>
+      </div>
+      <button onclick="closePointModal()" style="width:32px;height:32px;border-radius:50%;background:rgba(255,255,255,.08);border:none;color:#fff;font-size:1rem;cursor:pointer">✕</button>
+    </div>
+    <div id="point-history-list"><div style="text-align:center;padding:30px;color:rgba(240,235,248,.45)">Memuat riwayat...</div></div>
+  </div>
+</div>
+
+<!-- SETUP PAGE -->
+<div id="setup-page" style="display:none;min-height:100vh;background:var(--bg);padding:20px">
+  <div style="max-width:520px;margin:0 auto;padding-top:20px">
+    <div style="font-family:'Pacifico',cursive;font-size:1.2rem;color:var(--pink);margin-bottom:24px">CallPay</div>
+    <div id="setup-content"></div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+<style>
+@keyframes slideUp{from{transform:translateY(40px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes fadeScaleIn{from{transform:scale(.95);opacity:0}to{transform:scale(1);opacity:1}}
+</style>
+<script type="module" src="talent-app.js?v=11"></script>
+</body>
+</html>

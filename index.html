@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CallPay Agency — Teman Setia Kamu 💕</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <!-- Font dimuat non-blocking agar tidak menunda render halaman -->
+  <link rel="preload" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Pacifico&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Pacifico&display=swap"></noscript>
+  <link rel="stylesheet" href="style.css?v=11">
+  <style>
+    /* Modal */
+    .modal-backdrop{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.72);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .25s}
+    .modal-backdrop.open{opacity:1;pointer-events:all}
+    .modal-box{background:#1A1A2E;border:1px solid var(--border-pink);border-radius:var(--radius-lg);width:100%;max-width:480px;max-height:92vh;display:flex;flex-direction:column;transform:translateY(20px);transition:transform .25s}
+    .modal-backdrop.open .modal-box{transform:translateY(0)}
+    .modal-scroll{overflow-y:auto;padding:24px;flex:1}
+    .modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+    .modal-head h3{font-size:1.1rem;font-weight:900}
+    .modal-close-btn{background:rgba(255,255,255,.08);border:none;color:var(--text);width:32px;height:32px;border-radius:99px;font-size:1rem;display:flex;align-items:center;justify-content:center;transition:background .2s}
+    .modal-close-btn:hover{background:rgba(255,255,255,.16)}
+    .modal-talent-strip{display:flex;align-items:center;gap:14px;background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:12px;padding:12px;margin-bottom:20px}
+    .modal-talent-strip img{width:56px;height:56px;border-radius:10px;object-fit:cover;flex-shrink:0}
+    .mts-name{font-size:1rem;font-weight:900}
+    .mts-meta{font-size:.78rem;color:var(--text-muted);font-weight:600}
+    .form-field{margin-bottom:14px}
+    .form-field label{display:block;font-size:.77rem;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+    .form-field select,.form-field input,.form-field textarea{width:100%;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Nunito',sans-serif;font-size:.9rem;font-weight:600;padding:10px 14px;outline:none;transition:border-color .2s}
+    .form-field select:focus,.form-field input:focus,.form-field textarea:focus{border-color:var(--pink)}
+    .form-field select option{background:#1A1A2E}
+    .wa-confirm-btn{width:100%;display:flex;align-items:center;justify-content:center;gap:10px;background:#25D366;color:#fff;border:none;padding:13px;border-radius:12px;font-size:.95rem;font-weight:800;margin-top:14px;transition:opacity .2s,transform .2s;box-shadow:0 4px 18px rgba(37,211,102,.3)}
+    .wa-confirm-btn:hover{opacity:.9;transform:translateY(-1px)}
+    .wa-confirm-btn:disabled{opacity:.4;cursor:not-allowed;transform:none}
+    .admin-fee-wrap{display:flex;align-items:flex-start;gap:10px;background:rgba(255,184,0,.06);border:1px solid rgba(255,184,0,.2);border-radius:10px;padding:12px 14px;margin-top:14px}
+    .admin-fee-wrap input[type=checkbox]{width:17px;height:17px;margin-top:2px;flex-shrink:0;accent-color:var(--pink);cursor:pointer}
+    .admin-fee-wrap label{font-size:.8rem;font-weight:700;color:rgba(240,235,248,.75);line-height:1.5;cursor:pointer}
+    .admin-fee-wrap label span{color:#FFB800;font-weight:800}
+    @media(max-width:600px){.modal-scroll{padding:16px}}
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar">
+  <div class="nav-logo" title="Klik 5x untuk akses admin">
+    <img src="assets/logo.png" alt="CallPay" onerror="this.style.display='none'">
+    <span class="nav-logo-text">CallPay</span>
+  </div>
+  <ul class="nav-links" id="nav-links">
+    <li><a href="#talent" onclick="closeMobileNav()">Talent</a></li>
+    <li><a href="#testimoni" onclick="closeMobileNav()">Testimoni</a></li>
+    <li class="nav-mobile-cta"><a href="#talent" onclick="closeMobileNav()">Pesan Sekarang</a></li>
+  </ul>
+  <div style="display:flex;align-items:center;gap:12px">
+    <a href="#talent" class="nav-cta">Pesan Sekarang</a>
+    <button class="nav-hamburger" id="nav-hamburger" onclick="toggleMobileNav()" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</nav>
+
+<!-- TALENT -->
+<div class="sec-talent" id="talent"><div class="section">
+  <span class="section-label pink">Talent Kami</span>
+  <h2 class="section-title">Pilih Talent Favoritmu</h2>
+  <p class="section-sub">Silahkan order talent pilihan kamu</p>
+  <div class="gender-filter-wrap">
+    <button class="gf-btn fa" onclick="setFilter('all',this)">Semua</button>
+    <button class="gf-btn" onclick="setFilter('female',this)">🌸 Wanita</button>
+    <button class="gf-btn" onclick="setFilter('male',this)">💙 Pria</button>
+  </div>
+  <div class="talent-grid" id="talent-grid"></div>
+  <div class="see-more-wrap" id="see-more-wrap">
+    <button class="see-more-btn" id="see-more-btn" onclick="toggleSeeMore()">Lihat Talent Lainnya <span class="arr">▼</span></button>
+  </div>
+</div></div>
+
+<!-- TESTIMONI -->
+<div class="sec-testi" id="testimoni"><div class="section">
+  <span class="section-label pink">Testimoni</span>
+  <h2 class="section-title">Kata Mereka 💬</h2>
+  <p class="section-sub">Ribuan pelanggan sudah merasakan kehangatan CallPay</p>
+  <div style="text-align:center;margin-bottom:28px">
+    <button class="btn-testi-add" onclick="openTestiModal()">✍️ Tulis Testimoni Kamu</button>
+  </div>
+  <div class="testi-grid" id="testi-grid">
+    <div class="testi-card"><div class="testi-qmark">"</div><div class="testi-stars">★★★★★</div><p class="testi-text">Sleepcallnya beneran bikin tenang banget! Suaranya lembut, sabar dengerin ceritaku sampai ketiduran. Recommended banget!</p><div class="testi-user"><div class="testi-avatar pk">A</div><div><div class="testi-uname">Aysha R.</div><div class="testi-date">Februari 2025</div></div></div></div>
+    <div class="testi-card"><div class="testi-qmark">"</div><div class="testi-stars">★★★★★</div><p class="testi-text">Lagi overthinking parah, terus nyoba temen curhat di CallPay. Beneran berasa lebih lega! Talent-nya asik dan ga judgmental sama sekali.</p><div class="testi-user"><div class="testi-avatar bl">D</div><div><div class="testi-uname">Dito S.</div><div class="testi-date">Januari 2025</div></div></div></div>
+    <div class="testi-card"><div class="testi-qmark">"</div><div class="testi-stars">★★★★★</div><p class="testi-text">Virtual GF experience-nya top banget! Ngerasa di-sayang, di-perhatiin. Harganya juga terjangkau. Udah langganan dari 2022!</p><div class="testi-user"><div class="testi-avatar bl">R</div><div><div class="testi-uname">Raka P.</div><div class="testi-date">Maret 2025</div></div></div></div>
+    <div class="testi-card"><div class="testi-qmark">"</div><div class="testi-stars">★★★★★</div><p class="testi-text">Ordernya gampang, respon cepet, talent-nya ramah semua. CallPay emang beda dari yang lain. Trusted banget!</p><div class="testi-user"><div class="testi-avatar pk">N</div><div><div class="testi-uname">Nadia F.</div><div class="testi-date">Maret 2025</div></div></div></div>
+    <div class="testi-card"><div class="testi-qmark">"</div><div class="testi-stars">★★★★★</div><p class="testi-text">Pas gabut malem-malem, ngobrol sama temen call di sini seru banget! Bisa sharing banyak hal, ga pernah boring.</p><div class="testi-user"><div class="testi-avatar bl">F</div><div><div class="testi-uname">Fariz M.</div><div class="testi-date">Februari 2025</div></div></div></div>
+    <div class="testi-card"><div class="testi-qmark">"</div><div class="testi-stars">★★★★★</div><p class="testi-text">Kagum sama profesionalisme CallPay. Talent ditraining dengan baik, aman, nyaman, dan harga sangat worth it. 10/10!</p><div class="testi-user"><div class="testi-avatar pk">S</div><div><div class="testi-uname">Salsa K.</div><div class="testi-date">April 2025</div></div></div></div>
+  </div>
+</div></div>
+
+<!-- MODAL TESTIMONI -->
+<div class="testi-modal-bg" id="testi-modal">
+  <div class="testi-modal">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+      <div>
+        <div style="font-size:1.1rem;font-weight:900">✍️ Tulis Testimoni</div>
+        <div style="font-size:.78rem;color:rgba(240,235,248,.5);font-weight:600;margin-top:2px">Ceritakan pengalamanmu bersama CallPay</div>
+      </div>
+      <button onclick="closeTestiModal()" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:rgba(240,235,248,.6);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:1rem;display:flex;align-items:center;justify-content:center">×</button>
+    </div>
+
+    <div class="testi-form-row">
+      <label class="testi-form-label">Untuk siapa testimoni ini? *</label>
+      <select id="testi-target" class="testi-form-input">
+        <option value="">— Pilih —</option>
+        <option value="CallPay Agency">🏢 CallPay Agency (umum)</option>
+      </select>
+    </div>
+
+    <div class="testi-form-row">
+      <label class="testi-form-label">Testimoni kamu * <span id="testi-count" style="color:rgba(240,235,248,.4);font-weight:600">(0/600 karakter)</span></label>
+      <textarea id="testi-text" class="testi-form-input" rows="5" placeholder="Ceritakan pengalamanmu..." maxlength="600" oninput="countTestiWords(this)"></textarea>
+    </div>
+
+    <div class="testi-form-row">
+      <label class="testi-form-label">Nama kamu (opsional)</label>
+      <input type="text" id="testi-name" class="testi-form-input" placeholder="Contoh: Aysha R.">
+    </div>
+
+    <p id="testi-err" style="color:#ff5c5c;font-size:.82rem;font-weight:700;display:none;margin-bottom:10px"></p>
+    <button class="btn-testi-submit" id="testi-submit-btn" onclick="submitTesti()">Kirim Testimoni 🚀</button>
+    <p style="font-size:.73rem;color:rgba(240,235,248,.35);font-weight:600;text-align:center;margin-top:10px">Testimoni akan direview admin sebelum ditampilkan</p>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="footer-top">
+    <div class="footer-brand">
+      <div class="footer-logo">CallPay</div>
+      <p class="footer-tagline">Teman setia kamu sejak 2021. Selalu ada kapanpun kamu membutuhkan 💕</p>
+    </div>
+    <nav class="footer-nav"><h4>Menu</h4><ul><li><a href="#home">Home</a></li><li><a href="#layanan">Layanan</a></li><li><a href="#talent">Talent</a></li><li><a href="#testimoni">Testimoni</a></li></ul></nav>
+    <div class="footer-contact"><h4>Kontak</h4><p>📱 WhatsApp: <a href="https://wa.me/62895400709371">+62 895-400-709371</a></p><p>📸 Instagram: @callpay.id</p><p>🕐 Online: 24 Jam / 7 Hari</p></div>
+  </div>
+  <hr class="footer-hr">
+  <div class="footer-copy">© 2021–2030 CallPay Agency. All rights reserved.</div>
+</footer>
+
+<!-- WA Float -->
+<a href="https://wa.me/62895400709371" class="wa-float" target="_blank" title="Chat WhatsApp">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="28" height="28" fill="white"><path d="M24 4C13 4 4 13 4 24c0 3.6 1 7 2.7 9.9L4 44l10.4-2.7C17.2 43 20.5 44 24 44c11 0 20-9 20-20S35 4 24 4zm0 36c-3.1 0-6.1-.8-8.7-2.4l-.6-.4-6.2 1.6 1.7-6-.4-.6C8.8 30.1 8 27.1 8 24 8 15.2 15.2 8 24 8s16 7.2 16 16-7.2 16-16 16zm8.7-11.8c-.5-.2-2.8-1.4-3.2-1.5-.4-.2-.7-.2-1 .2-.3.4-1.2 1.5-1.4 1.8-.3.3-.5.4-1 .1-.5-.2-2-.7-3.8-2.3-1.4-1.2-2.3-2.8-2.6-3.2-.3-.5 0-.7.2-1 .2-.2.5-.5.7-.8.2-.3.3-.5.4-.8.1-.3 0-.6-.1-.8-.1-.2-1-2.5-1.4-3.4-.4-.9-.8-.8-1-.8h-.9c-.3 0-.8.1-1.2.6-.4.5-1.6 1.6-1.6 3.8s1.7 4.4 1.9 4.7c.2.3 3.3 5.1 8.1 7.1 1.1.5 2 .8 2.7 1 1.1.3 2.2.3 3 .2.9-.1 2.8-1.1 3.2-2.2.4-1.1.4-2 .3-2.2-.2-.3-.5-.4-1-.6z"/></svg>
+</a>
+
+<!-- ORDER MODAL -->
+<div class="modal-backdrop" id="order-modal">
+  <div class="modal-box">
+    <div class="modal-scroll">
+    <div class="modal-head">
+      <h3>Pesan Layanan</h3>
+      <button class="modal-close-btn" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-talent-strip">
+      <img id="modal-img" src="" alt="">
+      <div>
+        <div class="mts-name" id="modal-tname"></div>
+        <div class="mts-meta" id="modal-tmeta"></div>
+      </div>
+    </div>
+    <div class="form-field">
+      <label>Layanan *</label>
+      <select id="modal-service" onchange="updateDurations();updateModalPrice()">
+        <option value="">— Pilih Layanan —</option>
+        <option value="temen-call">📞 Temen Call</option>
+        <option value="sleepcall">🌙 Sleepcall</option>
+        <option value="temen-curhat">🫂 Temen Curhat</option>
+        <option value="pacar-virtual">💕 Pacar Virtual</option>
+      </select>
+    </div>
+    <div class="form-field">
+      <label>Durasi *</label>
+      <select id="modal-duration" onchange="updateModalPrice()">
+        <option value="">— Pilih Layanan Dulu —</option>
+      </select>
+    </div>
+    <div class="form-field">
+      <label>Catatan (opsional)</label>
+      <textarea id="modal-note" rows="2" placeholder="Ceritakan apa yang kamu inginkan..."></textarea>
+    </div>
+
+    <div class="admin-fee-wrap">
+      <input type="checkbox" id="admin-fee-check" onchange="updateModalPrice()">
+      <label for="admin-fee-check">Saya mengerti bahwa harga di atas <strong>belum termasuk biaya admin</strong>. Biaya admin sebesar <span>Rp 3.000</span> akan ditambahkan saat konfirmasi.</label>
+    </div>
+    <button class="wa-confirm-btn" id="modal-wa-btn" onclick="confirmViaWA()" disabled>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="20" height="20" fill="white"><path d="M24 4C13 4 4 13 4 24c0 3.6 1 7 2.7 9.9L4 44l10.4-2.7C17.2 43 20.5 44 24 44c11 0 20-9 20-20S35 4 24 4zm0 36c-3.1 0-6.1-.8-8.7-2.4l-.6-.4-6.2 1.6 1.7-6-.4-.6C8.8 30.1 8 27.1 8 24 8 15.2 15.2 8 24 8s16 7.2 16 16-7.2 16-16 16zm8.7-11.8c-.5-.2-2.8-1.4-3.2-1.5-.4-.2-.7-.2-1 .2-.3.4-1.2 1.5-1.4 1.8-.3.3-.5.4-1 .1-.5-.2-2-.7-3.8-2.3-1.4-1.2-2.3-2.8-2.6-3.2-.3-.5 0-.7.2-1 .2-.2.5-.5.7-.8.2-.3.3-.5.4-.8.1-.3 0-.6-.1-.8-.1-.2-1-2.5-1.4-3.4-.4-.9-.8-.8-1-.8h-.9c-.3 0-.8.1-1.2.6-.4.5-1.6 1.6-1.6 3.8s1.7 4.4 1.9 4.7c.2.3 3.3 5.1 8.1 7.1 1.1.5 2 .8 2.7 1 1.1.3 2.2.3 3 .2.9-.1 2.8-1.1 3.2-2.2.4-1.1.4-2 .3-2.2-.2-.3-.5-.4-1-.6z"/></svg>
+      Konfirmasi via WhatsApp
+    </button>
+    </div><!-- end modal-scroll -->
+  </div>
+</div>
+
+<script type="module" src="script.js?v=11"></script>
+<script>
+function toggleMobileNav() {
+  const links = document.getElementById('nav-links');
+  const btn   = document.getElementById('nav-hamburger');
+  const open  = links.classList.toggle('open');
+  btn.classList.toggle('open', open);
+}
+function closeMobileNav() {
+  document.getElementById('nav-links').classList.remove('open');
+  document.getElementById('nav-hamburger').classList.remove('open');
+}
+// Tutup nav kalau klik di luar
+document.addEventListener('click', function(e) {
+  const nav   = document.getElementById('nav-links');
+  const btn   = document.getElementById('nav-hamburger');
+  if (!nav.contains(e.target) && !btn.contains(e.target)) closeMobileNav();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,54 @@
+# ── GZIP Compression ─────────────────────────────────────
+<IfModule mod_deflate.c>
+  AddOutputFilterByType DEFLATE text/html text/css application/javascript application/json text/plain
+</IfModule>
+
+# ── HTML: tidak pernah di-cache ───────────────────────────
+<FilesMatch "\.(html|htm)$">
+  <IfModule mod_headers.c>
+    Header set Cache-Control "no-cache, no-store, must-revalidate"
+    Header set Pragma "no-cache"
+    Header set Expires "0"
+  </IfModule>
+</FilesMatch>
+
+# ── CSS & JS: cache 1 tahun ────────────────────────────────
+<FilesMatch "\.(css|js)$">
+  <IfModule mod_headers.c>
+    Header set Cache-Control "public, max-age=31536000, immutable"
+  </IfModule>
+</FilesMatch>
+
+# ── Gambar & Font: cache 1 bulan ─────────────────────────
+<IfModule mod_expires.c>
+  ExpiresActive On
+  ExpiresByType image/jpeg    "access plus 1 month"
+  ExpiresByType image/png     "access plus 1 month"
+  ExpiresByType image/webp    "access plus 1 month"
+  ExpiresByType image/svg+xml "access plus 1 month"
+  ExpiresByType image/x-icon  "access plus 1 month"
+  ExpiresByType font/woff2    "access plus 1 month"
+  ExpiresByType font/woff     "access plus 1 month"
+</IfModule>
+
+# ── URL Shortcut untuk 3 Agensi (internal rewrite) ───────
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+
+  # callpay.id/spy → load index.html dengan admin=sleepcallpay (URL tetap /spy)
+  RewriteRule ^spy$ /index.html?admin=sleepcallpay [L,QSA]
+
+  # callpay.id/z → load index.html dengan admin=scallpayz (URL tetap /z)
+  RewriteRule ^z$ /index.html?admin=scallpayz [L,QSA]
+</IfModule>
+
+# ── LiteSpeed Cache ───────────────────────────────────────
+<IfModule LiteSpeed>
+  CacheLookup on
+</IfModule>
+
+# ── Security Headers ──────────────────────────────────────
+<IfModule mod_headers.c>
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "SAMEORIGIN"
+</IfModule>
