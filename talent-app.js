@@ -203,6 +203,7 @@ window.switchTab = function(tab) {
     if (btn) btn.classList.toggle('active', t === tab);
   });
   if (tab === 'orders') renderOrders();
+  if (tab === 'settings') renderSettingsPanel();
 };
 
 function renderOrders() {
@@ -627,7 +628,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     showPage('login-page');
   };
   document.getElementById('status-toggle').onclick = toggleStatus;
-  document.getElementById('tab-settings').onclick  = () => renderSettingsPanel();
+  document.getElementById('tab-settings').onclick  = () => switchTab('settings');
   // Tutup modal point kalau klik backdrop
   document.getElementById('point-modal').addEventListener('click', function(e) {
     if (e.target === this) closePointModal();
