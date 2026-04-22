@@ -119,6 +119,9 @@ const SVC_KEY_TO_LABEL = { // legacy - masih dipakai untuk decode key dari selec
   'pacar-virtual': 'Pacar Virtual',
   'video-call'    : 'Video Call',
 };
+// Expose ke window
+window.SVC_KEY_TO_LABEL = SVC_KEY_TO_LABEL;
+
 let SVC_LABEL_TO_KEY = {
   'Temen Call'   : 'temen-call',
   'Sleepcall'    : 'sleepcall',
