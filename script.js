@@ -87,10 +87,10 @@ async function loadPricesFromFirestore() {
     const docId = _priceMap[_adminParam] || 'admin1';
     // Load sekali
     const snap = await getDoc(doc(db, 'pricelist', docId));
-    if (snap.exists()) PRICES = snap.data();
+    if (snap.exists()) { PRICES = snap.data(); window.PRICES = PRICES; }
     // Realtime update kalau owner ubah harga
     onSnapshot(doc(db, 'pricelist', docId), s => {
-      if (s.exists()) PRICES = s.data();
+      if (s.exists()) { PRICES = s.data(); window.PRICES = PRICES; }
     });
   } catch(e) { console.warn('Gagal load pricelist:', e); }
 }
@@ -109,6 +109,7 @@ const _rawParam   = new URLSearchParams(window.location.search).get('admin')
                     || _pathMap[_pathSlug] 
                     || 'callpay';
 const _adminParam = _legacyMap[_rawParam] || _rawParam;
+window._adminParam = _adminParam; // expose ke global
 const WA_NUMBER   = WA_NUMBERS[_adminParam] || WA_NUMBERS['callpay'];
 
 const SVC_KEY_TO_LABEL = { // legacy - masih dipakai untuk decode key dari select dropdown
@@ -210,6 +211,7 @@ window.toggleSeeMore = function() {
 window.openModal = function(id) {
   activeTalent = TALENTS.find(t => String(t.id) === String(id));
   if (!activeTalent) return;
+  window.activeTalent = activeTalent; // expose ke global untuk order-patch.js
   document.getElementById('modal-img').src           = activeTalent.img;
   document.getElementById('modal-tname').textContent = activeTalent.name;
   document.getElementById('modal-tmeta').textContent = `${activeTalent.age} tahun · Indonesia`;
