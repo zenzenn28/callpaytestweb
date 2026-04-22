@@ -189,7 +189,7 @@ window.closePointModal = function() {
 };
 
 // ── CONFIG ────────────────────────────────────────────────
-const VERCEL_URL = 'https://YOUR-VERCEL-URL.vercel.app'; // Ganti setelah deploy
+const VERCEL_URL = 'https://callpay-order-15no.vercel.app'; // Ganti setelah deploy
 
 // ── ORDER SYSTEM ──────────────────────────────────────────
 let _orderListener = null;
