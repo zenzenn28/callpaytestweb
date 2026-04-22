@@ -52,10 +52,17 @@
       <button class="status-toggle active" id="status-toggle">Set Offline</button>
     </div>
     <div class="tabs">
-      <button class="tab-btn active" id="tab-settings">⚙️ Setting Profil</button>
+      <button class="tab-btn active" id="tab-settings" onclick="switchTab('settings')">⚙️ Setting Profil</button>
+      <button class="tab-btn" id="tab-orders" onclick="switchTab('orders')" style="position:relative">
+        📦 Order Masuk
+        <span id="order-badge" style="display:none;position:absolute;top:-4px;right:-4px;background:#FF5C5C;color:#fff;border-radius:99px;font-size:.6rem;font-weight:900;padding:2px 5px;min-width:16px;text-align:center">0</span>
+      </button>
     </div>
     <div id="settings-section">
       <div id="settings-content"></div>
+    </div>
+    <div id="orders-section" style="display:none">
+      <div id="orders-content"></div>
     </div>
   </div>
 </div>
