@@ -132,6 +132,11 @@ if (sessionStorage.getItem('cp_owner') !== '1') {
       <div class="form-row">
         <label>Bio / Deskripsi</label>
         <textarea id="f-bio" placeholder="Tulis bio singkat talent..." maxlength="120"></textarea>
+      </div>
+      <div class="form-row">
+        <label>Nomor WhatsApp Talent *</label>
+        <input type="tel" id="f-wa" placeholder="Contoh: 08123456789">
+        <small style="color:var(--muted);font-size:.72rem;font-weight:600">Digunakan untuk menerima notifikasi order masuk</small>
         <div class="form-hint"><span id="bio-count">0</span>/120 karakter</div>
       </div>
 
