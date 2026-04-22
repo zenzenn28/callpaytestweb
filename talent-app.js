@@ -437,7 +437,7 @@ function buildProfileForm(t, isSettingMode) {
     </div>
     <div class="setup-section">
       <div class="setup-label">📱 Nomor WhatsApp *</div>
-      <input type="tel" id="s-wa" class="setup-input" value="${t.waNumber||''}" placeholder="Contoh: 8123456789 (tanpa 0)">
+      <input type="tel" id="s-wa" class="setup-input" value="${t.waNumber||''}" placeholder="Contoh: 08123456789">
       <div style="font-size:.72rem;color:var(--muted);font-weight:600;margin-top:4px">Digunakan untuk menerima notifikasi order masuk</div>
     </div>
     <div class="setup-section">
@@ -556,7 +556,7 @@ window.submitProfile = async function() {
   const name      = document.getElementById('s-name')?.value.trim();
   const age       = parseInt(document.getElementById('s-age')?.value);
   const bio       = document.getElementById('s-bio')?.value.trim();
-  const waNumber  = document.getElementById('s-wa')?.value.trim().replace(/^0/, '') || '';
+  const waNumber  = document.getElementById('s-wa')?.value.trim().replace(/^\+62/, '').replace(/^62/, '').replace(/^0/, '') || '';
   const services  = [...document.querySelectorAll('.svc-ck:checked')].map(c=>c.value);
   const errEl     = document.getElementById('s-err');
   const btn       = document.getElementById('s-submit');
