@@ -104,6 +104,7 @@ function loadDashboard() {
     renderSetupPage(); showPage('setup-page'); return;
   }
   showPage('dashboard');
+  listenOrders();
   listenStatus();
   updateBanner();
   renderSettingsPanel();
@@ -187,8 +188,148 @@ window.closePointModal = function() {
   document.getElementById('point-modal').style.display = 'none';
 };
 
-// ── POINT SYSTEM OTOMATIS ─────────────────────────────────
+// ── CONFIG ────────────────────────────────────────────────
+const VERCEL_URL = 'https://YOUR-VERCEL-URL.vercel.app'; // Ganti setelah deploy
 
+// ── ORDER SYSTEM ──────────────────────────────────────────
+let _orderListener = null;
+
+window.switchTab = function(tab) {
+  const tabs = ['settings', 'orders'];
+  tabs.forEach(t => {
+    const section = document.getElementById(t + '-section');
+    const btn     = document.getElementById('tab-' + t);
+    if (section) section.style.display = t === tab ? 'block' : 'none';
+    if (btn) btn.classList.toggle('active', t === tab);
+  });
+  if (tab === 'orders') renderOrders();
+};
+
+function renderOrders() {
+  const el = document.getElementById('orders-content');
+  if (!el) return;
+  el.innerHTML = '<div style="text-align:center;padding:30px;color:rgba(240,235,248,.45)">⏳ Memuat order...</div>';
+  listenOrders();
+}
+
+function listenOrders() {
+  if (!_docId) return;
+  // Realtime listen order pending untuk talent ini
+  import('https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js').then(({ collection, query, where, onSnapshot, orderBy }) => {
+    const q = query(
+      collection(db, 'orders'),
+      where('talentId', '==', _docId),
+      where('status', '==', 'pending')
+    );
+    if (_orderListener) _orderListener();
+    _orderListener = onSnapshot(q, snap => {
+      const orders = [];
+      snap.forEach(d => orders.push({ id: d.id, ...d.data() }));
+      renderOrderList(orders);
+      // Update badge
+      const badge = document.getElementById('order-badge');
+      if (badge) {
+        badge.textContent = orders.length;
+        badge.style.display = orders.length > 0 ? 'block' : 'none';
+      }
+    });
+  });
+}
+
+function renderOrderList(orders) {
+  const el = document.getElementById('orders-content');
+  if (!el) return;
+
+  if (!orders.length) {
+    el.innerHTML = `
+      <div style="text-align:center;padding:48px 20px">
+        <div style="font-size:3rem;margin-bottom:12px">📭</div>
+        <div style="font-weight:800;font-size:.95rem;margin-bottom:6px">Belum ada order masuk</div>
+        <div style="font-size:.8rem;color:rgba(240,235,248,.45);font-weight:600">Order yang masuk akan tampil di sini</div>
+      </div>`;
+    return;
+  }
+
+  el.innerHTML = orders.map(order => {
+    const exp     = new Date(order.expiredAt);
+    const now     = new Date();
+    const secLeft = Math.max(0, Math.floor((exp - now) / 1000));
+    const mins    = Math.floor(secLeft / 60);
+    const secs    = secLeft % 60;
+    return `
+    <div class="order-card" id="ocard-${order.orderId}" style="background:rgba(255,255,255,.04);border:1px solid rgba(249,168,201,.25);border-radius:16px;padding:18px;margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div style="font-size:.72rem;font-weight:800;color:rgba(240,235,248,.4);text-transform:uppercase;letter-spacing:.06em">Order Baru 🔔</div>
+        <div style="font-size:.82rem;font-weight:900;color:#FFB800" id="timer-${order.orderId}">${mins}:${secs.toString().padStart(2,'0')}</div>
+      </div>
+      <div style="margin-bottom:12px">
+        <div style="font-size:.95rem;font-weight:900;margin-bottom:4px">📋 ${order.service}</div>
+        <div style="font-size:.82rem;color:rgba(240,235,248,.6);font-weight:700">⏱️ ${order.duration} menit · 💰 Rp ${Number(order.price||0).toLocaleString('id-ID')}</div>
+        ${order.note ? `<div style="font-size:.8rem;color:rgba(240,235,248,.5);margin-top:6px;font-style:italic">"${order.note}"</div>` : ''}
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+        <button onclick="respondOrder('${order.orderId}','reject')" style="padding:11px;border-radius:12px;background:rgba(255,92,92,.1);border:1px solid rgba(255,92,92,.3);color:#FF5C5C;font-family:'Nunito',sans-serif;font-weight:800;font-size:.85rem;cursor:pointer">❌ Tolak</button>
+        <button onclick="respondOrder('${order.orderId}','accept')" style="padding:11px;border-radius:12px;background:linear-gradient(135deg,rgba(61,214,140,.15),rgba(61,214,140,.08));border:1px solid rgba(61,214,140,.35);color:#3DD68C;font-family:'Nunito',sans-serif;font-weight:800;font-size:.85rem;cursor:pointer">✅ Terima</button>
+      </div>
+    </div>`;
+  }).join('');
+
+  // Start countdown timers
+  orders.forEach(order => startOrderTimer(order.orderId, order.expiredAt));
+}
+
+function startOrderTimer(orderId, expiredAt) {
+  const el  = document.getElementById(`timer-${orderId}`);
+  if (!el) return;
+  const int = setInterval(() => {
+    const left = Math.max(0, Math.floor((new Date(expiredAt) - new Date()) / 1000));
+    const m    = Math.floor(left / 60);
+    const s    = left % 60;
+    if (el) el.textContent = `${m}:${s.toString().padStart(2,'0')}`;
+    if (left <= 0) {
+      clearInterval(int);
+      // Auto expire
+      fetch(`${VERCEL_URL}/api/expire-orders`).catch(()=>{});
+    }
+  }, 1000);
+}
+
+window.respondOrder = async function(orderId, action) {
+  const btn = document.querySelector(`#ocard-${orderId} button`);
+  try {
+    const res  = await fetch(`${VERCEL_URL}/api/respond-order`, {
+      method : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body   : JSON.stringify({ orderId, action, talentId: _docId })
+    });
+    const data = await res.json();
+
+    if (action === 'accept' && data.custWa) {
+      // Tampilkan nomor WA cust
+      const waFormatted = '62' + data.custWa.replace(/^0/, '').replace(/\D/g,'');
+      const card = document.getElementById(`ocard-${orderId}`);
+      if (card) {
+        card.style.borderColor = 'rgba(61,214,140,.5)';
+        card.innerHTML = `
+          <div style="text-align:center;padding:10px 0">
+            <div style="font-size:1.5rem;margin-bottom:8px">🎉</div>
+            <div style="font-weight:900;margin-bottom:4px">Order Diterima!</div>
+            <div style="font-size:.82rem;color:rgba(240,235,248,.6);margin-bottom:14px">Hubungi customer sekarang</div>
+            <a href="https://wa.me/${waFormatted}" target="_blank" style="display:block;padding:12px;border-radius:12px;background:rgba(61,214,140,.15);border:1px solid rgba(61,214,140,.35);color:#3DD68C;font-weight:800;font-size:.88rem;text-decoration:none">
+              📱 Buka WhatsApp Customer
+            </a>
+          </div>`;
+      }
+      toast('✅ Order diterima! Hubungi customer sekarang.');
+    } else if (action === 'reject') {
+      toast('Order ditolak. Customer mendapat kode voucher.');
+    }
+  } catch(e) {
+    toast('❌ Gagal: ' + e.message);
+  }
+};
+
+// ── POINT SYSTEM OTOMATIS ─────────────────────────────────
 
 
 
@@ -289,6 +430,11 @@ function buildProfileForm(t, isSettingMode) {
     <div class="setup-section">
       <div class="setup-label">💬 Bio Singkat</div>
       <textarea id="s-bio" class="setup-input" rows="3" placeholder="Ceritakan tentang dirimu...">${t.bio||''}</textarea>
+    </div>
+    <div class="setup-section">
+      <div class="setup-label">📱 Nomor WhatsApp *</div>
+      <input type="tel" id="s-wa" class="setup-input" value="${t.waNumber||''}" placeholder="Contoh: 8123456789 (tanpa 0)">
+      <div style="font-size:.72rem;color:var(--muted);font-weight:600;margin-top:4px">Digunakan untuk menerima notifikasi order masuk</div>
     </div>
     <div class="setup-section">
       <div class="setup-label">🎯 Layanan *</div>
@@ -406,6 +552,7 @@ window.submitProfile = async function() {
   const name      = document.getElementById('s-name')?.value.trim();
   const age       = parseInt(document.getElementById('s-age')?.value);
   const bio       = document.getElementById('s-bio')?.value.trim();
+  const waNumber  = document.getElementById('s-wa')?.value.trim().replace(/^0/, '') || '';
   const services  = [...document.querySelectorAll('.svc-ck:checked')].map(c=>c.value);
   const errEl     = document.getElementById('s-err');
   const btn       = document.getElementById('s-submit');
@@ -432,6 +579,7 @@ window.submitProfile = async function() {
       services,
       img     : finalImg,
       audio   : finalAudio,
+      waNumber,
       _pendingEdit: false,
     }, { merge: true });
     currentTalent = { ...currentTalent, name:finalName, age:finalAge, bio, services, img:finalImg, audio:finalAudio };
