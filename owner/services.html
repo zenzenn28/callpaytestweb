@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Kelola Layanan — CallPay Owner</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Pacifico&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="owner.css">
+  <style>
+    .svc-list{display:flex;flex-direction:column;gap:10px;max-width:580px;margin-bottom:28px}
+    .svc-row{display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);transition:border-color .2s}
+    .svc-row:hover{border-color:var(--border-gd)}
+    .svc-icon-preview{width:36px;height:36px;border-radius:10px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
+    .svc-name{font-weight:800;font-size:.92rem;flex:1}
+    .svc-key{font-size:.72rem;color:var(--muted);font-weight:600;margin-top:2px}
+    .svc-actions{display:flex;gap:6px}
+    .btn-edit-svc{padding:5px 12px;border-radius:99px;background:rgba(255,209,102,.08);border:1px solid rgba(255,209,102,.25);color:var(--gold-mid);font-size:.75rem;font-weight:800;cursor:pointer;transition:all .2s}
+    .btn-edit-svc:hover{background:rgba(255,209,102,.18)}
+    .btn-del-svc{padding:5px 12px;border-radius:99px;background:rgba(255,92,92,.08);border:1px solid rgba(255,92,92,.2);color:var(--red);font-size:.75rem;font-weight:800;cursor:pointer;transition:all .2s}
+    .btn-del-svc:hover{background:rgba(255,92,92,.18)}
+
+    /* Form tambah/edit */
+    .svc-form{background:var(--surface);border:1px solid var(--border-gd);border-radius:var(--rl);padding:24px;max-width:480px}
+    .svc-form-title{font-size:.95rem;font-weight:900;margin-bottom:18px;color:var(--gold-mid)}
+    .form-row{margin-bottom:14px}
+    .form-row label{display:block;font-size:.72rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+    .form-row input{width:100%;padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-family:'Nunito',sans-serif;font-size:.9rem;font-weight:600;outline:none;transition:border-color .2s}
+    .form-row input:focus{border-color:var(--gold-mid)}
+    .form-hint{font-size:.72rem;color:var(--muted);font-weight:600;margin-top:4px}
+    .color-options{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+    .color-opt{width:32px;height:32px;border-radius:8px;cursor:pointer;border:3px solid transparent;transition:all .2s;display:flex;align-items:center;justify-content:center;font-size:.6rem;font-weight:800}
+    .color-opt.selected{border-color:#fff;transform:scale(1.1)}
+    .form-actions{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}
+    .btn-save-svc-form{padding:10px 24px;border-radius:99px;background:linear-gradient(135deg,var(--gold-mid),var(--gold));border:none;color:#1A1108;font-family:'Nunito',sans-serif;font-weight:800;font-size:.88rem;cursor:pointer;transition:opacity .2s}
+    .btn-save-svc-form:hover{opacity:.88}
+    .btn-cancel-form{padding:10px 20px;border-radius:99px;background:transparent;border:1px solid var(--border);color:var(--muted);font-family:'Nunito',sans-serif;font-weight:800;font-size:.88rem;cursor:pointer}
+    .btn-add-new{padding:10px 22px;border-radius:99px;background:rgba(255,209,102,.08);border:2px solid var(--border-gd);color:var(--gold-mid);font-family:'Nunito',sans-serif;font-weight:800;font-size:.88rem;cursor:pointer;transition:all .2s;margin-bottom:24px}
+    .btn-add-new:hover{background:rgba(255,209,102,.15)}
+
+    @media(max-width:600px){
+      .svc-row{flex-wrap:wrap;gap:10px}
+      .svc-actions{width:100%;justify-content:flex-end}
+      .svc-form{padding:18px 16px}
+      .form-actions{flex-direction:column}
+      .btn-save-svc-form,.btn-cancel-form{width:100%;text-align:center}
+    }
+  </style>
+<script>
+function toggleSidebar(){const sb=document.querySelector('.sidebar'),ov=document.getElementById('sidebar-overlay'),btn=document.getElementById('hamburger-btn');if(!sb||!ov||!btn)return;const open=sb.classList.toggle('open');ov.classList.toggle('open',open);btn.textContent=open?'✕':'☰';}
+function closeSidebar(){const sb=document.querySelector('.sidebar'),ov=document.getElementById('sidebar-overlay'),btn=document.getElementById('hamburger-btn');if(!sb||!ov||!btn)return;sb.classList.remove('open');ov.classList.remove('open');btn.textContent='☰';}
+</script>
+<script>
+if (sessionStorage.getItem('cp_owner') !== '1') {
+  document.addEventListener('DOMContentLoaded', function() { window.location.href = 'index.html'; });
+}
+</script>
+</head>
+<body>
+<div class="app">
+  <div class="mobile-topbar"><span class="mobile-logo">CallPay</span><button class="hamburger" onclick="toggleSidebar()" id="hamburger-btn">☰</button></div>
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+  <aside class="sidebar">
+    <div class="sidebar-logo"><div class="sidebar-logo-text">CallPay</div><div class="sidebar-logo-sub">👑 Owner Panel</div></div>
+    <nav class="sidebar-nav">
+      <a href="index.html"         class="nav-item"><span class="nav-icon">📊</span>Dashboard</a>
+      <a href="create-talent.html" class="nav-item"><span class="nav-icon">➕</span>Buat Akun Talent</a>
+      <a href="review.html"        class="nav-item"><span class="nav-icon">🔐</span>Kelola Akses Layanan</a>
+      <a href="services.html"      class="nav-item active"><span class="nav-icon">🎯</span>Kelola Layanan</a>
+      <a href="pricelist.html"     class="nav-item"><span class="nav-icon">💰</span>Kelola Pricelist</a>
+      <a href="settings.html"      class="nav-item"><span class="nav-icon">⚙️</span>Pengaturan</a>
+      <a href="../index.html"      class="nav-item" id="back-web"><span class="nav-icon">🌐</span>Lihat Website</a>
+    </nav>
+    <div class="sidebar-footer"><button class="logout-btn" id="logout-btn">Logout →</button></div>
+  </aside>
+  <main class="main">
+    <div class="page-header">
+      <h1>Kelola Layanan 🎯</h1>
+      <p>Tambah, edit, atau hapus layanan yang tersedia</p>
+    </div>
+
+    <div id="svc-list" class="svc-list">
+      <p style="color:var(--muted);font-size:.85rem">⏳ Memuat layanan...</p>
+    </div>
+
+    <button class="btn-add-new" onclick="showForm()">➕ Tambah Layanan Baru</button>
+
+    <div class="svc-form" id="svc-form" style="display:none">
+      <div class="svc-form-title" id="form-title">➕ Tambah Layanan Baru</div>
+      <div class="form-row">
+        <label>Nama Layanan *</label>
+        <input type="text" id="f-svc-name" placeholder="Contoh: Temen Call">
+        <div class="form-hint">Nama yang tampil di card talent dan dropdown order</div>
+      </div>
+      <div class="form-row">
+        <label>Icon Emoji *</label>
+        <input type="text" id="f-svc-icon" placeholder="Contoh: 📞" maxlength="4">
+        <div class="form-hint">Satu emoji untuk mewakili layanan ini</div>
+      </div>
+      <div class="form-row">
+        <label>Warna Badge</label>
+        <div class="color-options" id="color-options">
+          <div class="color-opt selected" data-color="pink" style="background:rgba(249,168,201,.2);color:#F9A8C9;border-color:#F9A8C9" onclick="selectColor(this,'pink')">PK</div>
+          <div class="color-opt" data-color="blue" style="background:rgba(77,166,232,.2);color:#7EC8F5" onclick="selectColor(this,'blue')">BL</div>
+          <div class="color-opt" data-color="purple" style="background:rgba(167,139,250,.2);color:#c4b5fd" onclick="selectColor(this,'purple')">PP</div>
+          <div class="color-opt" data-color="green" style="background:rgba(52,211,153,.2);color:#34d399" onclick="selectColor(this,'green')">GN</div>
+          <div class="color-opt" data-color="red" style="background:rgba(249,115,148,.2);color:#fb7185" onclick="selectColor(this,'red')">RD</div>
+          <div class="color-opt" data-color="yellow" style="background:rgba(255,184,0,.2);color:#FFB800" onclick="selectColor(this,'yellow')">YL</div>
+          <div class="color-opt" data-color="teal" style="background:rgba(20,184,166,.2);color:#2dd4bf" onclick="selectColor(this,'teal')">TL</div>
+        </div>
+      </div>
+      <input type="hidden" id="f-svc-color" value="pink">
+      <input type="hidden" id="f-svc-edit-id" value="">
+      <p id="form-err" style="color:var(--red);font-size:.82rem;font-weight:700;display:none;margin-bottom:8px"></p>
+      <div class="form-actions">
+        <button class="btn-save-svc-form" onclick="saveService()">💾 Simpan Layanan</button>
+        <button class="btn-cancel-form" onclick="hideForm()">Batal</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js';
+import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, getDocs, writeBatch } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js';
+
+const FIREBASE_CONFIG = {
+  apiKey:'AIzaSyBLPe_yx28LyefI856Ysxz3YEPnwA0ENFU',
+  authDomain:'callpay-28a28.firebaseapp.com',
+  projectId:'callpay-28a28',
+  storageBucket:'callpay-28a28.firebasestorage.app',
+  messagingSenderId:'44722427776',
+  appId:'1:44722427776:web:29d1a297746cd83d685365'
+};
+const _app = getApps().length ? getApps()[0] : initializeApp(FIREBASE_CONFIG);
+const _db  = getFirestore(_app);
+
+// Default services untuk inisialisasi pertama kali
+const DEFAULT_SERVICES = [
+  { id:'temen-call',    name:'Temen Call',    icon:'📞', color:'blue',   order:1 },
+  { id:'sleepcall',     name:'Sleepcall',     icon:'🌙', color:'purple', order:2 },
+  { id:'temen-curhat',  name:'Temen Curhat',  icon:'🫂', color:'pink',   order:3 },
+  { id:'pacar-virtual', name:'Pacar Virtual', icon:'💕', color:'red',    order:4 },
+  { id:'video-call',    name:'Video Call',    icon:'📹', color:'green',  order:5 },
+];
+
+const COLOR_MAP = {
+  pink:   { bg:'rgba(249,168,201,.12)', color:'#F9A8C9', border:'rgba(249,168,201,.3)' },
+  blue:   { bg:'rgba(77,166,232,.12)',  color:'#7EC8F5', border:'rgba(77,166,232,.25)' },
+  purple: { bg:'rgba(167,139,250,.12)', color:'#c4b5fd', border:'rgba(167,139,250,.25)' },
+  green:  { bg:'rgba(52,211,153,.08)',  color:'#34d399', border:'rgba(52,211,153,.3)' },
+  red:    { bg:'rgba(249,115,148,.15)', color:'#fb7185', border:'rgba(249,115,148,.3)' },
+  yellow: { bg:'rgba(255,184,0,.1)',    color:'#FFB800', border:'rgba(255,184,0,.3)' },
+  teal:   { bg:'rgba(20,184,166,.1)',   color:'#2dd4bf', border:'rgba(20,184,166,.3)' },
+};
+
+let _services = [];
+let _selectedColor = 'pink';
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast show';
+  clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function renderServices(list) {
+  const el = document.getElementById('svc-list');
+  if (!list.length) { el.innerHTML = '<p style="color:var(--muted);font-size:.85rem">Belum ada layanan. Tambahkan layanan baru.</p>'; return; }
+  el.innerHTML = list.map(s => {
+    const c = COLOR_MAP[s.color] || COLOR_MAP.pink;
+    return `
+    <div class="svc-row">
+      <div class="svc-icon-preview" style="background:${c.bg};color:${c.color}">${s.icon || '🎯'}</div>
+      <div style="flex:1;min-width:0">
+        <div class="svc-name">${s.name}</div>
+        <div class="svc-key">ID: ${s.id}</div>
+      </div>
+      <div class="svc-actions">
+        <button class="btn-edit-svc" onclick="editService('${s.id}')">✏️ Edit</button>
+        <button class="btn-del-svc" onclick="deleteService('${s.id}','${s.name}')">🗑️ Hapus</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+window.selectColor = function(el, color) {
+  document.querySelectorAll('.color-opt').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  _selectedColor = color;
+  document.getElementById('f-svc-color').value = color;
+};
+
+window.showForm = function(svc = null) {
+  document.getElementById('svc-form').style.display = 'block';
+  document.getElementById('form-err').style.display = 'none';
+  if (svc) {
+    document.getElementById('form-title').textContent = '✏️ Edit Layanan';
+    document.getElementById('f-svc-name').value  = svc.name;
+    document.getElementById('f-svc-icon').value  = svc.icon || '';
+    document.getElementById('f-svc-edit-id').value = svc.id;
+    // Set warna
+    const colorEl = document.querySelector(`[data-color="${svc.color}"]`);
+    if (colorEl) selectColor(colorEl, svc.color);
+  } else {
+    document.getElementById('form-title').textContent = '➕ Tambah Layanan Baru';
+    document.getElementById('f-svc-name').value  = '';
+    document.getElementById('f-svc-icon').value  = '';
+    document.getElementById('f-svc-edit-id').value = '';
+    selectColor(document.querySelector('[data-color="pink"]'), 'pink');
+  }
+  document.getElementById('svc-form').scrollIntoView({ behavior:'smooth', block:'start' });
+};
+
+window.hideForm = function() {
+  document.getElementById('svc-form').style.display = 'none';
+};
+
+window.editService = function(id) {
+  const svc = _services.find(s => s.id === id);
+  if (svc) showForm(svc);
+};
+
+window.saveService = async function() {
+  const name   = document.getElementById('f-svc-name').value.trim();
+  const icon   = document.getElementById('f-svc-icon').value.trim();
+  const color  = document.getElementById('f-svc-color').value;
+  const editId = document.getElementById('f-svc-edit-id').value;
+  const errEl  = document.getElementById('form-err');
+  errEl.style.display = 'none';
+
+  if (!name) { errEl.textContent = 'Nama layanan wajib diisi.'; errEl.style.display = 'block'; return; }
+  if (!icon) { errEl.textContent = 'Icon emoji wajib diisi.'; errEl.style.display = 'block'; return; }
+
+  try {
+    if (editId) {
+      // Edit - update nama dan tampilan, tapi pertahankan ID
+      const existing = _services.find(s => s.id === editId);
+      const oldName  = existing?.name || '';
+      await setDoc(doc(_db, 'services', editId), {
+        name, icon, color, order: existing?.order || 99,
+        updatedAt: new Date().toISOString()
+      });
+      // Update nama di semua talent yang pakai layanan ini
+      if (oldName !== name) {
+        const talentsSnap = await getDocs(collection(_db, 'talents'));
+        const batch = writeBatch(_db);
+        talentsSnap.forEach(d => {
+          const data  = d.data();
+          const svcs  = data.services || [];
+          const locked = data.lockedServices || [];
+          if (svcs.includes(oldName) || locked.includes(oldName)) {
+            batch.update(doc(_db, 'talents', d.id), {
+              services       : svcs.map(s => s === oldName ? name : s),
+              lockedServices : locked.map(s => s === oldName ? name : s),
+            });
+          }
+        });
+        await batch.commit();
+      }
+      toast(`✅ Layanan "${name}" berhasil diupdate!`);
+    } else {
+      // Tambah baru
+      const id = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+      if (_services.find(s => s.id === id)) {
+        errEl.textContent = 'Layanan dengan nama ini sudah ada.'; errEl.style.display = 'block'; return;
+      }
+      await setDoc(doc(_db, 'services', id), {
+        name, icon, color, order: _services.length + 1,
+        createdAt: new Date().toISOString()
+      });
+      toast(`✅ Layanan "${name}" berhasil ditambahkan!`);
+    }
+    hideForm();
+  } catch(e) {
+    errEl.textContent = 'Gagal: ' + e.message; errEl.style.display = 'block';
+  }
+};
+
+window.deleteService = async function(id, name) {
+  if (!confirm(`Hapus layanan "${name}"?\n\nLayanan ini akan hilang dari semua card talent, dropdown order, dan form edit profil.`)) return;
+  try {
+    await deleteDoc(doc(_db, 'services', id));
+    // Hapus layanan dari semua talent
+    const talentsSnap = await getDocs(collection(_db, 'talents'));
+    const batch = writeBatch(_db);
+    talentsSnap.forEach(d => {
+      const data   = d.data();
+      const svcs   = (data.services || []).filter(s => s !== name);
+      const locked = (data.lockedServices || []).filter(s => s !== name);
+      batch.update(doc(_db, 'talents', d.id), { services: svcs, lockedServices: locked });
+    });
+    await batch.commit();
+    toast(`🗑️ Layanan "${name}" berhasil dihapus dari semua talent!`);
+  } catch(e) {
+    toast('❌ Gagal: ' + e.message);
+  }
+};
+
+// Init default services kalau belum ada
+async function initDefaultServices() {
+  const snap = await getDocs(collection(_db, 'services'));
+  if (snap.empty) {
+    const batch = writeBatch(_db);
+    DEFAULT_SERVICES.forEach(s => {
+      batch.set(doc(_db, 'services', s.id), s);
+    });
+    await batch.commit();
+  }
+}
+
+// Realtime
+onSnapshot(collection(_db, 'services'), snap => {
+  _services = [];
+  snap.forEach(d => _services.push({ id: d.id, ...d.data() }));
+  _services.sort((a,b) => (a.order||99) - (b.order||99));
+  renderServices(_services);
+});
+
+document.getElementById('logout-btn').onclick = () => { sessionStorage.removeItem('cp_owner'); window.location.href = 'index.html'; };
+document.getElementById('back-web').addEventListener('click', e => { e.preventDefault(); window.open('../index.html','_blank'); });
+document.addEventListener('DOMContentLoaded', async () => {
+  if (sessionStorage.getItem('cp_owner') !== '1') { window.location.href = 'index.html'; return; }
+  document.querySelectorAll('.nav-item').forEach(a => a.addEventListener('click', () => { if(window.innerWidth<=768) closeSidebar(); }));
+  await initDefaultServices();
+});
+</script>
+</body>
+</html>

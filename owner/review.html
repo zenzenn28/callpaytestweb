@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Kelola Akses Layanan — CallPay Owner</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Pacifico&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="owner.css">
+  <style>
+    /* Search */
+    .search-wrap{position:relative;max-width:400px;margin-bottom:24px}
+    .search-input{width:100%;padding:11px 16px 11px 40px;background:var(--surface);border:1px solid var(--border);border-radius:99px;color:var(--text);font-family:'Nunito',sans-serif;font-size:.9rem;font-weight:600;outline:none;transition:border-color .2s}
+    .search-input:focus{border-color:var(--gold-mid)}
+    .search-icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:1rem;pointer-events:none}
+
+    /* Talent list */
+    .talent-access-list{display:flex;flex-direction:column;gap:12px;max-width:680px}
+    .talent-access-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);overflow:hidden;transition:border-color .2s}
+    .talent-access-card:hover{border-color:var(--border-gd)}
+
+    .talent-access-header{display:flex;align-items:center;gap:12px;padding:14px 18px;cursor:pointer;user-select:none}
+    .talent-access-header:hover{background:rgba(255,255,255,.03)}
+    .talent-access-img{width:46px;height:46px;border-radius:10px;object-fit:cover;object-position:top;flex-shrink:0}
+    .talent-access-img-ph{width:46px;height:46px;border-radius:10px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
+    .talent-access-info{flex:1;min-width:0}
+    .talent-access-name{font-weight:900;font-size:.95rem}
+    .talent-access-sub{font-size:.75rem;color:var(--muted);font-weight:600;margin-top:2px}
+    .talent-access-chevron{font-size:.85rem;color:var(--muted);transition:transform .2s;flex-shrink:0}
+    .talent-access-card.open .talent-access-chevron{transform:rotate(180deg)}
+
+    /* Services grid */
+    .talent-services-panel{display:none;padding:0 18px 16px;border-top:1px solid var(--border)}
+    .talent-access-card.open .talent-services-panel{display:block}
+    .services-access-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+    .svc-access-row{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:var(--surface2);border-radius:var(--r);border:1px solid var(--border)}
+    .svc-access-name{font-size:.85rem;font-weight:800;display:flex;align-items:center;gap:6px}
+    .lock-toggle{position:relative;width:44px;height:24px;flex-shrink:0}
+    .lock-toggle input{opacity:0;width:0;height:0}
+    .lock-slider{position:absolute;inset:0;background:#3f3f4e;border-radius:99px;cursor:pointer;transition:.3s}
+    .lock-slider:before{content:'';position:absolute;height:18px;width:18px;left:3px;bottom:3px;background:#fff;border-radius:50%;transition:.3s}
+    .lock-toggle input:checked + .lock-slider{background:var(--green)}
+    .lock-toggle input:checked + .lock-slider:before{transform:translateX(20px)}
+    .lock-badge{font-size:.65rem;font-weight:800;padding:2px 7px;border-radius:99px;margin-left:6px}
+    .lock-badge.locked{background:rgba(255,92,92,.12);color:var(--red);border:1px solid rgba(255,92,92,.25)}
+    .lock-badge.unlocked{background:rgba(61,214,140,.08);color:var(--green);border:1px solid rgba(61,214,140,.2)}
+
+    .empty-state{text-align:center;padding:48px;color:var(--muted);font-size:.9rem;font-weight:700}
+
+    @media(max-width:600px){
+      .services-access-grid{grid-template-columns:1fr}
+      .talent-access-header{padding:12px 14px}
+      .talent-services-panel{padding:0 14px 14px}
+    }
+  </style>
+<script>
+function toggleSidebar(){const sb=document.querySelector('.sidebar'),ov=document.getElementById('sidebar-overlay'),btn=document.getElementById('hamburger-btn');if(!sb||!ov||!btn)return;const open=sb.classList.toggle('open');ov.classList.toggle('open',open);btn.textContent=open?'✕':'☰';}
+function closeSidebar(){const sb=document.querySelector('.sidebar'),ov=document.getElementById('sidebar-overlay'),btn=document.getElementById('hamburger-btn');if(!sb||!ov||!btn)return;sb.classList.remove('open');ov.classList.remove('open');btn.textContent='☰';}
+</script>
+<script>
+if (sessionStorage.getItem('cp_owner') !== '1') {
+  document.addEventListener('DOMContentLoaded', function() { window.location.href = 'index.html'; });
+}
+</script>
+</head>
+<body>
+<div class="app">
+  <div class="mobile-topbar"><span class="mobile-logo">CallPay</span><button class="hamburger" onclick="toggleSidebar()" id="hamburger-btn">☰</button></div>
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+  <aside class="sidebar">
+    <div class="sidebar-logo"><div class="sidebar-logo-text">CallPay</div><div class="sidebar-logo-sub">👑 Owner Panel</div></div>
+    <nav class="sidebar-nav">
+      <a href="index.html"         class="nav-item"><span class="nav-icon">📊</span>Dashboard</a>
+      <a href="create-talent.html" class="nav-item"><span class="nav-icon">➕</span>Buat Akun Talent</a>
+      <a href="review.html"        class="nav-item active"><span class="nav-icon">🔐</span>Kelola Akses Layanan</a>
+      <a href="services.html"      class="nav-item"><span class="nav-icon">🎯</span>Kelola Layanan</a>
+      <a href="pricelist.html"     class="nav-item"><span class="nav-icon">💰</span>Kelola Pricelist</a>
+      <a href="settings.html"      class="nav-item"><span class="nav-icon">⚙️</span>Pengaturan</a>
+      <a href="../index.html"      class="nav-item" id="back-web"><span class="nav-icon">🌐</span>Lihat Website</a>
+    </nav>
+    <div class="sidebar-footer"><button class="logout-btn" id="logout-btn">Logout →</button></div>
+  </aside>
+  <main class="main">
+    <div class="page-header">
+      <h1>Kelola Akses Layanan 🔐</h1>
+      <p>Kunci atau buka layanan per talent</p>
+    </div>
+
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input type="text" class="search-input" id="search-input" placeholder="Cari nama talent..." oninput="filterTalents(this.value)">
+    </div>
+
+    <div class="talent-access-list" id="talent-list">
+      <div class="empty-state">⏳ Memuat data talent...</div>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js';
+import { getFirestore, collection, onSnapshot, doc, setDoc, getDoc } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js';
+
+const FIREBASE_CONFIG = {
+  apiKey:'AIzaSyBLPe_yx28LyefI856Ysxz3YEPnwA0ENFU',
+  authDomain:'callpay-28a28.firebaseapp.com',
+  projectId:'callpay-28a28',
+  storageBucket:'callpay-28a28.firebasestorage.app',
+  messagingSenderId:'44722427776',
+  appId:'1:44722427776:web:29d1a297746cd83d685365'
+};
+const _app = getApps().length ? getApps()[0] : initializeApp(FIREBASE_CONFIG);
+const _db  = getFirestore(_app);
+
+let ALL_SERVICES = ['Temen Call','Sleepcall','Temen Curhat','Pacar Virtual','Video Call']; // default, akan diupdate dari Firestore
+const SVC_ICON = {'Temen Call':'📞','Sleepcall':'🌙','Temen Curhat':'🫂','Pacar Virtual':'💕','Video Call':'📹'};
+
+let _allTalents = [];
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast show';
+  clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function renderTalents(list) {
+  const container = document.getElementById('talent-list');
+  if (!list.length) {
+    container.innerHTML = '<div class="empty-state">📭 Tidak ada talent ditemukan</div>';
+    return;
+  }
+
+  container.innerHTML = list.map(t => {
+    const lockedServices = t.lockedServices || [];
+    const unlockedCount  = ALL_SERVICES.filter(s => !lockedServices.includes(s)).length;
+    return `
+    <div class="talent-access-card" id="card-${t.id}">
+      <div class="talent-access-header" onclick="toggleCard('${t.id}')">
+        ${t.img
+          ? `<img class="talent-access-img" src="${t.img}" alt="${t.name}">`
+          : `<div class="talent-access-img-ph">👤</div>`}
+        <div class="talent-access-info">
+          <div class="talent-access-name">${t.name || t.id}</div>
+          <div class="talent-access-sub">${unlockedCount}/${ALL_SERVICES.length} layanan aktif · ${t.gender === 'female' ? '🌸 Wanita' : '💙 Pria'}</div>
+        </div>
+        <span class="talent-access-chevron">▼</span>
+      </div>
+      <div class="talent-services-panel">
+        <div class="services-access-grid">
+          ${ALL_SERVICES.map(svc => {
+            const isLocked = lockedServices.includes(svc);
+            return `
+            <div class="svc-access-row">
+              <div class="svc-access-name">
+                ${SVC_ICON[svc]} ${svc}
+                <span class="lock-badge ${isLocked ? 'locked' : 'unlocked'}" id="badge-${t.id}-${svc.replace(/\s/g,'-')}">
+                  ${isLocked ? '🔒 Terkunci' : '✅ Aktif'}
+                </span>
+              </div>
+              <label class="lock-toggle" title="${isLocked ? 'Buka kunci' : 'Kunci layanan'}">
+                <input type="checkbox" ${!isLocked ? 'checked' : ''}
+                  onchange="toggleLock('${t.id}', '${svc}', this.checked)">
+                <span class="lock-slider"></span>
+              </label>
+            </div>`;
+          }).join('')}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+window.toggleCard = function(id) {
+  document.getElementById(`card-${id}`)?.classList.toggle('open');
+};
+
+window.filterTalents = function(q) {
+  const filtered = q.trim()
+    ? _allTalents.filter(t => (t.name || t.id).toLowerCase().includes(q.toLowerCase()))
+    : _allTalents;
+  renderTalents(filtered);
+};
+
+window.toggleLock = async function(talentId, svc, isUnlocked) {
+  try {
+    const snap = await getDoc(doc(_db, 'talents', talentId));
+    if (!snap.exists()) return;
+    const data = snap.data();
+    let locked = data.lockedServices || [];
+
+    if (isUnlocked) {
+      locked = locked.filter(s => s !== svc); // buka kunci
+    } else {
+      if (!locked.includes(svc)) locked.push(svc); // kunci
+    }
+
+    await setDoc(doc(_db, 'talents', talentId), { lockedServices: locked }, { merge: true });
+
+    // Update badge langsung
+    const badge = document.getElementById(`badge-${talentId}-${svc.replace(/\s/g,'-')}`);
+    if (badge) {
+      badge.textContent = isUnlocked ? '✅ Aktif' : '🔒 Terkunci';
+      badge.className = `lock-badge ${isUnlocked ? 'unlocked' : 'locked'}`;
+    }
+
+    toast(`${isUnlocked ? '✅ Dibuka' : '🔒 Dikunci'}: ${svc} untuk ${_allTalents.find(t=>t.id===talentId)?.name || talentId}`);
+  } catch(e) {
+    toast('❌ Gagal: ' + e.message);
+  }
+};
+
+// Load services dari Firestore
+onSnapshot(collection(_db, 'services'), snap => {
+  const svcs = [];
+  snap.forEach(d => svcs.push({ id: d.id, ...d.data() }));
+  svcs.sort((a,b) => (a.order||99) - (b.order||99));
+  ALL_SERVICES = svcs.map(s => s.name);
+  // Re-render kalau sudah ada talent
+  if (_allTalents.length) renderTalents(_allTalents);
+});
+
+// Realtime
+onSnapshot(collection(_db, 'talents'), snap => {
+  _allTalents = [];
+  snap.forEach(d => {
+    const data = d.data();
+    if (data.status === 'approved') {
+      _allTalents.push({ id: d.id, ...data });
+    }
+  });
+  _allTalents.sort((a,b) => (a.name||'').localeCompare(b.name||''));
+  const q = document.getElementById('search-input')?.value || '';
+  filterTalents(q);
+});
+
+document.getElementById('logout-btn').onclick = () => { sessionStorage.removeItem('cp_owner'); window.location.href = 'index.html'; };
+document.getElementById('back-web').addEventListener('click', e => { e.preventDefault(); window.open('../index.html','_blank'); });
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.nav-item').forEach(a => a.addEventListener('click', () => { if(window.innerWidth<=768) closeSidebar(); }));
+});
+</script>
+</body>
+</html>

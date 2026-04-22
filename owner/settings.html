@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Pengaturan — CallPay Owner</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Pacifico&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="owner.css?v=11">
+<script>
+function toggleSidebar(){const sb=document.querySelector('.sidebar'),ov=document.getElementById('sidebar-overlay'),btn=document.getElementById('hamburger-btn');if(!sb||!ov||!btn)return;const open=sb.classList.toggle('open');ov.classList.toggle('open',open);btn.textContent=open?'✕':'☰';}
+function closeSidebar(){const sb=document.querySelector('.sidebar'),ov=document.getElementById('sidebar-overlay'),btn=document.getElementById('hamburger-btn');if(!sb||!ov||!btn)return;sb.classList.remove('open');ov.classList.remove('open');btn.textContent='☰';}
+</script>
+<script>
+// Auth check — redirect ke login kalau belum login
+if (sessionStorage.getItem('cp_owner') !== '1') {
+  document.addEventListener('DOMContentLoaded', function() {
+    window.location.href = 'index.html';
+  });
+}
+</script>
+</head>
+<body>
+<div class="app">
+  <div class="mobile-topbar"><span class="mobile-logo">CallPay</span><button class="hamburger" onclick="toggleSidebar()" id="hamburger-btn">☰</button></div>
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+  <aside class="sidebar">
+    <div class="sidebar-logo"><div class="sidebar-logo-text">CallPay</div><div class="sidebar-logo-sub">👑 Owner Panel</div></div>
+    <nav class="sidebar-nav">
+      <a href="index.html"         class="nav-item"><span class="nav-icon">📊</span>Dashboard</a>
+      <a href="create-talent.html" class="nav-item"><span class="nav-icon">➕</span>Buat Akun Talent</a>
+      <a href="review.html"        class="nav-item"><span class="nav-icon">🔐</span>Kelola Akses Layanan</a>
+      <a href="settings.html"      class="nav-item active"><span class="nav-icon">⚙️</span>Pengaturan</a>
+      <a href="../index.html"      class="nav-item" id="back-web"><span class="nav-icon">🌐</span>Lihat Website</a>
+    </nav>
+    <div class="sidebar-footer"><button class="logout-btn" id="logout-btn">Logout →</button></div>
+  </aside>
+  <main class="main">
+    <div class="page-header"><h1>Pengaturan ⚙️</h1><p>Konfigurasi CallPay Agency</p></div>
+
+    <div class="settings-section">
+      <h3>🏢 Informasi Agency</h3>
+      <p class="sec-desc">Nama agency, nomor WhatsApp, dan media sosial.</p>
+      <div class="form-grid">
+        <div class="form-group"><label>Nama Agency</label><input type="text" id="s-name" placeholder="CallPay Agency"></div>
+        <div class="form-group"><label>Nomor WhatsApp Admin</label><input type="text" id="s-wa" placeholder="628xxxxxxxxxx"><p class="form-note">Format: 628xxxxxxxxxx</p></div>
+        <div class="form-group"><label>Instagram</label><input type="text" id="s-ig" placeholder="@callpay.id"></div>
+        <div class="form-group"><label>Potongan Agency (%)</label><input type="number" id="s-cut" min="0" max="100" placeholder="40"></div>
+      </div>
+      <div style="margin-top:18px"><button class="btn btn-pink" id="save-agency">💾 Simpan</button></div>
+    </div>
+
+    <div class="settings-section">
+      <h3>🔐 Kredensial Admin</h3>
+      <p class="sec-desc">Ubah username dan password login <b>Admin</b> (akses terbatas: Talent & Status Talent).</p>
+      <div class="form-grid">
+        <div class="form-group"><label>Username Baru</label><input type="text" id="s-user" placeholder="admin"></div>
+        <div class="form-group"><label>Password Baru</label><input type="password" id="s-pass" placeholder="••••••••"></div>
+        <div class="form-group"><label>Konfirmasi Password</label><input type="password" id="s-pass2" placeholder="••••••••"></div>
+      </div>
+      <div style="margin-top:18px"><button class="btn btn-pink" id="save-cred">🔒 Ubah Kredensial Admin</button></div>
+    </div>
+
+    <div class="settings-section">
+      <h3>👑 Password Owner</h3>
+      <p class="sec-desc">Password <b>Owner</b> memberikan akses penuh ke semua fitur admin panel.</p>
+      <div class="form-grid">
+        <div class="form-group"><label>Password Owner Baru</label><input type="password" id="s-owner-pass" placeholder="••••••••"></div>
+        <div class="form-group"><label>Konfirmasi Password Owner</label><input type="password" id="s-owner-pass2" placeholder="••••••••"></div>
+      </div>
+      <div style="margin-top:18px"><button class="btn btn-pink" id="save-owner-cred">👑 Ubah Password Owner</button></div>
+    </div>
+
+    <div class="settings-section danger-zone">
+      <h3>⚠️ Danger Zone</h3>
+      <p class="sec-desc">Tindakan permanen dan tidak bisa dibatalkan.</p>
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:14px;padding:16px;background:rgba(255,92,92,.04);border:1px solid rgba(255,92,92,.12);border-radius:var(--r)">
+        <div>
+          <div style="font-weight:800;font-size:.9rem;margin-bottom:3px">Hapus Semua Data Order</div>
+          <div style="font-size:.8rem;color:var(--muted);font-weight:600">Seluruh riwayat order dihapus permanen dari Firestore.</div>
+        </div>
+        <button class="btn btn-red" id="del-all-btn">🗑️ Hapus Semua Order</button>
+      </div>
+    </div>
+  </main>
+</div>
+
+<div class="modal-bg" id="del-modal">
+  <div class="modal-box">
+    <div class="modal-title">⚠️ Hapus Semua Order?</div>
+    <div class="modal-desc">
+      <strong id="del-count" style="color:var(--red)">0</strong> order akan dihapus permanen dari database.<br><br>
+      Ketik <code style="background:rgba(255,92,92,.12);color:var(--red);padding:2px 8px;border-radius:5px">HAPUS</code> untuk konfirmasi:
+    </div>
+    <div class="form-group" style="margin:14px 0"><input type="text" id="confirm-input" placeholder="Ketik HAPUS di sini"></div>
+    <div class="modal-actions">
+      <button class="btn btn-outline" id="del-cancel">Batal</button>
+      <button class="btn btn-red" id="del-confirm">Hapus Permanen</button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { DB, requireOwner } from '../admin/data.js?v=11';
+
+function toast(msg,dur=2800){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),dur);}
+
+document.getElementById('logout-btn').onclick=()=>{sessionStorage.removeItem('cp_owner');window.location.href='index.html';};
+document.getElementById('back-web').addEventListener('click',(e)=>{e.preventDefault();window.open('../index.html','_blank');});
+
+document.getElementById('save-agency').onclick=async()=>{
+  const cfg=DB.getSettings();
+  const name=document.getElementById('s-name').value.trim();
+  const wa=document.getElementById('s-wa').value.trim().replace(/\D/g,'');
+  const ig=document.getElementById('s-ig').value.trim();
+  const cut=parseInt(document.getElementById('s-cut').value);
+  if(name) cfg.agencyName=name;
+  if(wa) cfg.waNumber=wa;
+  if(ig) cfg.instagram=ig;
+  if(!isNaN(cut)&&cut>=0&&cut<=100) cfg.agencyCut=cut;
+  await DB.saveSettings(cfg);
+  toast('✅ Info agency disimpan!');
+};
+
+document.getElementById('save-cred').onclick=async()=>{
+  const u=document.getElementById('s-user').value.trim();
+  const p=document.getElementById('s-pass').value;
+  const p2=document.getElementById('s-pass2').value;
+  if(!u){toast('❌ Username tidak boleh kosong');return;}
+  if(p&&p!==p2){toast('❌ Password tidak cocok');return;}
+  const cfg=DB.getSettings();
+  cfg.username=u;
+  if(p) cfg.password=p;
+  await DB.saveSettings(cfg);
+  toast('✅ Kredensial admin diperbarui!');
+};
+
+document.getElementById('save-owner-cred').onclick=async()=>{
+  const p=document.getElementById('s-owner-pass').value;
+  const p2=document.getElementById('s-owner-pass2').value;
+  if(!p){toast('❌ Password owner tidak boleh kosong');return;}
+  if(p!==p2){toast('❌ Password tidak cocok');return;}
+  if(p.length<6){toast('❌ Password minimal 6 karakter');return;}
+  const cfg=DB.getSettings();
+  cfg.ownerPassword=p;
+  await DB.saveSettings(cfg);
+  toast('✅ Password owner diperbarui!');
+};
+
+document.getElementById('del-all-btn').onclick=async()=>{
+  const orders=await DB.getOrders();
+  document.getElementById('del-count').textContent=orders.length;
+  document.getElementById('confirm-input').value='';
+  document.getElementById('del-modal').classList.add('open');
+};
+document.getElementById('del-cancel').onclick=()=>{document.getElementById('del-modal').classList.remove('open');};
+document.getElementById('del-confirm').onclick=async()=>{
+  if(document.getElementById('confirm-input').value.trim().toUpperCase()!=='HAPUS'){toast('❌ Ketik HAPUS untuk konfirmasi');return;}
+  await DB.deleteAllOrders();
+  document.getElementById('del-modal').classList.remove('open');
+  toast('🗑️ Semua order dihapus dari database');
+};
+
+document.addEventListener('DOMContentLoaded',async()=>{
+  if(sessionStorage.getItem('cp_owner')!=='1'){window.location.href='index.html';return;}
+  const cfg=await DB.getSettingsAsync();
+  document.getElementById('s-name').value=cfg.agencyName||'';
+  document.getElementById('s-wa').value=cfg.waNumber||'';
+  document.getElementById('s-ig').value=cfg.instagram||'';
+  document.getElementById('s-cut').value=cfg.agencyCut||40;
+  document.getElementById('s-user').value=cfg.username||'';
+
+  document.querySelectorAll('.nav-item').forEach(a=>a.addEventListener('click',()=>{if(window.innerWidth<=768)closeSidebar();}));
+});
+</script>
+</body>
+</html>

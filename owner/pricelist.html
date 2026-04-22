@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Kelola Pricelist — CallPay Owner</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Pacifico&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="owner.css">
+  <style>
+    .agency-tabs{display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap}
+    .agency-tab{padding:9px 22px;border-radius:99px;border:2px solid var(--border-gd);background:transparent;color:var(--muted);font-family:'Nunito',sans-serif;font-weight:800;font-size:.88rem;cursor:pointer;transition:all .2s}
+    .agency-tab.active{background:linear-gradient(135deg,var(--gold-mid),var(--gold));color:#1A1108;border-color:transparent}
+    .agency-tab:hover:not(.active){border-color:var(--gold-mid);color:var(--gold-mid)}
+
+    .service-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:22px 24px;margin-bottom:16px;max-width:640px}
+    .service-title{font-size:.95rem;font-weight:900;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+    .price-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .price-row{display:flex;flex-direction:column;gap:4px}
+    .price-label{font-size:.72rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+    .price-input-wrap{display:flex;align-items:center;gap:6px}
+    .price-prefix{font-size:.82rem;font-weight:700;color:var(--muted)}
+    .price-input{width:100%;padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-family:'Nunito',sans-serif;font-size:.9rem;font-weight:700;outline:none;transition:border-color .2s}
+    .price-input:focus{border-color:var(--gold-mid)}
+    .btn-save-svc{margin-top:14px;padding:9px 20px;border-radius:99px;background:linear-gradient(135deg,var(--gold-mid),var(--gold));border:none;color:#1A1108;font-family:'Nunito',sans-serif;font-weight:800;font-size:.85rem;cursor:pointer;transition:opacity .2s}
+    .btn-save-svc:hover{opacity:.85}
+    .btn-save-svc:disabled{opacity:.4;cursor:not-allowed}
+    .save-status{font-size:.75rem;font-weight:700;margin-left:10px;display:inline-block}
+
+    .loading-state{text-align:center;padding:40px;color:var(--muted);font-size:.9rem;font-weight:700}
+
+    @media(max-width:600px){
+      .price-grid{grid-template-columns:1fr}
+      .service-section{padding:16px}
+      .agency-tabs{gap:8px}
+      .agency-tab{padding:8px 16px;font-size:.82rem}
+    }
+  </style>
+<script>
+function toggleSidebar(){const sb=document.querySelector('.sidebar'),ov=document.getElementById('sidebar-overlay'),btn=document.getElementById('hamburger-btn');if(!sb||!ov||!btn)return;const open=sb.classList.toggle('open');ov.classList.toggle('open',open);btn.textContent=open?'✕':'☰';}
+function closeSidebar(){const sb=document.querySelector('.sidebar'),ov=document.getElementById('sidebar-overlay'),btn=document.getElementById('hamburger-btn');if(!sb||!ov||!btn)return;sb.classList.remove('open');ov.classList.remove('open');btn.textContent='☰';}
+</script>
+<script>
+if (sessionStorage.getItem('cp_owner') !== '1') {
+  document.addEventListener('DOMContentLoaded', function() { window.location.href = 'index.html'; });
+}
+</script>
+</head>
+<body>
+<div class="app">
+  <div class="mobile-topbar"><span class="mobile-logo">CallPay</span><button class="hamburger" onclick="toggleSidebar()" id="hamburger-btn">☰</button></div>
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+  <aside class="sidebar">
+    <div class="sidebar-logo"><div class="sidebar-logo-text">CallPay</div><div class="sidebar-logo-sub">👑 Owner Panel</div></div>
+    <nav class="sidebar-nav">
+      <a href="index.html"         class="nav-item"><span class="nav-icon">📊</span>Dashboard</a>
+      <a href="create-talent.html" class="nav-item"><span class="nav-icon">➕</span>Buat Akun Talent</a>
+      <a href="review.html"        class="nav-item"><span class="nav-icon">🔐</span>Kelola Akses Layanan</a>
+      <a href="pricelist.html"     class="nav-item active"><span class="nav-icon">💰</span>Kelola Pricelist</a>
+      <a href="settings.html"      class="nav-item"><span class="nav-icon">⚙️</span>Pengaturan</a>
+      <a href="../index.html"      class="nav-item" id="back-web"><span class="nav-icon">🌐</span>Lihat Website</a>
+    </nav>
+    <div class="sidebar-footer"><button class="logout-btn" id="logout-btn">Logout →</button></div>
+  </aside>
+  <main class="main">
+    <div class="page-header">
+      <h1>Kelola Pricelist 💰</h1>
+      <p>Atur harga layanan per agensi secara realtime</p>
+    </div>
+
+    <div class="agency-tabs">
+      <button class="agency-tab active" id="tab-admin1" onclick="switchAgency('admin1')">🏢 CallPay</button>
+      <button class="agency-tab" id="tab-admin2" onclick="switchAgency('admin2')">🌙 SleepcallPay</button>
+      <button class="agency-tab" id="tab-admin3" onclick="switchAgency('admin3')">⚡ ScallpayZ</button>
+    </div>
+
+    <div id="pricelist-content">
+      <div class="loading-state">⏳ Memuat pricelist...</div>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js';
+import { getFirestore, doc, getDoc, setDoc, collection, getDocs } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js';
+
+const FIREBASE_CONFIG = {
+  apiKey:'AIzaSyBLPe_yx28LyefI856Ysxz3YEPnwA0ENFU',
+  authDomain:'callpay-28a28.firebaseapp.com',
+  projectId:'callpay-28a28',
+  storageBucket:'callpay-28a28.firebasestorage.app',
+  messagingSenderId:'44722427776',
+  appId:'1:44722427776:web:29d1a297746cd83d685365'
+};
+const _app = getApps().length ? getApps()[0] : initializeApp(FIREBASE_CONFIG);
+const _db  = getFirestore(_app);
+
+// Harga default
+const DEFAULT_PRICES = {
+  'Temen Call':    {30:10000, 60:20000, 90:30000, 120:40000, 150:50000, 180:60000},
+  'Sleepcall':     {30:10000, 60:20000, 90:30000, 120:40000, 150:50000, 180:60000},
+  'Temen Curhat':  {30:12000, 60:24000, 90:36000, 120:48000, 150:60000, 180:72000},
+  'Pacar Virtual': {30:15000, 60:30000, 90:45000, 120:60000, 150:75000, 180:90000},
+  'Video Call':    {20:35000, 40:70000, 60:105000},
+};
+
+const DUR_LABEL = {20:'20 mnt', 30:'30 mnt', 40:'40 mnt', 60:'60 mnt', 90:'90 mnt', 120:'2 jam', 150:'2,5 jam', 180:'3 jam'};
+
+let SVC_ICON = {
+  'Temen Call':'📞', 'Sleepcall':'🌙', 'Temen Curhat':'🫂',
+  'Pacar Virtual':'💕', 'Video Call':'📹'
+};
+// Update SVC_ICON dari Firestore
+loadAllServices().then(svcs => {
+  SVC_ICON = {};
+  svcs.forEach(s => { SVC_ICON[s.name] = s.icon || '🎯'; });
+});
+
+let _currentAgency = 'admin1';
+let _currentPrices = {};
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast show';
+  clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+async function loadAllServices() {
+  try {
+    const snap = await getDocs(collection(_db, 'services'));
+    const svcs = [];
+    snap.forEach(d => svcs.push({ id: d.id, ...d.data() }));
+    svcs.sort((a,b) => (a.order||99) - (b.order||99));
+    return svcs;
+  } catch(e) { return []; }
+}
+
+async function loadPrices(agency) {
+  try {
+    // Load layanan dari Firestore
+    const svcs = await loadAllServices();
+    // Load harga yang sudah tersimpan
+    const snap = await getDoc(doc(_db, 'pricelist', agency));
+    const savedPrices = snap.exists() ? snap.data() : {};
+    // Gabungkan: layanan dari Firestore + harga yang sudah ada
+    const merged = {};
+    svcs.forEach(s => {
+      if (savedPrices[s.name]) {
+        // Harga sudah ada
+        merged[s.name] = savedPrices[s.name];
+      } else if (DEFAULT_PRICES[s.name]) {
+        // Pakai default
+        merged[s.name] = DEFAULT_PRICES[s.name];
+      } else {
+        // Layanan baru - beri harga default kosong berdasarkan durasi standar
+        merged[s.name] = {30:0, 60:0, 90:0, 120:0, 150:0, 180:0};
+      }
+    });
+    // Kalau belum ada pricelist sama sekali, simpan ke Firestore
+    if (!snap.exists()) {
+      await setDoc(doc(_db, 'pricelist', agency), merged);
+    }
+    return merged;
+  } catch(e) {
+    console.warn('Gagal load prices:', e);
+    return DEFAULT_PRICES;
+  }
+}
+
+function renderPricelist(prices) {
+  const content = document.getElementById('pricelist-content');
+  content.innerHTML = Object.entries(prices).map(([svc, durations]) => `
+    <div class="service-section" id="svc-${svc.replace(/\s/g,'-')}">
+      <div class="service-title">${SVC_ICON[svc] || '🎯'} ${svc}</div>
+      <div class="price-grid">
+        ${Object.entries(durations).map(([dur, price]) => `
+          <div class="price-row">
+            <div class="price-label">${DUR_LABEL[dur] || dur+' mnt'}</div>
+            <div class="price-input-wrap">
+              <span class="price-prefix">Rp</span>
+              <input type="number" class="price-input"
+                id="price-${svc.replace(/\s/g,'-')}-${dur}"
+                value="${price}"
+                min="0" step="1000"
+                data-svc="${svc}" data-dur="${dur}">
+            </div>
+          </div>
+        `).join('')}
+      </div>
+      <div style="display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:14px">
+        <button class="btn-save-svc" onclick="saveService('${svc}')">💾 Simpan ${svc}</button>
+        <span class="save-status" id="status-${svc.replace(/\s/g,'-')}"></span>
+      </div>
+    </div>
+  `).join('');
+}
+
+window.switchAgency = async function(agency) {
+  _currentAgency = agency;
+  // Update tab
+  document.getElementById('tab-admin1').classList.toggle('active', agency === 'admin1');
+  document.getElementById('tab-admin2').classList.toggle('active', agency === 'admin2');
+  document.getElementById('tab-admin3').classList.toggle('active', agency === 'admin3');
+  // Load prices
+  document.getElementById('pricelist-content').innerHTML = '<div class="loading-state">⏳ Memuat pricelist...</div>';
+  _currentPrices = await loadPrices(agency);
+  renderPricelist(_currentPrices);
+};
+
+window.saveService = async function(svc) {
+  const svcId  = svc.replace(/\s/g, '-');
+  const btn    = document.querySelector(`#svc-${svcId} .btn-save-svc`);
+  const status = document.getElementById(`status-${svcId}`);
+  btn.disabled = true; btn.textContent = 'Menyimpan...';
+
+  // Ambil semua nilai input untuk layanan ini
+  const newDurations = {};
+  document.querySelectorAll(`[data-svc="${svc}"]`).forEach(input => {
+    const dur = parseInt(input.dataset.dur);
+    const val = parseInt(input.value);
+    if (!isNaN(val) && val >= 0) newDurations[dur] = val;
+  });
+
+  try {
+    // Update hanya field layanan ini di Firestore
+    _currentPrices[svc] = newDurations;
+    await setDoc(doc(_db, 'pricelist', _currentAgency), _currentPrices);
+    status.textContent = '✅ Tersimpan!';
+    status.style.color = 'var(--green)';
+    toast(`✅ Harga ${svc} (${_currentAgency === 'admin1' ? 'CallPay' : 'SleepcallPay'}) berhasil diupdate!`);
+  } catch(e) {
+    status.textContent = '❌ Gagal';
+    status.style.color = 'var(--red)';
+    toast('❌ Gagal: ' + e.message);
+  }
+
+  setTimeout(() => { status.textContent = ''; }, 3000);
+  btn.disabled = false; btn.textContent = `💾 Simpan ${svc}`;
+};
+
+document.getElementById('logout-btn').onclick = () => { sessionStorage.removeItem('cp_owner'); window.location.href = 'index.html'; };
+document.getElementById('back-web').addEventListener('click', e => { e.preventDefault(); window.open('../index.html','_blank'); });
+
+document.addEventListener('DOMContentLoaded', async () => {
+  if (sessionStorage.getItem('cp_owner') !== '1') { window.location.href = 'index.html'; return; }
+  document.querySelectorAll('.nav-item').forEach(a => a.addEventListener('click', () => { if(window.innerWidth<=768) closeSidebar(); }));
+  _currentPrices = await loadPrices('admin1');
+  renderPricelist(_currentPrices);
+});
+</script>
+</body>
+</html>
