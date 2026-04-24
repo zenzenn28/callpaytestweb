@@ -263,7 +263,7 @@ function renderOrderList(orders) {
   el.innerHTML = orders.map(order => {
     if (order.status === 'accepted') {
       const raw = (order.custWa || '');
-      let clean = raw.replace(/D/g, '');
+      let clean = raw.replace(/\D/g, '');
       if (clean.startsWith('62')) clean = clean.slice(2);
       if (clean.startsWith('0')) clean = clean.slice(1);
       const waFormatted = '62' + clean;
