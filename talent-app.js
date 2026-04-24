@@ -147,6 +147,155 @@ function updatePointDisplay(points) {
     </div>`;
 }
 
+
+// ── SALARY SYSTEM ─────────────────────────────────────────
+
+function getCurrentPeriod() {
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  const day = now.getDate();
+  // Periode: tgl 5 - tgl 20
+  if (day >= 5 && day <= 20) {
+    const start = new Date(year, month, 5);
+    const end   = new Date(year, month, 20);
+    return {
+      id    : `${year}-${String(month+1).padStart(2,'0')}-1`,
+      label : `5 ${start.toLocaleDateString('id-ID',{month:'short'})} - 20 ${end.toLocaleDateString('id-ID',{month:'short',year:'numeric'})}`,
+      start, end
+    };
+  } else {
+    // Periode: tgl 21 - tgl 4 bulan berikutnya
+    const startMonth = day > 20 ? month : month - 1;
+    const startYear  = startMonth < 0 ? year - 1 : year;
+    const endMonth   = day > 20 ? month + 1 : month;
+    const endYear    = endMonth > 11 ? year + 1 : year;
+    const start = new Date(startYear, (startMonth + 12) % 12, 21);
+    const end   = new Date(endYear, endMonth % 12, 4);
+    return {
+      id    : `${startYear}-${String(((startMonth+12)%12)+1).padStart(2,'0')}-2`,
+      label : `21 ${start.toLocaleDateString('id-ID',{month:'short'})} - 4 ${end.toLocaleDateString('id-ID',{month:'short',year:'numeric'})}`,
+      start, end
+    };
+  }
+}
+
+async function loadSalaryData() {
+  if (!_docId) return;
+  const period = getCurrentPeriod();
+  const salaryEl = document.getElementById('talent-salary-box');
+  if (!salaryEl) return;
+
+  try {
+    // Ambil semua order accepted talent di periode ini
+    const { collection, query, where, getDocs } = await import('https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js');
+    const q = query(
+      collection(db, 'orders'),
+      where('talentId', '==', _docId),
+      where('status', '==', 'accepted')
+    );
+    const snap = await getDocs(q);
+    let totalGross = 0;
+    snap.forEach(d => {
+      const order = d.data();
+      // Filter sesuai periode
+      const createdAt = order.createdAt ? new Date(order.createdAt) : null;
+      if (createdAt && createdAt >= period.start && createdAt <= period.end) {
+        totalGross += Number(order.originalPrice || order.price || 0);
+      }
+    });
+
+    const totalNet = Math.round(totalGross * 0.6);
+    const potongan = totalGross - totalNet;
+
+    salaryEl.innerHTML = `
+      <div onclick="openSalaryModal()" style="background:rgba(61,214,140,.06);border:1px solid rgba(61,214,140,.2);border-radius:14px;padding:16px 18px;margin-bottom:16px;cursor:pointer;transition:border-color .2s" onmouseover="this.style.borderColor='rgba(61,214,140,.4)'" onmouseout="this.style.borderColor='rgba(61,214,140,.2)'">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="font-size:1.8rem">💰</div>
+            <div>
+              <div style="font-size:.7rem;font-weight:800;color:#3DD68C;text-transform:uppercase;letter-spacing:.06em;margin-bottom:1px">Gaji Periode Ini</div>
+              <div style="font-size:.72rem;color:rgba(240,235,248,.4);font-weight:600">${period.label}</div>
+            </div>
+          </div>
+          <div style="font-size:.72rem;color:rgba(61,214,140,.6);font-weight:700">Tap untuk riwayat →</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div style="background:rgba(255,255,255,.04);border-radius:10px;padding:10px 12px">
+            <div style="font-size:.68rem;font-weight:800;color:rgba(240,235,248,.4);text-transform:uppercase;margin-bottom:3px">Kotor</div>
+            <div style="font-size:.95rem;font-weight:900;color:#F0EBF8">Rp ${totalGross.toLocaleString('id-ID')}</div>
+          </div>
+          <div style="background:rgba(61,214,140,.08);border-radius:10px;padding:10px 12px">
+            <div style="font-size:.68rem;font-weight:800;color:#3DD68C;text-transform:uppercase;margin-bottom:3px">Bersih (60%)</div>
+            <div style="font-size:.95rem;font-weight:900;color:#3DD68C">Rp ${totalNet.toLocaleString('id-ID')}</div>
+          </div>
+        </div>
+        <div style="font-size:.72rem;color:rgba(240,235,248,.35);font-weight:600;margin-top:8px">Potongan agensi 40%: Rp ${potongan.toLocaleString('id-ID')}</div>
+      </div>`;
+  } catch(e) {
+    console.error('Load salary error:', e);
+    salaryEl.innerHTML = '';
+  }
+}
+
+window.openSalaryModal = async function() {
+  const modal = document.getElementById('salary-modal');
+  if (!modal) return;
+  modal.style.display = 'flex';
+  const listEl = document.getElementById('salary-history-list');
+  listEl.innerHTML = '<div style="text-align:center;padding:30px;color:rgba(240,235,248,.45)">Memuat riwayat...</div>';
+  try {
+    const { collection, query, orderBy, getDocs } = await import('https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js');
+    const q = query(
+      collection(db, 'salary_periods'),
+      orderBy('createdAt', 'desc')
+    );
+    const snap = await getDocs(q);
+    const periods = [];
+    snap.forEach(d => {
+      const data = d.data();
+      if (data.talentId === _docId) periods.push({ id: d.id, ...data });
+    });
+
+    if (!periods.length) {
+      listEl.innerHTML = '<div style="text-align:center;padding:30px;color:rgba(240,235,248,.45)"><div style="font-size:2rem;margin-bottom:8px">📭</div><p style="font-size:.85rem">Belum ada riwayat gaji</p></div>';
+      return;
+    }
+
+    listEl.innerHTML = periods.map(p => {
+      const isPaid   = p.status === 'paid';
+      const color    = isPaid ? '#3DD68C' : '#FFB800';
+      const statusTx = isPaid ? '✅ Sudah Dibayar' : '⏳ Belum Dibayar';
+      const paidDate = p.paidAt ? new Date(p.paidAt).toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'}) : '-';
+      return `
+      <div style="padding:14px 0;border-bottom:1px solid rgba(255,255,255,.06)">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+          <div style="font-size:.82rem;font-weight:800;color:var(--text)">${p.periodLabel || p.id}</div>
+          <div style="font-size:.75rem;font-weight:800;color:${color}">${statusTx}</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px">
+          <div>
+            <div style="font-size:.68rem;color:rgba(240,235,248,.4);font-weight:700">Kotor</div>
+            <div style="font-size:.85rem;font-weight:800;color:#F0EBF8">Rp ${Number(p.totalGross||0).toLocaleString('id-ID')}</div>
+          </div>
+          <div>
+            <div style="font-size:.68rem;color:#3DD68C;font-weight:700">Bersih</div>
+            <div style="font-size:.85rem;font-weight:800;color:#3DD68C">Rp ${Number(p.totalNet||0).toLocaleString('id-ID')}</div>
+          </div>
+        </div>
+        ${isPaid ? `<div style="font-size:.72rem;color:rgba(240,235,248,.35);font-weight:600">Dibayar: ${paidDate}</div>` : ''}
+      </div>`;
+    }).join('');
+  } catch(e) {
+    listEl.innerHTML = '<div style="text-align:center;padding:30px;color:rgba(255,92,92,.7)">Gagal memuat riwayat.</div>';
+  }
+};
+
+window.closeSalaryModal = function() {
+  const modal = document.getElementById('salary-modal');
+  if (modal) modal.style.display = 'none';
+};
+
 // ── POINT MODAL (history) ─────────────────────────────────
 window.openPointModal = async function() {
   const modal = document.getElementById('point-modal');
@@ -423,6 +572,7 @@ function listenStatus() {
     updateStatusUI(online);
     updateBanner();
     updatePointDisplay(data.points !== undefined ? data.points : 100);
+    loadSalaryData();
     document.getElementById('t-avatar').textContent   = (data.name || _docId)[0].toUpperCase();
     document.getElementById('t-name-top').textContent = data.name || _docId;
   });
