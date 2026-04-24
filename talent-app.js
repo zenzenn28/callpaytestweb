@@ -229,6 +229,12 @@ function listenOrders() {
           orders.push({ id: d.id, ...data });
         }
       });
+      // Sort: pending dulu, lalu accepted — masing-masing terbaru di atas
+      orders.sort((a, b) => {
+        if (a.status === 'pending' && b.status !== 'pending') return -1;
+        if (a.status !== 'pending' && b.status === 'pending') return 1;
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      });
       renderOrderList(orders);
       const pendingCount = orders.filter(o => o.status === 'pending').length;
       const badge = document.getElementById('order-badge');
