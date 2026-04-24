@@ -229,14 +229,8 @@ function listenOrders() {
           orders.push({ id: d.id, ...data });
         }
       });
-      // Sort: pending dulu, accepted, lalu rejected/expired — terbaru di atas
-      const statusOrder = { pending: 0, accepted: 1, rejected: 2, expired: 2 };
-      orders.sort((a, b) => {
-        const oa = statusOrder[a.status] ?? 3;
-        const ob = statusOrder[b.status] ?? 3;
-        if (oa !== ob) return oa - ob;
-        return new Date(b.createdAt) - new Date(a.createdAt);
-      });
+      // Sort: terbaru di atas berdasarkan tanggal masuk
+      orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       renderOrderList(orders);
       const pendingCount = orders.filter(o => o.status === 'pending').length;
       const badge = document.getElementById('order-badge');
@@ -246,6 +240,21 @@ function listenOrders() {
       }
     });
   });
+}
+
+
+function formatOrderDate(isoString) {
+  if (!isoString) return '';
+  const d = new Date(isoString);
+  const days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+  const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+  const day = days[d.getDay()];
+  const date = d.getDate();
+  const month = months[d.getMonth()];
+  const year = d.getFullYear();
+  const hour = d.getHours().toString().padStart(2,'0');
+  const min = d.getMinutes().toString().padStart(2,'0');
+  return day + ', ' + date + ' ' + month + ' ' + year + ' · ' + hour + ':' + min;
 }
 
 function renderOrderList(orders) {
@@ -272,11 +281,12 @@ function renderOrderList(orders) {
       const displayNum = '0' + clean;
       return `
       <div class="order-card" id="ocard-${order.orderId}" style="background:rgba(61,214,140,.04);border:1px solid rgba(61,214,140,.35);border-radius:12px;padding:12px 14px;margin-bottom:10px">
+        <div style="font-size:.7rem;color:rgba(240,235,248,.35);font-weight:600;margin-bottom:8px">${formatOrderDate(order.createdAt)}</div>
         <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
           <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0">
-            <span style="font-size:1rem">🎉</span>
+            <span style="font-size:1rem">✅</span>
             <div style="min-width:0">
-              <div style="font-size:.8rem;font-weight:900;color:#3DD68C">Diterima · ${order.service}</div>
+              <div style="font-size:.8rem;font-weight:900;color:#3DD68C">${order.service} · ${order.duration} menit</div>
               <div style="font-size:.82rem;font-weight:800;color:#F0EBF8;letter-spacing:.03em">${displayNum}</div>
             </div>
           </div>
@@ -291,12 +301,12 @@ function renderOrderList(orders) {
     if (order.status === 'rejected') {
       return `
       <div class="order-card" id="ocard-${order.orderId}" style="background:rgba(255,92,92,.03);border:1px solid rgba(255,92,92,.25);border-radius:16px;padding:18px;margin-bottom:12px;opacity:.7">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-          <div style="font-size:.72rem;font-weight:800;color:#FF5C5C;text-transform:uppercase;letter-spacing:.06em">❌ Order Ditolak</div>
-          <div style="font-size:.72rem;color:rgba(240,235,248,.3);font-weight:600">${order.service}</div>
+        <div style="font-size:.7rem;color:rgba(240,235,248,.35);font-weight:600;margin-bottom:6px">${formatOrderDate(order.createdAt)}</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <div style="font-size:.72rem;font-weight:800;color:#FF5C5C;text-transform:uppercase;letter-spacing:.06em">❌ Ditolak</div>
+          <div style="font-size:.72rem;color:rgba(240,235,248,.3);font-weight:600">${order.service} · ${order.duration} menit</div>
         </div>
-        <div style="font-size:.82rem;color:rgba(240,235,248,.5);font-weight:600">⏱️ ${order.duration} menit · 💰 Rp ${Number(order.price||0).toLocaleString('id-ID')}</div>
-        <div style="font-size:.75rem;color:rgba(240,235,248,.35);margin-top:6px;font-weight:600">Customer mendapat voucher pengganti</div>
+        <div style="font-size:.75rem;color:rgba(240,235,248,.35);font-weight:600">Customer mendapat voucher pengganti</div>
       </div>`;
     }
 
@@ -304,12 +314,12 @@ function renderOrderList(orders) {
     if (order.status === 'expired') {
       return `
       <div class="order-card" id="ocard-${order.orderId}" style="background:rgba(255,184,0,.03);border:1px solid rgba(255,184,0,.2);border-radius:16px;padding:18px;margin-bottom:12px;opacity:.7">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <div style="font-size:.7rem;color:rgba(240,235,248,.35);font-weight:600;margin-bottom:6px">${formatOrderDate(order.createdAt)}</div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
           <div style="font-size:.72rem;font-weight:800;color:#FFB800;text-transform:uppercase;letter-spacing:.06em">⏰ Waktu Habis</div>
-          <div style="font-size:.72rem;color:rgba(240,235,248,.3);font-weight:600">${order.service}</div>
+          <div style="font-size:.72rem;color:rgba(240,235,248,.3);font-weight:600">${order.service} · ${order.duration} menit</div>
         </div>
-        <div style="font-size:.82rem;color:rgba(240,235,248,.5);font-weight:600">⏱️ ${order.duration} menit · 💰 Rp ${Number(order.price||0).toLocaleString('id-ID')}</div>
-        <div style="font-size:.75rem;color:rgba(240,235,248,.35);margin-top:6px;font-weight:600">Tidak ada respons — customer mendapat voucher</div>
+        <div style="font-size:.75rem;color:rgba(240,235,248,.35);font-weight:600">Tidak ada respons — customer mendapat voucher</div>
       </div>`;
     }
 
@@ -320,6 +330,7 @@ function renderOrderList(orders) {
     const secs    = secLeft % 60;
     return `
     <div class="order-card" id="ocard-${order.orderId}" style="background:rgba(255,255,255,.04);border:1px solid rgba(249,168,201,.25);border-radius:16px;padding:18px;margin-bottom:12px">
+      <div style="font-size:.7rem;color:rgba(240,235,248,.35);font-weight:600;margin-bottom:6px">${formatOrderDate(order.createdAt)}</div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
         <div style="font-size:.72rem;font-weight:800;color:rgba(240,235,248,.4);text-transform:uppercase;letter-spacing:.06em">Order Baru 🔔</div>
         <div style="font-size:.82rem;font-weight:900;color:#FFB800" id="timer-${order.orderId}">${mins}:${secs.toString().padStart(2,'0')}</div>
