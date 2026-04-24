@@ -215,9 +215,7 @@ function renderOrders() {
 
 function listenOrders() {
   if (!_docId) return;
-  // Realtime listen order pending untuk talent ini
   import('https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js').then(({ collection, query, where, onSnapshot }) => {
-    // Query hanya by talentId, filter status di client (hindari butuh composite index)
     const q = query(
       collection(db, 'orders'),
       where('talentId', '==', _docId)
@@ -227,15 +225,16 @@ function listenOrders() {
       const orders = [];
       snap.forEach(d => {
         const data = d.data();
-        // Hanya tampilkan yang pending
-        if (data.status === 'pending') orders.push({ id: d.id, ...data });
+        if (data.status === 'pending' || data.status === 'accepted') {
+          orders.push({ id: d.id, ...data });
+        }
       });
       renderOrderList(orders);
-      // Update badge
+      const pendingCount = orders.filter(o => o.status === 'pending').length;
       const badge = document.getElementById('order-badge');
       if (badge) {
-        badge.textContent = orders.length;
-        badge.style.display = orders.length > 0 ? 'block' : 'none';
+        badge.textContent = pendingCount;
+        badge.style.display = pendingCount > 0 ? 'block' : 'none';
       }
     });
   });
@@ -256,6 +255,26 @@ function renderOrderList(orders) {
   }
 
   el.innerHTML = orders.map(order => {
+    if (order.status === 'accepted') {
+      const raw = (order.custWa || '');
+      let clean = raw.replace(/D/g, '');
+      if (clean.startsWith('62')) clean = clean.slice(2);
+      if (clean.startsWith('0')) clean = clean.slice(1);
+      const waFormatted = '62' + clean;
+      return `
+      <div class="order-card" id="ocard-${order.orderId}" style="background:rgba(61,214,140,.04);border:1px solid rgba(61,214,140,.35);border-radius:16px;padding:18px;margin-bottom:12px">
+        <div style="text-align:center;padding:10px 0">
+          <div style="font-size:1.5rem;margin-bottom:8px">🎉</div>
+          <div style="font-weight:900;margin-bottom:4px">Order Diterima!</div>
+          <div style="font-size:.82rem;color:rgba(240,235,248,.6);margin-bottom:6px">📋 ${order.service} · ⏱️ ${order.duration} menit</div>
+          <div style="font-size:.82rem;color:rgba(240,235,248,.6);margin-bottom:14px">Hubungi customer sekarang</div>
+          <a href="https://wa.me/${waFormatted}" target="_blank" style="display:block;padding:12px;border-radius:12px;background:rgba(61,214,140,.15);border:1px solid rgba(61,214,140,.35);color:#3DD68C;font-weight:800;font-size:.88rem;text-decoration:none">
+            📱 Buka WhatsApp Customer
+          </a>
+        </div>
+      </div>`;
+    }
+
     const exp     = new Date(order.expiredAt);
     const now     = new Date();
     const secLeft = Math.max(0, Math.floor((exp - now) / 1000));
@@ -270,7 +289,7 @@ function renderOrderList(orders) {
       <div style="margin-bottom:12px">
         <div style="font-size:.95rem;font-weight:900;margin-bottom:4px">📋 ${order.service}</div>
         <div style="font-size:.82rem;color:rgba(240,235,248,.6);font-weight:700">⏱️ ${order.duration} menit · 💰 Rp ${Number(order.price||0).toLocaleString('id-ID')}</div>
-        ${order.note ? `<div style="font-size:.8rem;color:rgba(240,235,248,.5);margin-top:6px;font-style:italic">"${order.note}"</div>` : ''}
+        ${order.note ? `<div style="font-size:.8rem;color:rgba(240,235,248,.5);margin-top:6px;font-style:italic">\${order.note}\</div>` : ''}
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
         <button onclick="respondOrder('${order.orderId}','reject')" style="padding:11px;border-radius:12px;background:rgba(255,92,92,.1);border:1px solid rgba(255,92,92,.3);color:#FF5C5C;font-family:'Nunito',sans-serif;font-weight:800;font-size:.85rem;cursor:pointer">❌ Tolak</button>
@@ -279,8 +298,7 @@ function renderOrderList(orders) {
     </div>`;
   }).join('');
 
-  // Start countdown timers
-  orders.forEach(order => startOrderTimer(order.orderId, order.expiredAt));
+  orders.filter(o => o.status === 'pending').forEach(order => startOrderTimer(order.orderId, order.expiredAt));
 }
 
 function startOrderTimer(orderId, expiredAt) {
