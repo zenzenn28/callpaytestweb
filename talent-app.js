@@ -225,14 +225,16 @@ function listenOrders() {
       const orders = [];
       snap.forEach(d => {
         const data = d.data();
-        if (data.status === 'pending' || data.status === 'accepted') {
+        if (['pending','accepted','rejected','expired'].includes(data.status)) {
           orders.push({ id: d.id, ...data });
         }
       });
-      // Sort: pending dulu, lalu accepted — masing-masing terbaru di atas
+      // Sort: pending dulu, accepted, lalu rejected/expired — terbaru di atas
+      const statusOrder = { pending: 0, accepted: 1, rejected: 2, expired: 2 };
       orders.sort((a, b) => {
-        if (a.status === 'pending' && b.status !== 'pending') return -1;
-        if (a.status !== 'pending' && b.status === 'pending') return 1;
+        const oa = statusOrder[a.status] ?? 3;
+        const ob = statusOrder[b.status] ?? 3;
+        if (oa !== ob) return oa - ob;
         return new Date(b.createdAt) - new Date(a.createdAt);
       });
       renderOrderList(orders);
@@ -261,6 +263,7 @@ function renderOrderList(orders) {
   }
 
   el.innerHTML = orders.map(order => {
+    // ── ACCEPTED ──
     if (order.status === 'accepted') {
       const raw = (order.custWa || '');
       let clean = raw.replace(/\D/g, '');
@@ -279,6 +282,32 @@ function renderOrderList(orders) {
             📋 Salin Nomor WA
           </button>
         </div>
+      </div>`;
+    }
+
+    // ── REJECTED ──
+    if (order.status === 'rejected') {
+      return `
+      <div class="order-card" id="ocard-${order.orderId}" style="background:rgba(255,92,92,.03);border:1px solid rgba(255,92,92,.25);border-radius:16px;padding:18px;margin-bottom:12px;opacity:.7">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div style="font-size:.72rem;font-weight:800;color:#FF5C5C;text-transform:uppercase;letter-spacing:.06em">❌ Order Ditolak</div>
+          <div style="font-size:.72rem;color:rgba(240,235,248,.3);font-weight:600">${order.service}</div>
+        </div>
+        <div style="font-size:.82rem;color:rgba(240,235,248,.5);font-weight:600">⏱️ ${order.duration} menit · 💰 Rp ${Number(order.price||0).toLocaleString('id-ID')}</div>
+        <div style="font-size:.75rem;color:rgba(240,235,248,.35);margin-top:6px;font-weight:600">Customer mendapat voucher pengganti</div>
+      </div>`;
+    }
+
+    // ── EXPIRED ──
+    if (order.status === 'expired') {
+      return `
+      <div class="order-card" id="ocard-${order.orderId}" style="background:rgba(255,184,0,.03);border:1px solid rgba(255,184,0,.2);border-radius:16px;padding:18px;margin-bottom:12px;opacity:.7">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+          <div style="font-size:.72rem;font-weight:800;color:#FFB800;text-transform:uppercase;letter-spacing:.06em">⏰ Waktu Habis</div>
+          <div style="font-size:.72rem;color:rgba(240,235,248,.3);font-weight:600">${order.service}</div>
+        </div>
+        <div style="font-size:.82rem;color:rgba(240,235,248,.5);font-weight:600">⏱️ ${order.duration} menit · 💰 Rp ${Number(order.price||0).toLocaleString('id-ID')}</div>
+        <div style="font-size:.75rem;color:rgba(240,235,248,.35);margin-top:6px;font-weight:600">Tidak ada respons — customer mendapat voucher</div>
       </div>`;
     }
 
