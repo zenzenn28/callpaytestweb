@@ -271,15 +271,17 @@ function renderOrderList(orders) {
       if (clean.startsWith('0')) clean = clean.slice(1);
       const displayNum = '0' + clean;
       return `
-      <div class="order-card" id="ocard-${order.orderId}" style="background:rgba(61,214,140,.04);border:1px solid rgba(61,214,140,.35);border-radius:16px;padding:18px;margin-bottom:12px">
-        <div style="text-align:center;padding:10px 0">
-          <div style="font-size:1.5rem;margin-bottom:8px">🎉</div>
-          <div style="font-weight:900;margin-bottom:4px">Order Diterima!</div>
-          <div style="font-size:.82rem;color:rgba(240,235,248,.6);margin-bottom:6px">📋 ${order.service} · ⏱️ ${order.duration} menit</div>
-          <div style="font-size:.82rem;color:rgba(240,235,248,.6);margin-bottom:10px">Nomor WA Customer:</div>
-          <div style="font-size:1.1rem;font-weight:900;color:#3DD68C;letter-spacing:.05em;margin-bottom:12px">${displayNum}</div>
-          <button onclick="navigator.clipboard.writeText('${displayNum}').then(()=>window.toast('✅ Nomor tersalin!')).catch(()=>alert('${displayNum}'))" style="width:100%;padding:11px;border-radius:12px;background:rgba(61,214,140,.15);border:1px solid rgba(61,214,140,.35);color:#3DD68C;font-family:'Nunito',sans-serif;font-weight:800;font-size:.88rem;cursor:pointer">
-            📋 Salin Nomor WA
+      <div class="order-card" id="ocard-${order.orderId}" style="background:rgba(61,214,140,.04);border:1px solid rgba(61,214,140,.35);border-radius:12px;padding:12px 14px;margin-bottom:10px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+          <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0">
+            <span style="font-size:1rem">🎉</span>
+            <div style="min-width:0">
+              <div style="font-size:.8rem;font-weight:900;color:#3DD68C">Diterima · ${order.service}</div>
+              <div style="font-size:.82rem;font-weight:800;color:#F0EBF8;letter-spacing:.03em">${displayNum}</div>
+            </div>
+          </div>
+          <button onclick="navigator.clipboard.writeText('${displayNum}').then(()=>window.toast('✅ Nomor tersalin!')).catch(()=>alert('${displayNum}'))" style="flex-shrink:0;padding:7px 12px;border-radius:8px;background:rgba(61,214,140,.15);border:1px solid rgba(61,214,140,.35);color:#3DD68C;font-family:'Nunito',sans-serif;font-weight:800;font-size:.78rem;cursor:pointer;white-space:nowrap">
+            📋 Salin
           </button>
         </div>
       </div>`;
@@ -373,13 +375,16 @@ window.respondOrder = async function(orderId, action) {
       if (card) {
         card.style.borderColor = 'rgba(61,214,140,.5)';
         card.innerHTML = `
-          <div style="text-align:center;padding:10px 0">
-            <div style="font-size:1.5rem;margin-bottom:8px">🎉</div>
-            <div style="font-weight:900;margin-bottom:4px">Order Diterima!</div>
-            <div style="font-size:.82rem;color:rgba(240,235,248,.6);margin-bottom:10px">Nomor WA Customer:</div>
-            <div style="font-size:1.1rem;font-weight:900;color:#3DD68C;letter-spacing:.05em;margin-bottom:12px">${displayNum}</div>
-            <button onclick="navigator.clipboard.writeText('${displayNum}').then(()=>window.toast('✅ Nomor tersalin!')).catch(()=>alert('${displayNum}'))" style="width:100%;padding:11px;border-radius:12px;background:rgba(61,214,140,.15);border:1px solid rgba(61,214,140,.35);color:#3DD68C;font-family:'Nunito',sans-serif;font-weight:800;font-size:.88rem;cursor:pointer">
-              📋 Salin Nomor WA
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+            <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0">
+              <span style="font-size:1rem">🎉</span>
+              <div style="min-width:0">
+                <div style="font-size:.8rem;font-weight:900;color:#3DD68C">Diterima!</div>
+                <div style="font-size:.82rem;font-weight:800;color:#F0EBF8;letter-spacing:.03em">${displayNum}</div>
+              </div>
+            </div>
+            <button onclick="navigator.clipboard.writeText('${displayNum}').then(()=>window.toast('✅ Nomor tersalin!')).catch(()=>alert('${displayNum}'))" style="flex-shrink:0;padding:7px 12px;border-radius:8px;background:rgba(61,214,140,.15);border:1px solid rgba(61,214,140,.35);color:#3DD68C;font-family:'Nunito',sans-serif;font-weight:800;font-size:.78rem;cursor:pointer;white-space:nowrap">
+              📋 Salin
             </button>
           </div>`;
       }
