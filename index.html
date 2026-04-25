@@ -13,6 +13,36 @@
   <noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Pacifico&display=swap"></noscript>
   <link rel="stylesheet" href="style.css?v=11">
   <style>
+    /* ── LOADING SCREEN ── */
+    #loading-screen{position:fixed;inset:0;z-index:99999;background:#2C2C2E;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:28px;transition:opacity .5s ease,visibility .5s ease}
+    #loading-screen.hide{opacity:0;visibility:hidden;pointer-events:none}
+    .ls-phone-scene{position:relative;width:140px;height:140px;display:flex;align-items:center;justify-content:center}
+    .ls-ripple{position:absolute;inset:0;border-radius:50%;border:2px solid rgba(232,98,138,.6);animation:lsRipple 2s ease-out infinite}
+    .ls-ripple:nth-child(2){animation-delay:.65s}
+    .ls-ripple:nth-child(3){animation-delay:1.3s}
+    @keyframes lsRipple{0%{transform:scale(.5);opacity:1}100%{transform:scale(1.9);opacity:0}}
+    .ls-phone-circle{width:88px;height:88px;border-radius:50%;background:linear-gradient(145deg,#E8628A,#c94d73);box-shadow:0 8px 32px rgba(232,98,138,.45),0 0 0 6px rgba(232,98,138,.12);display:flex;align-items:center;justify-content:center;animation:lsShake 2s ease-in-out infinite;position:relative;z-index:1}
+    @keyframes lsShake{0%,100%{transform:rotate(0deg) scale(1)}8%{transform:rotate(-18deg) scale(1.05)}16%{transform:rotate(16deg) scale(1.05)}24%{transform:rotate(-12deg) scale(1.02)}32%{transform:rotate(10deg) scale(1.02)}40%{transform:rotate(-6deg) scale(1)}48%{transform:rotate(4deg) scale(1)}56%,95%{transform:rotate(0deg) scale(1)}}
+    .ls-phone-svg{width:44px;height:44px;filter:drop-shadow(0 2px 4px rgba(0,0,0,.2))}
+    .ls-signal{position:absolute;top:4px;right:8px;display:flex;gap:3px;align-items:flex-end;z-index:2}
+    .ls-signal span{display:block;width:4px;background:rgba(232,98,138,.7);border-radius:2px;animation:lsSignal 1.2s ease-in-out infinite}
+    .ls-signal span:nth-child(1){height:6px;animation-delay:0s}
+    .ls-signal span:nth-child(2){height:10px;animation-delay:.15s}
+    .ls-signal span:nth-child(3){height:14px;animation-delay:.3s}
+    @keyframes lsSignal{0%,100%{opacity:.3}50%{opacity:1}}
+    .ls-dot-deco{position:absolute;border-radius:50%;background:#E8628A;opacity:0;animation:lsDotPop 2s ease-in-out infinite}
+    .ls-dot-deco.d1{width:8px;height:8px;top:14px;left:20px;animation-delay:.3s}
+    .ls-dot-deco.d2{width:5px;height:5px;top:28px;right:14px;animation-delay:.8s}
+    .ls-dot-deco.d3{width:6px;height:6px;bottom:16px;left:16px;animation-delay:1.2s}
+    @keyframes lsDotPop{0%,100%{opacity:0;transform:scale(0)}30%,70%{opacity:.6;transform:scale(1)}}
+    .ls-logo{font-family:'Pacifico',cursive;font-size:2.2rem;color:#fff;letter-spacing:.03em;text-shadow:0 2px 16px rgba(0,0,0,.3)}
+    .ls-logo span{background:linear-gradient(135deg,#E8628A,#F9A8C9);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+    .ls-status{font-family:'Nunito',sans-serif;font-size:.82rem;font-weight:700;color:rgba(255,255,255,.4);letter-spacing:.05em;text-align:center;min-height:18px}
+    .ls-bar-wrap{width:120px;height:3px;background:rgba(255,255,255,.1);border-radius:99px;overflow:hidden}
+    .ls-bar-fill{height:100%;background:linear-gradient(90deg,#E8628A,#F9A8C9);border-radius:99px;animation:lsBar 2s ease-in-out infinite}
+    @keyframes lsBar{0%{width:0%;margin-left:0}50%{width:70%;margin-left:0}100%{width:0%;margin-left:100%}}
+
+    /* ── MODAL ── */
     .modal-backdrop{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.72);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:20px;opacity:0;pointer-events:none;transition:opacity .25s}
     .modal-backdrop.open{opacity:1;pointer-events:all}
     .modal-box{background:#1A1A2E;border:1px solid var(--border-pink);border-radius:var(--radius-lg);width:100%;max-width:480px;max-height:92vh;display:flex;flex-direction:column;transform:translateY(20px);transition:transform .25s}
@@ -42,6 +72,33 @@
   </style>
 </head>
 <body>
+
+<!-- ── LOADING SCREEN ── -->
+<div id="loading-screen">
+  <div class="ls-phone-scene">
+    <div class="ls-ripple"></div>
+    <div class="ls-ripple"></div>
+    <div class="ls-ripple"></div>
+    <div class="ls-dot-deco d1"></div>
+    <div class="ls-dot-deco d2"></div>
+    <div class="ls-dot-deco d3"></div>
+    <div class="ls-signal"><span></span><span></span><span></span></div>
+    <div class="ls-phone-circle">
+      <svg class="ls-phone-svg" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="16" y="8" width="32" height="48" rx="6" fill="white" opacity=".95"/>
+        <rect x="20" y="14" width="24" height="28" rx="3" fill="#2C2C2E"/>
+        <circle cx="32" cy="50" r="3" fill="rgba(255,255,255,.5)"/>
+        <rect x="27" y="10" width="10" height="2" rx="1" fill="rgba(0,0,0,.2)"/>
+        <rect x="24" y="22" width="16" height="2" rx="1" fill="#E8628A" opacity=".8"/>
+        <rect x="26" y="27" width="12" height="2" rx="1" fill="#F9A8C9" opacity=".6"/>
+        <rect x="28" y="32" width="8"  height="2" rx="1" fill="#E8628A" opacity=".4"/>
+      </svg>
+    </div>
+  </div>
+  <div class="ls-logo">Call<span>Pay</span></div>
+  <div class="ls-status" id="ls-status-text">Menyambungkan ke talent...</div>
+  <div class="ls-bar-wrap"><div class="ls-bar-fill"></div></div>
+</div>
 
 <!-- NAVBAR -->
 <nav class="navbar">
@@ -150,53 +207,77 @@
 <div class="modal-backdrop" id="order-modal">
   <div class="modal-box">
     <div class="modal-scroll">
-    <div class="modal-head">
-      <h3>Pesan Layanan</h3>
-      <button class="modal-close-btn" onclick="closeModal()">✕</button>
-    </div>
-    <div class="modal-talent-strip">
-      <img id="modal-img" src="" alt="">
-      <div>
-        <div class="mts-name" id="modal-tname"></div>
-        <div class="mts-meta" id="modal-tmeta"></div>
+      <div class="modal-head">
+        <h3>Pesan Layanan</h3>
+        <button class="modal-close-btn" onclick="closeModal()">✕</button>
       </div>
-    </div>
-    <div class="form-field">
-      <label>Layanan *</label>
-      <select id="modal-service" onchange="updateDurations();updateModalPrice()">
-        <option value="">— Pilih Layanan —</option>
-        <option value="temen-call">📞 Temen Call</option>
-        <option value="sleepcall">🌙 Sleepcall</option>
-        <option value="temen-curhat">🫂 Temen Curhat</option>
-        <option value="pacar-virtual">💕 Pacar Virtual</option>
-      </select>
-    </div>
-    <div class="form-field">
-      <label>Durasi *</label>
-      <select id="modal-duration" onchange="updateModalPrice()">
-        <option value="">— Pilih Layanan Dulu —</option>
-      </select>
-    </div>
-    <div class="form-field">
-      <label>Catatan (opsional)</label>
-      <textarea id="modal-note" rows="2" placeholder="Ceritakan apa yang kamu inginkan..."></textarea>
-    </div>
-    <div class="admin-fee-wrap">
-      <input type="checkbox" id="admin-fee-check" onchange="updateModalPrice()">
-      <label for="admin-fee-check">Saya mengerti bahwa harga di atas <strong>belum termasuk biaya admin</strong>. Biaya admin sebesar <span>Rp 3.000</span> akan ditambahkan saat konfirmasi.</label>
-    </div>
-    <button class="wa-confirm-btn" id="modal-wa-btn" onclick="confirmViaWA()" disabled>
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="20" height="20" fill="white"><path d="M24 4C13 4 4 13 4 24c0 3.6 1 7 2.7 9.9L4 44l10.4-2.7C17.2 43 20.5 44 24 44c11 0 20-9 20-20S35 4 24 4zm0 36c-3.1 0-6.1-.8-8.7-2.4l-.6-.4-6.2 1.6 1.7-6-.4-.6C8.8 30.1 8 27.1 8 24 8 15.2 15.2 8 24 8s16 7.2 16 16-7.2 16-16 16zm8.7-11.8c-.5-.2-2.8-1.4-3.2-1.5-.4-.2-.7-.2-1 .2-.3.4-1.2 1.5-1.4 1.8-.3.3-.5.4-1 .1-.5-.2-2-.7-3.8-2.3-1.4-1.2-2.3-2.8-2.6-3.2-.3-.5 0-.7.2-1 .2-.2.5-.5.7-.8.2-.3.3-.5.4-.8.1-.3 0-.6-.1-.8-.1-.2-1-2.5-1.4-3.4-.4-.9-.8-.8-1-.8h-.9c-.3 0-.8.1-1.2.6-.4.5-1.6 1.6-1.6 3.8s1.7 4.4 1.9 4.7c.2.3 3.3 5.1 8.1 7.1 1.1.5 2 .8 2.7 1 1.1.3 2.2.3 3 .2.9-.1 2.8-1.1 3.2-2.2.4-1.1.4-2 .3-2.2-.2-.3-.5-.4-1-.6z"/></svg>
-      Konfirmasi via WhatsApp
-    </button>
+      <div class="modal-talent-strip">
+        <img id="modal-img" src="" alt="">
+        <div>
+          <div class="mts-name" id="modal-tname"></div>
+          <div class="mts-meta" id="modal-tmeta"></div>
+        </div>
+      </div>
+      <div class="form-field">
+        <label>Layanan *</label>
+        <select id="modal-service" onchange="updateDurations();updateModalPrice()">
+          <option value="">— Pilih Layanan —</option>
+          <option value="temen-call">📞 Temen Call</option>
+          <option value="sleepcall">🌙 Sleepcall</option>
+          <option value="temen-curhat">🫂 Temen Curhat</option>
+          <option value="pacar-virtual">💕 Pacar Virtual</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label>Durasi *</label>
+        <select id="modal-duration" onchange="updateModalPrice()">
+          <option value="">— Pilih Layanan Dulu —</option>
+        </select>
+      </div>
+      <div class="form-field">
+        <label>Catatan (opsional)</label>
+        <textarea id="modal-note" rows="2" placeholder="Ceritakan apa yang kamu inginkan..."></textarea>
+      </div>
+      <div class="admin-fee-wrap">
+        <input type="checkbox" id="admin-fee-check" onchange="updateModalPrice()">
+        <label for="admin-fee-check">Saya mengerti bahwa harga di atas <strong>belum termasuk biaya admin</strong>. Biaya admin sebesar <span>Rp 3.000</span> akan ditambahkan saat konfirmasi.</label>
+      </div>
+      <button class="wa-confirm-btn" id="modal-wa-btn" onclick="confirmViaWA()" disabled>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="20" height="20" fill="white"><path d="M24 4C13 4 4 13 4 24c0 3.6 1 7 2.7 9.9L4 44l10.4-2.7C17.2 43 20.5 44 24 44c11 0 20-9 20-20S35 4 24 4zm0 36c-3.1 0-6.1-.8-8.7-2.4l-.6-.4-6.2 1.6 1.7-6-.4-.6C8.8 30.1 8 27.1 8 24 8 15.2 15.2 8 24 8s16 7.2 16 16-7.2 16-16 16zm8.7-11.8c-.5-.2-2.8-1.4-3.2-1.5-.4-.2-.7-.2-1 .2-.3.4-1.2 1.5-1.4 1.8-.3.3-.5.4-1 .1-.5-.2-2-.7-3.8-2.3-1.4-1.2-2.3-2.8-2.6-3.2-.3-.5 0-.7.2-1 .2-.2.5-.5.7-.8.2-.3.3-.5.4-.8.1-.3 0-.6-.1-.8-.1-.2-1-2.5-1.4-3.4-.4-.9-.8-.8-1-.8h-.9c-.3 0-.8.1-1.2.6-.4.5-1.6 1.6-1.6 3.8s1.7 4.4 1.9 4.7c.2.3 3.3 5.1 8.1 7.1 1.1.5 2 .8 2.7 1 1.1.3 2.2.3 3 .2.9-.1 2.8-1.1 3.2-2.2.4-1.1.4-2 .3-2.2-.2-.3-.5-.4-1-.6z"/></svg>
+        Konfirmasi via WhatsApp
+      </button>
     </div>
   </div>
 </div>
 
 <script type="module" src="script.js?v=11"></script>
-<!-- Cache busting: naikkan ?v= setiap update order-patch.js -->
 <script defer src="https://callpay-order-15no.vercel.app/order-patch.js?v=3"></script>
 <script>
+// Loading screen
+(function() {
+  var msgs = ['Menyambungkan ke talent...','Memuat daftar talent...','Hampir siap! ✨'];
+  var i = 0;
+  var el = document.getElementById('ls-status-text');
+  var iv = setInterval(function() {
+    i = (i + 1) % msgs.length;
+    if (el) el.textContent = msgs[i];
+  }, 1000);
+  function hide() {
+    clearInterval(iv);
+    var ls = document.getElementById('loading-screen');
+    if (!ls) return;
+    ls.classList.add('hide');
+    setTimeout(function() { if (ls.parentNode) ls.parentNode.removeChild(ls); }, 600);
+  }
+  var start = Date.now();
+  window.addEventListener('load', function() {
+    var wait = Math.max(0, 1800 - (Date.now() - start));
+    setTimeout(hide, wait);
+  });
+  setTimeout(hide, 5000);
+})();
+
+// Mobile nav
 function toggleMobileNav() {
   const links = document.getElementById('nav-links');
   const btn   = document.getElementById('nav-hamburger');
@@ -208,8 +289,8 @@ function closeMobileNav() {
   document.getElementById('nav-hamburger').classList.remove('open');
 }
 document.addEventListener('click', function(e) {
-  const nav   = document.getElementById('nav-links');
-  const btn   = document.getElementById('nav-hamburger');
+  const nav = document.getElementById('nav-links');
+  const btn = document.getElementById('nav-hamburger');
   if (!nav.contains(e.target) && !btn.contains(e.target)) closeMobileNav();
 });
 </script>
