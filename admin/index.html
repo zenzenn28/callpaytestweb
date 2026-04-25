@@ -25,7 +25,6 @@ function closeSidebar(){const sb=document.querySelector('.sidebar'),ov=document.
 </script>
 </head>
 <body>
-
 <!-- LOGIN -->
 <div class="login-page" id="login-page" style="display:none">
   <div class="login-card">
@@ -62,11 +61,12 @@ function closeSidebar(){const sb=document.querySelector('.sidebar'),ov=document.
   <aside class="sidebar">
     <div class="sidebar-logo"><div class="sidebar-logo-text">CallPay</div><div class="sidebar-logo-sub">Admin Panel</div></div>
     <nav class="sidebar-nav">
-      <a href="talents.html" class="nav-item"><span class="nav-icon">⭐</span>Point Talent</a>
-      <a href="status.html"  class="nav-item"><span class="nav-icon">🟢</span>Talent Online</a>
-      <a href="review-testimoni.html" class="nav-item"><span class="nav-icon">💬</span>Review Testimoni</a>
-      <a href="clear-history.html" class="nav-item"><span class="nav-icon">🗑️</span>Hapus Riwayat Point</a>
-      <a href="../index.html" class="nav-item" id="back-web"><span class="nav-icon">🌐</span>Lihat Website</a>
+      <a href="talents.html"           class="nav-item"><span class="nav-icon">⭐</span>Point Talent</a>
+      <a href="status.html"            class="nav-item"><span class="nav-icon">🟢</span>Talent Online</a>
+      <a href="salary.html"            class="nav-item"><span class="nav-icon">💰</span>Rekap Gaji</a>
+      <a href="review-testimoni.html"  class="nav-item"><span class="nav-icon">💬</span>Review Testimoni</a>
+      <a href="clear-history.html"     class="nav-item"><span class="nav-icon">🗑️</span>Hapus Riwayat Point</a>
+      <a href="../index.html"          class="nav-item" id="back-web"><span class="nav-icon">🌐</span>Lihat Website</a>
     </nav>
     <div class="sidebar-footer"><button class="logout-btn" id="logout-btn">Logout →</button></div>
   </aside>
@@ -90,6 +90,13 @@ function closeSidebar(){const sb=document.querySelector('.sidebar'),ov=document.
           <div style="font-size:.8rem;color:var(--muted);font-weight:600">Monitor status & kelola talent online</div>
         </div>
       </a>
+      <a href="salary.html" style="text-decoration:none">
+        <div class="panel" style="cursor:pointer;transition:border-color .2s,transform .2s;border:1px solid rgba(61,214,140,.3);height:100%" onmouseover="this.style.borderColor='#3DD68C';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(61,214,140,.3)';this.style.transform='translateY(0)'">
+          <div style="font-size:2.2rem;margin-bottom:12px">💰</div>
+          <div style="font-weight:900;font-size:1rem;margin-bottom:4px">Rekap Gaji</div>
+          <div style="font-size:.8rem;color:var(--muted);font-weight:600">Kelola & konfirmasi pembayaran gaji talent</div>
+        </div>
+      </a>
       <a href="review-testimoni.html" style="text-decoration:none">
         <div class="panel" style="cursor:pointer;transition:border-color .2s,transform .2s;border:1px solid var(--border);height:100%" onmouseover="this.style.borderColor='var(--pink)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='var(--border)';this.style.transform='translateY(0)'">
           <div style="font-size:2.2rem;margin-bottom:12px">💬</div>
@@ -100,17 +107,12 @@ function closeSidebar(){const sb=document.querySelector('.sidebar'),ov=document.
     </div>
   </main>
 </div>
-
 <div class="toast" id="toast"></div>
 <script type="module">
 import { DB } from './data.js?v=11';
-
-
 const SESSION_KEY = 'cp_admin_v2';
-
 function isAdminLoggedIn() { return sessionStorage.getItem(SESSION_KEY) === '1'; }
 function setAdminLogin(v)  { v ? sessionStorage.setItem(SESSION_KEY,'1') : sessionStorage.removeItem(SESSION_KEY); }
-
 async function doLogin() {
   const cfg = await DB.getSettingsAsync();
   const u = document.getElementById('u').value.trim();
@@ -124,14 +126,12 @@ async function doLogin() {
     document.getElementById('p').value = '';
   }
 }
-
 function showDash() {
   document.getElementById('login-page').style.display = 'none';
   document.getElementById('dashboard').style.display = 'flex';
   const cfg = DB.getSettings();
   document.getElementById('dash-sub').textContent = `Selamat datang, ${cfg.username || 'Admin'}`;
 }
-
 document.getElementById('login-btn').onclick = doLogin;
 ['u','p'].forEach(id => document.getElementById(id).addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); }));
 document.getElementById('logout-btn').onclick = () => {
@@ -140,13 +140,11 @@ document.getElementById('logout-btn').onclick = () => {
   document.getElementById('login-page').style.display = 'flex';
 };
 document.getElementById('back-web').addEventListener('click', (e) => { e.preventDefault(); window.open('../index.html','_blank'); });
-
 document.addEventListener('DOMContentLoaded', async () => {
   await DB.getSettingsAsync();
   if (isAdminLoggedIn()) showDash();
   document.querySelectorAll('.nav-item').forEach(a => a.addEventListener('click', () => { if(window.innerWidth<=768) closeSidebar(); }));
 });
-
 </script>
 </body>
 </html>
