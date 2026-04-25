@@ -204,7 +204,8 @@ async function loadSalaryData() {
         <img class="talent-img" src="${t.img || ''}" onerror="this.style.display='none'" alt="">
         <div class="talent-info">
           <div class="talent-name">${t.name || t.id}</div>
-          <div class="talent-meta">${s.orders} order · ${t.waNumber ? '0'+t.waNumber : '-'}</div>
+          <div class="talent-meta">${s.orders} order · ${t.bankName || 'Bank belum diisi'}</div>
+          <div class="talent-meta" style="color:rgba(240,235,248,.35)">${t.bankNumber ? t.bankNumber + ' · ' + (t.bankHolder||'--') : 'Rekening belum diisi'}</div>
         </div>
         <div class="salary-info">
           <div class="salary-gross">Kotor: Rp ${gross.toLocaleString('id-ID')}</div>
