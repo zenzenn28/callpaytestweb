@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Rekap Gaji — CallPay Owner</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Nunito',sans-serif;background:#0A0A15;color:#F0EBF8;min-height:100vh;padding:20px}
+    .header{display:flex;align-items:center;gap:12px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,.08)}
+    .header h1{font-size:1.1rem;font-weight:900;flex:1}
+    .header a{font-size:.82rem;color:rgba(240,235,248,.4);text-decoration:none;font-weight:700;white-space:nowrap}
+    .period-info{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px}
+    .period-label{font-size:.82rem;font-weight:800;color:#FFB800}
+    .period-sub{font-size:.72rem;color:rgba(240,235,248,.4);font-weight:600;margin-top:2px}
+    .summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+    .summary-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px}
+    .summary-label{font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:rgba(240,235,248,.4);margin-bottom:4px}
+    .summary-value{font-size:1rem;font-weight:900}
+    .talent-list{display:flex;flex-direction:column;gap:10px}
+    .talent-row{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:12px;transition:border-color .2s}
+    .talent-row.paid{border-color:rgba(61,214,140,.3);background:rgba(61,214,140,.03)}
+    .talent-row.unpaid{border-color:rgba(255,184,0,.2)}
+    .talent-img{width:42px;height:42px;border-radius:10px;object-fit:cover;flex-shrink:0;background:#1E1E35}
+    .talent-info{flex:1;min-width:0}
+    .talent-name{font-size:.88rem;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .talent-meta{font-size:.72rem;color:rgba(240,235,248,.5);font-weight:600;margin-top:2px}
+    .salary-info{text-align:right;flex-shrink:0}
+    .salary-gross{font-size:.7rem;color:rgba(240,235,248,.4);font-weight:700}
+    .salary-net{font-size:.9rem;font-weight:900;color:#3DD68C}
+    .checkbox-wrap{display:flex;align-items:center;margin-left:4px}
+    .salary-checkbox{width:22px;height:22px;accent-color:#3DD68C;cursor:pointer;flex-shrink:0}
+    .empty{text-align:center;padding:48px 20px;color:rgba(240,235,248,.35)}
+    .loading{text-align:center;padding:40px;color:rgba(240,235,248,.4)}
+    /* Confirm Modal */
+    .confirm-modal{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:20px}
+    .confirm-modal.open{display:flex}
+    .confirm-box{background:linear-gradient(145deg,#16162A,#1E1E35);border:1px solid rgba(61,214,140,.25);border-radius:20px;padding:28px;width:100%;max-width:340px;text-align:center}
+    .confirm-icon{font-size:2.5rem;margin-bottom:12px}
+    .confirm-title{font-size:1rem;font-weight:900;margin-bottom:8px}
+    .confirm-sub{font-size:.82rem;color:rgba(240,235,248,.6);font-weight:600;line-height:1.6;margin-bottom:20px}
+    .confirm-name{color:#3DD68C;font-weight:900}
+    .confirm-amount{font-size:1.3rem;font-weight:900;color:#3DD68C;margin-bottom:6px}
+    .confirm-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .btn-cancel{padding:11px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:rgba(240,235,248,.7);font-family:'Nunito',sans-serif;font-weight:800;font-size:.85rem;cursor:pointer}
+    .btn-confirm{padding:11px;border-radius:12px;background:linear-gradient(135deg,#3DD68C,#2ea870);border:none;color:#fff;font-family:'Nunito',sans-serif;font-weight:800;font-size:.85rem;cursor:pointer}
+    @media(max-width:480px){
+      .summary{grid-template-columns:1fr 1fr}
+      .summary-card:last-child{grid-column:span 2}
+      .salary-gross{display:none}
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <a href="index.html">← Kembali ke Owner Panel</a>
+  <h1>💰 Rekap Gaji Talent</h1>
+</div>
+
+<div class="period-info">
+  <div>
+    <div class="period-label" id="period-label">Memuat periode...</div>
+    <div class="period-sub" id="period-sub"></div>
+  </div>
+  <div style="font-size:.72rem;color:rgba(240,235,248,.4);font-weight:700">Gajian tgl 5 & 20</div>
+</div>
+
+<div class="summary">
+  <div class="summary-card">
+    <div class="summary-label">Total Kotor</div>
+    <div class="summary-value" id="sum-gross" style="color:#F0EBF8">Rp 0</div>
+  </div>
+  <div class="summary-card">
+    <div class="summary-label">Total Bersih</div>
+    <div class="summary-value" id="sum-net" style="color:#3DD68C">Rp 0</div>
+  </div>
+  <div class="summary-card">
+    <div class="summary-label">Belum Dibayar</div>
+    <div class="summary-value" id="sum-unpaid" style="color:#FFB800">0</div>
+  </div>
+</div>
+
+<div class="talent-list" id="talent-list">
+  <div class="loading">⏳ Memuat data gaji...</div>
+</div>
+
+<!-- CONFIRM MODAL -->
+<div class="confirm-modal" id="confirm-modal">
+  <div class="confirm-box">
+    <div class="confirm-icon">💸</div>
+    <div class="confirm-title">Konfirmasi Transfer Gaji</div>
+    <div class="confirm-sub">
+      Apakah gaji untuk<br>
+      <span class="confirm-name" id="confirm-name">-</span><br>
+      sudah ditransfer?
+    </div>
+    <div class="confirm-amount" id="confirm-amount">Rp 0</div>
+    <div style="font-size:.72rem;color:rgba(240,235,248,.4);font-weight:600;margin-bottom:20px" id="confirm-bank">-</div>
+    <div class="confirm-btns">
+      <button class="btn-cancel" onclick="cancelConfirm()">Belum</button>
+      <button class="btn-confirm" onclick="doConfirm()">✅ Sudah Transfer</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js';
+import { getFirestore, collection, query, where, getDocs, doc, setDoc } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js';
+
+const FIREBASE_CONFIG = {
+  apiKey           : 'AIzaSyBLPe_yx28LyefI856Ysxz3YEPnwA0ENFU',
+  authDomain       : 'callpay-28a28.firebaseapp.com',
+  projectId        : 'callpay-28a28',
+  storageBucket    : 'callpay-28a28.firebasestorage.app',
+  messagingSenderId: '44722427776',
+  appId            : '1:44722427776:web:29d1a297746cd83d685365'
+};
+const app = getApps().length ? getApps()[0] : initializeApp(FIREBASE_CONFIG);
+const db  = getFirestore(app);
+
+function getCurrentPeriod() {
+  const now    = new Date();
+  const year   = now.getFullYear();
+  const month  = now.getMonth();
+  const day    = now.getDate();
+  const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+
+  if (day >= 5 && day <= 19) {
+    const start = new Date(year, month, 5);
+    const end   = new Date(year, month, 19, 23, 59, 59);
+    return {
+      id    : `${year}-${String(month+1).padStart(2,'0')}-p1`,
+      label : `5–19 ${months[month]} ${year}`,
+      start, end,
+      nextPayday: `20 ${months[month]} ${year}`
+    };
+  } else {
+    let sm = month, sy = year;
+    if (day < 5) { sm = month - 1; if (sm < 0) { sm = 11; sy = year - 1; } }
+    const em = (sm + 1) % 12;
+    const ey = em === 0 ? sy + 1 : sy;
+    const start = new Date(sy, sm, 20);
+    const end   = new Date(ey, em, 4, 23, 59, 59);
+    return {
+      id    : `${sy}-${String(sm+1).padStart(2,'0')}-p2`,
+      label : `20 ${months[sm]}–4 ${months[em]} ${ey}`,
+      start, end,
+      nextPayday: `5 ${months[em]} ${ey}`
+    };
+  }
+}
+
+const period = getCurrentPeriod();
+document.getElementById('period-label').textContent = `Periode ${period.label}`;
+document.getElementById('period-sub').textContent   = `Gajian berikutnya: ${period.nextPayday}`;
+
+let _pendingConfirm = null;
+
+async function loadSalaryData() {
+  try {
+    const talentsSnap = await getDocs(collection(db, 'talents'));
+    const talents = [];
+    talentsSnap.forEach(d => {
+      const t = d.data();
+      if (t.status === 'approved') talents.push({ id: d.id, ...t });
+    });
+
+    const ordersSnap = await getDocs(query(collection(db, 'orders'), where('status', '==', 'accepted')));
+    const salaryMap  = {};
+    ordersSnap.forEach(d => {
+      const order     = d.data();
+      const createdAt = order.createdAt ? new Date(order.createdAt) : null;
+      if (!createdAt || createdAt < period.start || createdAt > period.end) return;
+      const tid = order.talentId;
+      if (!salaryMap[tid]) salaryMap[tid] = { gross: 0, orders: 0 };
+      salaryMap[tid].gross  += Number(order.originalPrice || order.price || 0);
+      salaryMap[tid].orders += 1;
+    });
+
+    const paidMap = {};
+    try {
+      const salarySnap = await getDocs(query(collection(db, 'salary_periods'), where('periodId', '==', period.id)));
+      salarySnap.forEach(d => {
+        const s = d.data();
+        paidMap[s.talentId] = { status: s.status, paidAt: s.paidAt, docId: d.id };
+      });
+    } catch(e) { console.warn('No salary_periods yet'); }
+
+    let totalGross = 0, totalNet = 0, unpaidCount = 0;
+    talents.forEach(t => {
+      const s = salaryMap[t.id];
+      if (!s || s.gross === 0) return;
+      totalGross += s.gross;
+      totalNet   += Math.round(s.gross * 0.6);
+      if (paidMap[t.id]?.status !== 'paid') unpaidCount++;
+    });
+
+    document.getElementById('sum-gross').textContent  = 'Rp ' + totalGross.toLocaleString('id-ID');
+    document.getElementById('sum-net').textContent    = 'Rp ' + totalNet.toLocaleString('id-ID');
+    document.getElementById('sum-unpaid').textContent = unpaidCount + ' talent';
+
+    const rows = talents
+      .filter(t => salaryMap[t.id] && salaryMap[t.id].gross > 0)
+      .sort((a, b) => {
+        const aPaid = paidMap[a.id]?.status === 'paid' ? 1 : 0;
+        const bPaid = paidMap[b.id]?.status === 'paid' ? 1 : 0;
+        return aPaid - bPaid;
+      });
+
+    if (!rows.length) {
+      document.getElementById('talent-list').innerHTML = `
+        <div class="empty">
+          <div style="font-size:2.5rem;margin-bottom:12px">📭</div>
+          <div style="font-weight:800">Belum ada order diterima di periode ini</div>
+        </div>`;
+      return;
+    }
+
+    document.getElementById('talent-list').innerHTML = rows.map(t => {
+      const s      = salaryMap[t.id];
+      const gross  = s.gross;
+      const net    = Math.round(gross * 0.6);
+      const paid   = paidMap[t.id]?.status === 'paid';
+      const docId  = paidMap[t.id]?.docId || `${t.id}_${period.id}`;
+      const paidAt = paidMap[t.id]?.paidAt
+        ? new Date(paidMap[t.id].paidAt).toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'})
+        : '';
+      return `
+      <div class="talent-row ${paid ? 'paid' : 'unpaid'}" id="row-${t.id}">
+        <img class="talent-img" src="${t.img||''}" onerror="this.style.display='none'" alt="">
+        <div class="talent-info">
+          <div class="talent-name">${t.name||t.id}</div>
+          <div class="talent-meta">${s.orders} order · ${t.bankName||'Bank belum diisi'}</div>
+          <div class="talent-meta" style="color:rgba(240,235,248,.35)">${t.bankNumber ? t.bankNumber+' · '+(t.bankHolder||'--') : 'Rekening belum diisi'}</div>
+          ${paid && paidAt ? `<div class="talent-meta" style="color:rgba(61,214,140,.5)">✅ Dibayar ${paidAt}</div>` : ''}
+        </div>
+        <div class="salary-info">
+          <div class="salary-gross">Kotor: Rp ${gross.toLocaleString('id-ID')}</div>
+          <div class="salary-net">Rp ${net.toLocaleString('id-ID')}</div>
+        </div>
+        <div class="checkbox-wrap">
+          <input type="checkbox" class="salary-checkbox" id="cb-${t.id}"
+            ${paid ? 'checked' : ''}
+            onchange="onCheckboxChange('${t.id}','${docId}','${t.name||t.id}',${gross},${net},'${t.bankName||''}','${t.bankNumber||''}','${t.bankHolder||''}',this)">
+        </div>
+      </div>`;
+    }).join('');
+
+  } catch(e) {
+    console.error('Load salary error:', e);
+    document.getElementById('talent-list').innerHTML = `<div class="empty">❌ Gagal memuat data: ${e.message}</div>`;
+  }
+}
+
+window.onCheckboxChange = function(talentId, docId, talentName, gross, net, bankName, bankNumber, bankHolder, checkbox) {
+  if (!checkbox.checked) {
+    togglePaid(talentId, docId, talentName, gross, net, false);
+    return;
+  }
+  checkbox.checked = false;
+  _pendingConfirm  = { talentId, docId, talentName, gross, net };
+  document.getElementById('confirm-name').textContent   = talentName;
+  document.getElementById('confirm-amount').textContent = 'Rp ' + net.toLocaleString('id-ID');
+  document.getElementById('confirm-bank').textContent   = bankName && bankNumber
+    ? `${bankName} · ${bankNumber} · ${bankHolder}`
+    : 'Rekening belum diisi';
+  document.getElementById('confirm-modal').classList.add('open');
+};
+
+window.cancelConfirm = function() {
+  _pendingConfirm = null;
+  document.getElementById('confirm-modal').classList.remove('open');
+};
+
+window.doConfirm = async function() {
+  if (!_pendingConfirm) return;
+  const { talentId, docId, talentName, gross, net } = _pendingConfirm;
+  document.getElementById('confirm-modal').classList.remove('open');
+  _pendingConfirm = null;
+  await togglePaid(talentId, docId, talentName, gross, net, true);
+};
+
+async function togglePaid(talentId, docId, talentName, gross, net, isPaid) {
+  try {
+    const now = new Date().toISOString();
+    await setDoc(doc(db, 'salary_periods', docId), {
+      talentId, talentName,
+      periodId   : period.id,
+      periodLabel: period.label,
+      totalGross : gross,
+      totalNet   : net,
+      status     : isPaid ? 'paid' : 'pending',
+      paidAt     : isPaid ? now : null,
+      createdAt  : now,
+    }, { merge: true });
+
+    const cb = document.getElementById(`cb-${talentId}`);
+    if (cb) cb.checked = isPaid;
+
+    const row = document.getElementById(`row-${talentId}`);
+    if (row) {
+      row.classList.toggle('paid', isPaid);
+      row.classList.toggle('unpaid', !isPaid);
+      const list = document.getElementById('talent-list');
+      isPaid ? list.appendChild(row) : list.insertBefore(row, list.firstChild);
+    }
+
+    loadSalaryData();
+  } catch(e) {
+    alert('Gagal update: ' + e.message);
+    const cb = document.getElementById(`cb-${talentId}`);
+    if (cb) cb.checked = !isPaid;
+  }
+}
+
+loadSalaryData();
+</script>
+</body>
+</html>
