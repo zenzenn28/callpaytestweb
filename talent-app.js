@@ -429,6 +429,7 @@ function renderOrderList(orders) {
             <span style="font-size:1rem">✅</span>
             <div style="min-width:0">
               <div style="font-size:.8rem;font-weight:900;color:#3DD68C">${order.service} · ${order.duration} menit</div>
+              <div style="font-size:.78rem;color:rgba(240,235,248,.5);font-weight:700">Rp ${Math.round(Number(order.originalPrice||order.price||0)*0.6).toLocaleString('id-ID')}</div>
               <div style="font-size:.82rem;font-weight:800;color:#F0EBF8;letter-spacing:.03em">${displayNum}</div>
             </div>
           </div>
@@ -534,6 +535,7 @@ window.respondOrder = async function(orderId, action) {
               <span style="font-size:1rem">🎉</span>
               <div style="min-width:0">
                 <div style="font-size:.8rem;font-weight:900;color:#3DD68C">Diterima!</div>
+                <div style="font-size:.78rem;color:rgba(240,235,248,.5);font-weight:700">Rp ${Math.round(Number(data.price||0)*0.6).toLocaleString('id-ID')}</div>
                 <div style="font-size:.82rem;font-weight:800;color:#F0EBF8;letter-spacing:.03em">${displayNum}</div>
               </div>
             </div>
