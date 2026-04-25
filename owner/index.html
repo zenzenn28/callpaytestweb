@@ -12,7 +12,6 @@ function toggleSidebar(){const sb=document.querySelector('.sidebar'),ov=document
 function closeSidebar(){const sb=document.querySelector('.sidebar'),ov=document.getElementById('sidebar-overlay'),btn=document.getElementById('hamburger-btn');if(!sb||!ov||!btn)return;sb.classList.remove('open');ov.classList.remove('open');btn.textContent='☰';}
 </script>
 <script>
-// Auth check secepat mungkin — cegah flash login page
 (function(){
   var ok = sessionStorage.getItem('cp_owner') === '1';
   document.addEventListener('DOMContentLoaded', function() {
@@ -59,16 +58,18 @@ function closeSidebar(){const sb=document.querySelector('.sidebar'),ov=document.
       <div class="sidebar-logo-sub">👑 Owner Panel</div>
     </div>
     <nav class="sidebar-nav">
-      <a href="index.html"        class="nav-item active"><span class="nav-icon">📊</span>Dashboard</a>
+      <a href="index.html"         class="nav-item active"><span class="nav-icon">📊</span>Dashboard</a>
       <a href="create-talent.html" class="nav-item"><span class="nav-icon">➕</span>Buat Akun Talent</a>
       <a href="review.html"        class="nav-item" id="nav-review"><span class="nav-icon">🔐</span>Kelola Akses Layanan</a>
       <a href="services.html"      class="nav-item"><span class="nav-icon">🎯</span>Kelola Layanan</a>
-      <a href="pricelist.html"     class="nav-item"><span class="nav-icon">💰</span>Kelola Pricelist</a>
+      <a href="pricelist.html"     class="nav-item"><span class="nav-icon">💲</span>Kelola Pricelist</a>
+      <a href="salary.html"        class="nav-item"><span class="nav-icon">💰</span>Rekap Gaji</a>
       <a href="settings.html"      class="nav-item"><span class="nav-icon">⚙️</span>Pengaturan</a>
       <a href="../index.html"      class="nav-item" id="back-web"><span class="nav-icon">🌐</span>Lihat Website</a>
     </nav>
     <div class="sidebar-footer"><button class="logout-btn" id="logout-btn">Logout →</button></div>
   </aside>
+
   <main class="main">
     <div class="page-header">
       <h1>Owner Panel 👑</h1>
@@ -84,7 +85,12 @@ function closeSidebar(){const sb=document.querySelector('.sidebar'),ov=document.
         <div class="shortcut-icon">📋</div>
         <div class="shortcut-title">Kelola Akses Layanan</div>
         <div class="shortcut-desc">Mengatur akses layanan per talent</div>
-        <div id="pending-badge" style="display:none;margin-top:10px;background:rgba(255,184,0,.12);color:var(--yellow);border:1px solid rgba(255,184,0,.25);padding:3px 14px;border-radius:99px;font-size:.72rem;font-weight:800;display:inline-block"></div>
+        <div id="pending-badge" style="display:none;margin-top:10px;background:rgba(255,184,0,.12);color:var(--yellow);border:1px solid rgba(255,184,0,.25);padding:3px 14px;border-radius:99px;font-size:.72rem;font-weight:800"></div>
+      </a>
+      <a href="salary.html" class="shortcut-card">
+        <div class="shortcut-icon">💰</div>
+        <div class="shortcut-title">Rekap Gaji</div>
+        <div class="shortcut-desc">Kelola & konfirmasi pembayaran gaji talent</div>
       </a>
       <a href="settings.html" class="shortcut-card">
         <div class="shortcut-icon">⚙️</div>
@@ -98,9 +104,7 @@ function closeSidebar(){const sb=document.querySelector('.sidebar'),ov=document.
 <div class="toast" id="toast"></div>
 <script type="module">
 import { DB } from '../admin/data.js?v=11';
-
 const SESSION_KEY = 'cp_owner';
-
 function isOwnerLoggedIn() { return sessionStorage.getItem(SESSION_KEY) === '1'; }
 function setOwnerLogin(v)  { v ? sessionStorage.setItem(SESSION_KEY,'1') : sessionStorage.removeItem(SESSION_KEY); }
 
@@ -128,19 +132,21 @@ async function loadPendingBadge() {
     const { initializeApp, getApps } = await import('https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js');
     const { getFirestore, collection, getDocs } = await import('https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js');
     const FIREBASE_CONFIG = {
-      apiKey:'AIzaSyBLPe_yx28LyefI856Ysxz3YEPnwA0ENFU',
-      authDomain:'callpay-28a28.firebaseapp.com', projectId:'callpay-28a28',
-      storageBucket:'callpay-28a28.firebasestorage.app', messagingSenderId:'44722427776',
-      appId:'1:44722427776:web:29d1a297746cd83d685365'
+      apiKey           : 'AIzaSyBLPe_yx28LyefI856Ysxz3YEPnwA0ENFU',
+      authDomain       : 'callpay-28a28.firebaseapp.com',
+      projectId        : 'callpay-28a28',
+      storageBucket    : 'callpay-28a28.firebasestorage.app',
+      messagingSenderId: '44722427776',
+      appId            : '1:44722427776:web:29d1a297746cd83d685365'
     };
-    const app = getApps().length ? getApps()[0] : initializeApp(FIREBASE_CONFIG);
-    const db  = getFirestore(app);
+    const app  = getApps().length ? getApps()[0] : initializeApp(FIREBASE_CONFIG);
+    const db   = getFirestore(app);
     const snap = await getDocs(collection(db, 'talents'));
     const pendingCount = snap.docs.filter(d => ['pending','edit-pending'].includes(d.data().status)).length;
     const badge = document.getElementById('pending-badge');
     if (pendingCount > 0 && badge) {
-      badge.textContent = `${pendingCount} menunggu review`;
-      badge.style.display = 'inline-block';
+      badge.textContent    = `${pendingCount} menunggu review`;
+      badge.style.display  = 'inline-block';
     }
   } catch(e) {}
 }
@@ -153,12 +159,16 @@ document.getElementById('logout-btn').onclick = () => {
   document.getElementById('login-page').style.display = 'flex';
   document.getElementById('p').value = '';
 };
-document.getElementById('back-web').addEventListener('click', (e) => { e.preventDefault(); window.open('../index.html','_blank'); });
-
+document.getElementById('back-web').addEventListener('click', (e) => {
+  e.preventDefault();
+  window.open('../index.html', '_blank');
+});
 document.addEventListener('DOMContentLoaded', async () => {
   await DB.getSettingsAsync();
   if (isOwnerLoggedIn()) showDash();
-  document.querySelectorAll('.nav-item').forEach(a => a.addEventListener('click', () => { if(window.innerWidth<=768) closeSidebar(); }));
+  document.querySelectorAll('.nav-item').forEach(a => a.addEventListener('click', () => {
+    if (window.innerWidth <= 768) closeSidebar();
+  }));
 });
 </script>
 </body>
