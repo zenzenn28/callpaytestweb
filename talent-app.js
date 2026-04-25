@@ -220,17 +220,10 @@ async function loadSalaryData() {
           </div>
           <div style="font-size:.72rem;color:rgba(61,214,140,.6);font-weight:700">Tap untuk riwayat →</div>
         </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-          <div style="background:rgba(255,255,255,.04);border-radius:10px;padding:10px 12px">
-            <div style="font-size:.68rem;font-weight:800;color:rgba(240,235,248,.4);text-transform:uppercase;margin-bottom:3px">Kotor</div>
-            <div style="font-size:.95rem;font-weight:900;color:#F0EBF8">Rp ${totalGross.toLocaleString('id-ID')}</div>
-          </div>
-          <div style="background:rgba(61,214,140,.08);border-radius:10px;padding:10px 12px">
-            <div style="font-size:.68rem;font-weight:800;color:#3DD68C;text-transform:uppercase;margin-bottom:3px">Bersih (60%)</div>
-            <div style="font-size:.95rem;font-weight:900;color:#3DD68C">Rp ${totalNet.toLocaleString('id-ID')}</div>
-          </div>
+        <div style="background:rgba(61,214,140,.08);border-radius:10px;padding:12px 14px">
+          <div style="font-size:.68rem;font-weight:800;color:#3DD68C;text-transform:uppercase;margin-bottom:3px">Gaji Bersih</div>
+          <div style="font-size:1.3rem;font-weight:900;color:#3DD68C">Rp ${totalNet.toLocaleString('id-ID')}</div>
         </div>
-        <div style="font-size:.72rem;color:rgba(240,235,248,.35);font-weight:600;margin-top:8px">Potongan agensi 40%: Rp ${potongan.toLocaleString('id-ID')}</div>
       </div>`;
   } catch(e) {
     console.error('Load salary error:', e);
@@ -487,7 +480,8 @@ function renderOrderList(orders) {
       <div style="margin-bottom:12px">
         <div style="font-size:.95rem;font-weight:900;margin-bottom:4px">📋 ${order.service}</div>
         <div style="font-size:.82rem;color:rgba(240,235,248,.6);font-weight:700">⏱️ ${order.duration} menit · 💰 Rp ${Number(order.price||0).toLocaleString('id-ID')}</div>
-        ${order.note ? `<div style="font-size:.8rem;color:rgba(240,235,248,.5);margin-top:6px;font-style:italic">\${order.note}\</div>` : ''}
+        <div style="font-size:.78rem;color:rgba(240,235,248,.4);font-weight:700;margin-top:4px">📱 xxxx-xxxx-${(order.custWa||''). slice(-4)}</div>
+        ${order.note ? `<div style="font-size:.8rem;color:rgba(240,235,248,.5);margin-top:4px;font-style:italic">\${order.note}\</div>` : ''}
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
         <button onclick="respondOrder('${order.orderId}','reject')" style="padding:11px;border-radius:12px;background:rgba(255,92,92,.1);border:1px solid rgba(255,92,92,.3);color:#FF5C5C;font-family:'Nunito',sans-serif;font-weight:800;font-size:.85rem;cursor:pointer">❌ Tolak</button>
@@ -666,6 +660,12 @@ function buildProfileForm(t, isSettingMode) {
       <div style="font-size:.72rem;color:var(--muted);font-weight:600;margin-top:4px">Digunakan untuk menerima notifikasi order masuk</div>
     </div>
     <div class="setup-section">
+      <div class="setup-label">🏦 Rekening Bank (untuk transfer gaji)</div>
+      <input type="text" id="s-bank-name" class="setup-input" value="${t.bankName||''}" placeholder="Nama Bank (contoh: BCA, BNI, Mandiri)" style="margin-bottom:8px">
+      <input type="text" id="s-bank-number" class="setup-input" value="${t.bankNumber||''}" placeholder="Nomor Rekening" style="margin-bottom:8px">
+      <input type="text" id="s-bank-holder" class="setup-input" value="${t.bankHolder||''}" placeholder="Nama Pemilik Rekening">
+    </div>
+    <div class="setup-section">
       <div class="setup-label">🎯 Layanan *</div>
       <div style="display:flex;flex-wrap:wrap;gap:8px" id="svc-wrap">
         ${ALL_SERVICES.map(s=>{
@@ -801,6 +801,9 @@ window.submitProfile = async function() {
     const finalImg   = _uploadedPhotoUrl   || currentTalent.img   || '';
     const finalAudio = _uploadedAudioUrl   || currentTalent.audio || '';
     // Simpan langsung ke Firestore tanpa review admin
+    const bankName   = document.getElementById('s-bank-name')?.value.trim() || '';
+    const bankNumber = document.getElementById('s-bank-number')?.value.trim() || '';
+    const bankHolder = document.getElementById('s-bank-holder')?.value.trim() || '';
     await setDoc(doc(db, 'talents', _docId), {
       name    : finalName,
       age     : finalAge,
@@ -809,6 +812,9 @@ window.submitProfile = async function() {
       img     : finalImg,
       audio   : finalAudio,
       waNumber,
+      bankName,
+      bankNumber,
+      bankHolder,
       _pendingEdit: false,
     }, { merge: true });
     currentTalent = { ...currentTalent, name:finalName, age:finalAge, bio, services, img:finalImg, audio:finalAudio };
