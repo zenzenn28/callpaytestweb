@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Log Aktivitas Order — CallPay Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Nunito',sans-serif;background:#0A0A15;color:#F0EBF8;min-height:100vh;padding:20px}
+    .header{display:flex;align-items:center;gap:12px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,.08)}
+    .header h1{font-size:1.1rem;font-weight:900;flex:1}
+    .header a{font-size:.82rem;color:rgba(240,235,248,.4);text-decoration:none;font-weight:700;white-space:nowrap}
+    .live-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:99px;background:rgba(61,214,140,.1);border:1px solid rgba(61,214,140,.3);font-size:.72rem;font-weight:800;color:#3DD68C}
+    .live-dot{width:7px;height:7px;border-radius:50%;background:#3DD68C;animation:livePulse 1.5s ease-in-out infinite}
+    @keyframes livePulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
+
+    /* Summary */
+    .summary{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:20px}
+    .summary-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px;text-align:center}
+    .summary-icon{font-size:1.3rem;margin-bottom:4px}
+    .summary-val{font-size:1.2rem;font-weight:900}
+    .summary-lbl{font-size:.62rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:rgba(240,235,248,.4);margin-top:2px}
+
+    /* Filter & Search */
+    .toolbar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+    .search-input{flex:1;min-width:180px;padding:9px 14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:10px;color:#F0EBF8;font-family:'Nunito',sans-serif;font-size:.85rem;font-weight:600;outline:none}
+    .search-input:focus{border-color:rgba(249,168,201,.4)}
+    .search-input::placeholder{color:rgba(240,235,248,.3)}
+    .filter-tabs{display:flex;gap:6px;flex-wrap:wrap}
+    .filter-tab{padding:6px 14px;border-radius:99px;font-family:'Nunito',sans-serif;font-size:.75rem;font-weight:800;cursor:pointer;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:rgba(240,235,248,.5);transition:all .2s}
+    .filter-tab.active.all{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.3);color:#fff}
+    .filter-tab.active.pending{background:rgba(255,184,0,.12);border-color:rgba(255,184,0,.35);color:#FFB800}
+    .filter-tab.active.accepted{background:rgba(61,214,140,.12);border-color:rgba(61,214,140,.35);color:#3DD68C}
+    .filter-tab.active.rejected{background:rgba(255,92,92,.12);border-color:rgba(255,92,92,.35);color:#FF5C5C}
+    .filter-tab.active.expired{background:rgba(255,184,0,.08);border-color:rgba(255,184,0,.25);color:#FFB800}
+    .filter-tab.active.waiting{background:rgba(167,139,250,.12);border-color:rgba(167,139,250,.35);color:#a78bfa}
+
+    /* Order log list */
+    .log-list{display:flex;flex-direction:column;gap:10px}
+
+    .log-card{border-radius:14px;padding:14px 16px;border:1px solid;transition:border-color .3s,background .3s}
+    .log-card.status-pending{background:rgba(255,184,0,.04);border-color:rgba(255,184,0,.3)}
+    .log-card.status-accepted{background:rgba(61,214,140,.04);border-color:rgba(61,214,140,.35)}
+    .log-card.status-rejected{background:rgba(255,92,92,.04);border-color:rgba(255,92,92,.3)}
+    .log-card.status-expired{background:rgba(255,184,0,.03);border-color:rgba(255,184,0,.2)}
+    .log-card.status-waiting_payment{background:rgba(167,139,250,.04);border-color:rgba(167,139,250,.25)}
+
+    .log-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px}
+    .log-id{font-size:.72rem;font-family:monospace;color:rgba(240,235,248,.35);font-weight:600}
+    .log-badge{font-size:.68rem;font-weight:900;padding:4px 10px;border-radius:99px;white-space:nowrap;flex-shrink:0}
+    .badge-pending{background:rgba(255,184,0,.15);color:#FFB800;border:1px solid rgba(255,184,0,.3)}
+    .badge-accepted{background:rgba(61,214,140,.12);color:#3DD68C;border:1px solid rgba(61,214,140,.3)}
+    .badge-rejected{background:rgba(255,92,92,.12);color:#FF5C5C;border:1px solid rgba(255,92,92,.3)}
+    .badge-expired{background:rgba(255,184,0,.08);color:#FFB800;border:1px solid rgba(255,184,0,.2)}
+    .badge-waiting_payment{background:rgba(167,139,250,.12);color:#a78bfa;border:1px solid rgba(167,139,250,.3)}
+
+    .log-main{display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;margin-bottom:8px}
+    .log-field{font-size:.78rem;font-weight:700;color:rgba(240,235,248,.55)}
+    .log-field span{color:#F0EBF8;font-weight:800}
+    .log-field.full{grid-column:span 2}
+    .log-time{font-size:.7rem;color:rgba(240,235,248,.3);font-weight:600;margin-top:6px;padding-top:8px;border-top:1px solid rgba(255,255,255,.05)}
+
+    .empty{text-align:center;padding:48px 20px;color:rgba(240,235,248,.35)}
+    .loading{text-align:center;padding:40px;color:rgba(240,235,248,.4);font-weight:700}
+
+    @media(max-width:600px){
+      .summary{grid-template-columns:repeat(3,1fr)}
+      .summary-card:nth-child(4),.summary-card:nth-child(5){grid-column:span 1}
+      .log-main{grid-template-columns:1fr}
+      .log-field.full{grid-column:span 1}
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <a href="index.html">← Kembali</a>
+  <h1>📋 Log Aktivitas Order</h1>
+  <div class="live-badge"><div class="live-dot"></div> LIVE</div>
+</div>
+
+<!-- Summary -->
+<div class="summary">
+  <div class="summary-card">
+    <div class="summary-icon">📋</div>
+    <div class="summary-val" id="sum-all">0</div>
+    <div class="summary-lbl">Total</div>
+  </div>
+  <div class="summary-card">
+    <div class="summary-icon">⏳</div>
+    <div class="summary-val" id="sum-pending" style="color:#FFB800">0</div>
+    <div class="summary-lbl">Pending</div>
+  </div>
+  <div class="summary-card">
+    <div class="summary-icon">✅</div>
+    <div class="summary-val" id="sum-accepted" style="color:#3DD68C">0</div>
+    <div class="summary-lbl">Diterima</div>
+  </div>
+  <div class="summary-card">
+    <div class="summary-icon">❌</div>
+    <div class="summary-val" id="sum-rejected" style="color:#FF5C5C">0</div>
+    <div class="summary-lbl">Ditolak</div>
+  </div>
+  <div class="summary-card">
+    <div class="summary-icon">⏰</div>
+    <div class="summary-val" id="sum-expired" style="color:rgba(255,184,0,.7)">0</div>
+    <div class="summary-lbl">Expired</div>
+  </div>
+</div>
+
+<!-- Toolbar -->
+<div class="toolbar">
+  <input type="text" class="search-input" id="search-input" placeholder="🔍 Cari ID order, talent, layanan, WA...">
+</div>
+<div class="filter-tabs" style="margin-bottom:16px">
+  <button class="filter-tab active all"     onclick="setFilter('all',this)">Semua</button>
+  <button class="filter-tab waiting"        onclick="setFilter('waiting_payment',this)">🟣 Menunggu Bayar</button>
+  <button class="filter-tab pending"        onclick="setFilter('pending',this)">🟡 Pending</button>
+  <button class="filter-tab accepted"       onclick="setFilter('accepted',this)">🟢 Diterima</button>
+  <button class="filter-tab rejected"       onclick="setFilter('rejected',this)">🔴 Ditolak</button>
+  <button class="filter-tab expired"        onclick="setFilter('expired',this)">⏰ Expired</button>
+</div>
+
+<!-- Log list -->
+<div class="log-list" id="log-list">
+  <div class="loading">⏳ Memuat log order...</div>
+</div>
+
+<script type="module">
+import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js';
+import { getFirestore, collection, onSnapshot, query, orderBy } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js';
+
+const FIREBASE_CONFIG = {
+  apiKey           : 'AIzaSyBLPe_yx28LyefI856Ysxz3YEPnwA0ENFU',
+  authDomain       : 'callpay-28a28.firebaseapp.com',
+  projectId        : 'callpay-28a28',
+  storageBucket    : 'callpay-28a28.firebasestorage.app',
+  messagingSenderId: '44722427776',
+  appId            : '1:44722427776:web:29d1a297746cd83d685365'
+};
+const app = getApps().length ? getApps()[0] : initializeApp(FIREBASE_CONFIG);
+const db  = getFirestore(app);
+
+let allOrders    = [];
+let activeFilter = 'all';
+let searchQuery  = '';
+
+function formatDate(iso) {
+  if (!iso) return '-';
+  return new Date(iso).toLocaleDateString('id-ID', {
+    weekday:'short', day:'2-digit', month:'short',
+    year:'numeric', hour:'2-digit', minute:'2-digit'
+  });
+}
+
+function formatWa(wa) {
+  if (!wa) return '-';
+  let num = wa.toString().replace(/\D/g, '');
+  if (num.startsWith('62')) num = '0' + num.slice(2);
+  else if (!num.startsWith('0')) num = '0' + num;
+  return num;
+}
+
+function formatPrice(p) {
+  return p ? 'Rp ' + Number(p).toLocaleString('id-ID') : '-';
+}
+
+function getStatusBadge(status) {
+  const map = {
+    pending        : { label: '⏳ Pending',          cls: 'badge-pending' },
+    accepted       : { label: '✅ Diterima',          cls: 'badge-accepted' },
+    rejected       : { label: '❌ Ditolak',           cls: 'badge-rejected' },
+    expired        : { label: '⏰ Expired',           cls: 'badge-expired' },
+    waiting_payment: { label: '🟣 Menunggu Bayar',   cls: 'badge-waiting_payment' },
+  };
+  return map[status] || { label: status, cls: 'badge-pending' };
+}
+
+function renderOrders() {
+  let list = allOrders.filter(o => {
+    if (activeFilter !== 'all' && o.status !== activeFilter) return false;
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      return (o.orderId||'').toLowerCase().includes(q) ||
+             (o.talentName||'').toLowerCase().includes(q) ||
+             (o.service||'').toLowerCase().includes(q) ||
+             (o.custWa||'').includes(q);
+    }
+    return true;
+  });
+
+  // Update summary
+  document.getElementById('sum-all').textContent      = allOrders.length;
+  document.getElementById('sum-pending').textContent  = allOrders.filter(o => o.status === 'pending').length;
+  document.getElementById('sum-accepted').textContent = allOrders.filter(o => o.status === 'accepted').length;
+  document.getElementById('sum-rejected').textContent = allOrders.filter(o => o.status === 'rejected').length;
+  document.getElementById('sum-expired').textContent  = allOrders.filter(o => o.status === 'expired').length;
+
+  if (!list.length) {
+    document.getElementById('log-list').innerHTML = `
+      <div class="empty">
+        <div style="font-size:2.5rem;margin-bottom:12px">📭</div>
+        <div style="font-weight:800">Tidak ada order ditemukan</div>
+      </div>`;
+    return;
+  }
+
+  document.getElementById('log-list').innerHTML = list.map(o => {
+    const { label, cls } = getStatusBadge(o.status);
+    const custWa = formatWa(o.custWa);
+    const net    = o.originalPrice ? Math.round(Number(o.originalPrice) * 0.6) : 0;
+
+    return `
+    <div class="log-card status-${o.status}">
+      <div class="log-top">
+        <div class="log-id">${o.orderId || o.id || '-'}</div>
+        <div class="log-badge ${cls}">${label}</div>
+      </div>
+      <div class="log-main">
+        <div class="log-field">👤 Talent: <span>${o.talentName || o.talentId || '-'}</span></div>
+        <div class="log-field">📱 WA Customer: <span>${custWa}</span></div>
+        <div class="log-field">📋 Layanan: <span>${o.service || '-'}</span></div>
+        <div class="log-field">⏱️ Durasi: <span>${o.duration ? o.duration + ' menit' : '-'}</span></div>
+        <div class="log-field">💰 Harga: <span>${formatPrice(o.originalPrice || o.price)}</span></div>
+        <div class="log-field">💵 Gaji Talent: <span style="color:#3DD68C">${net ? 'Rp ' + net.toLocaleString('id-ID') : '-'}</span></div>
+        <div class="log-field">🎟️ Voucher: <span>${o.useVoucher ? (o.voucherCode || 'Ya') : 'Tidak'}</span></div>
+        <div class="log-field">🏷️ Admin: <span>${o.adminParam || 'callpay'}</span></div>
+        ${o.note ? `<div class="log-field full">📝 Catatan: <span>${o.note}</span></div>` : ''}
+        ${o.expiredAt ? `<div class="log-field full">⏰ Timer Habis: <span>${formatDate(o.expiredAt)}</span></div>` : ''}
+      </div>
+      <div class="log-time">
+        🕐 Order masuk: ${formatDate(o.createdAt)}
+        ${o.paidAt      ? ' · Bayar: '    + formatDate(o.paidAt)      : ''}
+        ${o.respondedAt ? ' · Respons: '  + formatDate(o.respondedAt) : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// Realtime listener
+onSnapshot(collection(db, 'orders'), snap => {
+  allOrders = [];
+  snap.forEach(d => allOrders.push({ id: d.id, ...d.data() }));
+  // Sort: terbaru di atas
+  allOrders.sort((a, b) => new Date(b.createdAt||0) - new Date(a.createdAt||0));
+  renderOrders();
+});
+
+window.setFilter = function(filter, btn) {
+  activeFilter = filter;
+  document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  renderOrders();
+};
+
+document.getElementById('search-input').addEventListener('input', function() {
+  searchQuery = this.value.trim();
+  renderOrders();
+});
+</script>
+</body>
+</html>
