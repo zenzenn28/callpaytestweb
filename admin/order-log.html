@@ -219,7 +219,7 @@ function renderOrders() {
     const net    = o.originalPrice ? Math.round(Number(o.originalPrice) * 0.6) : 0;
     // Tampilkan voucher hanya di rejected dan pending (waktu habis)
     const showVoucher = ['rejected','expired'].includes(o.status);
-    const voucherCode = o.voucherCode || '-';
+    const voucherCode = o.voucherCode || voucherMap[o.orderId || o.id] || '-';
 
     return `
     <div class="log-card status-${o.status}">
@@ -246,11 +246,23 @@ function renderOrders() {
   }).join('');
 }
 
-// Realtime listener
+// Map orderId → voucherCode (dari koleksi vouchers)
+let voucherMap = {};
+
+// Load vouchers realtime
+onSnapshot(collection(db, 'vouchers'), snap => {
+  voucherMap = {};
+  snap.forEach(d => {
+    const v = d.data();
+    if (v.originalOrder) voucherMap[v.originalOrder] = v.code || d.id;
+  });
+  renderOrders();
+});
+
+// Realtime listener orders
 onSnapshot(collection(db, 'orders'), snap => {
   allOrders = [];
   snap.forEach(d => allOrders.push({ id: d.id, ...d.data() }));
-  // Sort: terbaru di atas
   allOrders.sort((a, b) => new Date(b.createdAt||0) - new Date(a.createdAt||0));
   renderOrders();
 });
