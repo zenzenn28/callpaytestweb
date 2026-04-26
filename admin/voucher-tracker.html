@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Voucher Tracker — CallPay Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Nunito',sans-serif;background:#0A0A15;color:#F0EBF8;min-height:100vh;padding:20px}
+    .header{display:flex;align-items:center;gap:12px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,.08)}
+    .header h1{font-size:1.1rem;font-weight:900;flex:1}
+    .header a{font-size:.82rem;color:rgba(240,235,248,.4);text-decoration:none;font-weight:700;white-space:nowrap}
+
+    /* Filter tabs */
+    .filter-tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+    .filter-tab{padding:7px 16px;border-radius:99px;font-family:'Nunito',sans-serif;font-size:.78rem;font-weight:800;cursor:pointer;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:rgba(240,235,248,.5);transition:all .2s}
+    .filter-tab.active{color:#fff}
+    .filter-tab.all.active{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.3)}
+    .filter-tab.unused.active{background:rgba(255,92,92,.15);border-color:rgba(255,92,92,.4);color:#FF5C5C}
+    .filter-tab.expired.active{background:rgba(255,184,0,.12);border-color:rgba(255,184,0,.35);color:#FFB800}
+    .filter-tab.used.active{background:rgba(61,214,140,.12);border-color:rgba(61,214,140,.35);color:#3DD68C}
+
+    /* Summary */
+    .summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
+    .summary-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px;text-align:center}
+    .summary-icon{font-size:1.4rem;margin-bottom:4px}
+    .summary-val{font-size:1.2rem;font-weight:900}
+    .summary-lbl{font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:rgba(240,235,248,.4);margin-top:2px}
+
+    /* Voucher list */
+    .voucher-list{display:flex;flex-direction:column;gap:10px}
+
+    .voucher-card{border-radius:14px;padding:14px 16px;border:1px solid;transition:transform .15s}
+    .voucher-card:hover{transform:translateY(-1px)}
+
+    /* Status colors */
+    .voucher-card.unused{background:rgba(255,92,92,.04);border-color:rgba(255,92,92,.3)}
+    .voucher-card.expired{background:rgba(255,184,0,.04);border-color:rgba(255,184,0,.25)}
+    .voucher-card.used{background:rgba(61,214,140,.04);border-color:rgba(61,214,140,.3)}
+
+    .vc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px}
+    .vc-code{font-size:1rem;font-weight:900;letter-spacing:.08em;font-family:monospace}
+    .vc-badge{font-size:.68rem;font-weight:900;padding:4px 10px;border-radius:99px;white-space:nowrap;flex-shrink:0}
+    .badge-unused{background:rgba(255,92,92,.15);color:#FF5C5C;border:1px solid rgba(255,92,92,.3)}
+    .badge-expired{background:rgba(255,184,0,.12);color:#FFB800;border:1px solid rgba(255,184,0,.3)}
+    .badge-used{background:rgba(61,214,140,.12);color:#3DD68C;border:1px solid rgba(61,214,140,.3)}
+
+    .vc-info{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:8px}
+    .vc-info-item{font-size:.78rem;font-weight:700;color:rgba(240,235,248,.6)}
+    .vc-info-item span{color:#F0EBF8;font-weight:800}
+
+    .vc-meta{font-size:.72rem;color:rgba(240,235,248,.35);font-weight:600}
+
+    /* Used state - ceklis */
+    .vc-used-banner{display:flex;align-items:center;gap:8px;margin-top:10px;padding:10px 12px;background:rgba(61,214,140,.08);border-radius:10px;border:1px solid rgba(61,214,140,.2)}
+    .vc-used-banner .check{font-size:1.2rem}
+    .vc-used-banner p{font-size:.78rem;font-weight:800;color:#3DD68C}
+
+    .empty{text-align:center;padding:48px 20px;color:rgba(240,235,248,.35)}
+    .loading{text-align:center;padding:40px;color:rgba(240,235,248,.4)}
+
+    /* Search */
+    .search-wrap{margin-bottom:16px}
+    .search-input{width:100%;padding:10px 14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:10px;color:#F0EBF8;font-family:'Nunito',sans-serif;font-size:.88rem;font-weight:600;outline:none;transition:border-color .2s}
+    .search-input:focus{border-color:rgba(249,168,201,.4)}
+    .search-input::placeholder{color:rgba(240,235,248,.3)}
+
+    @media(max-width:480px){
+      .summary{grid-template-columns:1fr 1fr}
+      .vc-info{gap:10px}
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <a href="index.html">← Kembali</a>
+  <h1>🎟️ Voucher Tracker</h1>
+</div>
+
+<!-- Summary -->
+<div class="summary">
+  <div class="summary-card">
+    <div class="summary-icon">🎟️</div>
+    <div class="summary-val" id="sum-all">0</div>
+    <div class="summary-lbl">Total</div>
+  </div>
+  <div class="summary-card">
+    <div class="summary-icon">🔴</div>
+    <div class="summary-val" id="sum-unused" style="color:#FF5C5C">0</div>
+    <div class="summary-lbl">Belum Dipakai</div>
+  </div>
+  <div class="summary-card">
+    <div class="summary-icon">🟡</div>
+    <div class="summary-val" id="sum-expired" style="color:#FFB800">0</div>
+    <div class="summary-lbl">Waktu Habis</div>
+  </div>
+  <div class="summary-card">
+    <div class="summary-icon">🟢</div>
+    <div class="summary-val" id="sum-used" style="color:#3DD68C">0</div>
+    <div class="summary-lbl">Digunakan</div>
+  </div>
+</div>
+
+<!-- Search -->
+<div class="search-wrap">
+  <input type="text" class="search-input" id="search-input" placeholder="🔍 Cari kode voucher atau layanan...">
+</div>
+
+<!-- Filter tabs -->
+<div class="filter-tabs">
+  <button class="filter-tab all active" onclick="setFilter('all',this)">Semua</button>
+  <button class="filter-tab unused" onclick="setFilter('unused',this)">🔴 Belum Dipakai</button>
+  <button class="filter-tab expired" onclick="setFilter('expired',this)">🟡 Waktu Habis</button>
+  <button class="filter-tab used" onclick="setFilter('used',this)">🟢 Digunakan</button>
+</div>
+
+<!-- Voucher list -->
+<div class="voucher-list" id="voucher-list">
+  <div class="loading">⏳ Memuat data voucher...</div>
+</div>
+
+<script type="module">
+import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js';
+import { getFirestore, collection, getDocs, orderBy, query } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js';
+
+const FIREBASE_CONFIG = {
+  apiKey           : 'AIzaSyBLPe_yx28LyefI856Ysxz3YEPnwA0ENFU',
+  authDomain       : 'callpay-28a28.firebaseapp.com',
+  projectId        : 'callpay-28a28',
+  storageBucket    : 'callpay-28a28.firebasestorage.app',
+  messagingSenderId: '44722427776',
+  appId            : '1:44722427776:web:29d1a297746cd83d685365'
+};
+const app = getApps().length ? getApps()[0] : initializeApp(FIREBASE_CONFIG);
+const db  = getFirestore(app);
+
+let allVouchers  = [];
+let activeFilter = 'all';
+let searchQuery  = '';
+
+function formatDate(iso) {
+  if (!iso) return '-';
+  return new Date(iso).toLocaleDateString('id-ID', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+
+function getVoucherStatus(v) {
+  if (v.used) return 'used';
+  if (v.reason === 'talent_timeout') return 'expired';
+  return 'unused';
+}
+
+function getStatusLabel(status) {
+  if (status === 'used')    return { label: '✅ Digunakan', cls: 'badge-used' };
+  if (status === 'expired') return { label: '⏰ Waktu Habis', cls: 'badge-expired' };
+  return { label: '🔴 Belum Dipakai', cls: 'badge-unused' };
+}
+
+function renderVouchers() {
+  let list = allVouchers.filter(v => {
+    const status = getVoucherStatus(v);
+    if (activeFilter !== 'all' && status !== activeFilter) return false;
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      return (v.code||'').toLowerCase().includes(q) ||
+             (v.service||'').toLowerCase().includes(q);
+    }
+    return true;
+  });
+
+  if (!list.length) {
+    document.getElementById('voucher-list').innerHTML = `
+      <div class="empty">
+        <div style="font-size:2.5rem;margin-bottom:12px">🎟️</div>
+        <div style="font-weight:800">Tidak ada voucher ditemukan</div>
+      </div>`;
+    return;
+  }
+
+  document.getElementById('voucher-list').innerHTML = list.map(v => {
+    const status = getVoucherStatus(v);
+    const { label, cls } = getStatusLabel(status);
+    const custLast4 = v.custWa ? v.custWa.slice(-4) : '----';
+
+    return `
+    <div class="voucher-card ${status}">
+      <div class="vc-top">
+        <div class="vc-code">${v.code || '-'}</div>
+        <div class="vc-badge ${cls}">${label}</div>
+      </div>
+      <div class="vc-info">
+        <div class="vc-info-item">📋 Layanan: <span>${v.service || '-'}</span></div>
+        <div class="vc-info-item">⏱️ Durasi: <span>${v.duration || '-'} menit</span></div>
+        <div class="vc-info-item">📱 WA: <span>xxxx-xxxx-${custLast4}</span></div>
+      </div>
+      <div class="vc-meta">
+        Dibuat: ${formatDate(v.createdAt)}
+        ${v.usedAt ? ' · Dipakai: ' + formatDate(v.usedAt) : ''}
+        ${v.reason ? ' · Alasan: ' + (v.reason === 'rejected' ? 'Ditolak talent' : v.reason === 'talent_timeout' ? 'Timer habis' : v.reason) : ''}
+      </div>
+      ${status === 'used' ? `
+      <div class="vc-used-banner">
+        <span class="check">✅</span>
+        <p>Voucher telah digunakan dan diterima talent</p>
+      </div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+async function loadVouchers() {
+  try {
+    const snap = await getDocs(collection(db, 'vouchers'));
+    allVouchers = [];
+    snap.forEach(d => allVouchers.push({ id: d.id, ...d.data() }));
+
+    // Sort: terbaru di atas
+    allVouchers.sort((a, b) => new Date(b.createdAt||0) - new Date(a.createdAt||0));
+
+    // Hitung summary
+    const unused  = allVouchers.filter(v => getVoucherStatus(v) === 'unused').length;
+    const expired = allVouchers.filter(v => getVoucherStatus(v) === 'expired').length;
+    const used    = allVouchers.filter(v => getVoucherStatus(v) === 'used').length;
+
+    document.getElementById('sum-all').textContent     = allVouchers.length;
+    document.getElementById('sum-unused').textContent  = unused;
+    document.getElementById('sum-expired').textContent = expired;
+    document.getElementById('sum-used').textContent    = used;
+
+    renderVouchers();
+  } catch(e) {
+    console.error('Load vouchers error:', e);
+    document.getElementById('voucher-list').innerHTML = `<div class="empty">❌ Gagal memuat: ${e.message}</div>`;
+  }
+}
+
+window.setFilter = function(filter, btn) {
+  activeFilter = filter;
+  document.querySelectorAll('.filter-tab').forEach(t => t.classList.remove('active'));
+  btn.classList.add('active');
+  renderVouchers();
+};
+
+document.getElementById('search-input').addEventListener('input', function() {
+  searchQuery = this.value.trim();
+  renderVouchers();
+});
+
+loadVouchers();
+</script>
+</body>
+</html>
