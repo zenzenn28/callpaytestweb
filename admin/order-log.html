@@ -218,7 +218,8 @@ function renderOrders() {
     const custWa = formatWa(o.custWa);
     const net    = o.originalPrice ? Math.round(Number(o.originalPrice) * 0.6) : 0;
     // Tampilkan voucher hanya di rejected dan pending (waktu habis)
-    const showVoucher = ['rejected','expired'].includes(o.status);
+    // Tampilkan voucher: kalau ditolak/waktu habis ATAU kalau order pakai voucher
+    const showVoucher = ['rejected','expired'].includes(o.status) || (o.useVoucher && o.voucherCode);
     const voucherCode = o.voucherCode || voucherMap[o.orderId || o.id] || '-';
 
     return `
