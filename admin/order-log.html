@@ -38,15 +38,15 @@
     /* Order log list */
     .log-list{display:flex;flex-direction:column;gap:10px}
 
-    .log-card{border-radius:14px;padding:14px 16px;border:1px solid;transition:border-color .3s,background .3s}
+    .log-card{border-radius:12px;padding:10px 12px;border:1px solid;transition:border-color .3s,background .3s}
     .log-card.status-pending{background:rgba(255,184,0,.04);border-color:rgba(255,184,0,.3)}
     .log-card.status-accepted{background:rgba(61,214,140,.04);border-color:rgba(61,214,140,.35)}
     .log-card.status-rejected{background:rgba(255,92,92,.04);border-color:rgba(255,92,92,.3)}
     .log-card.status-expired{background:rgba(255,184,0,.03);border-color:rgba(255,184,0,.2)}
     .log-card.status-waiting_payment{background:rgba(167,139,250,.04);border-color:rgba(167,139,250,.25)}
 
-    .log-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:10px}
-    .log-id{font-size:.72rem;font-family:monospace;color:rgba(240,235,248,.35);font-weight:600}
+    .log-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:7px}
+    .log-id{font-size:.65rem;font-family:monospace;color:rgba(240,235,248,.35);font-weight:600}
     .log-badge{font-size:.68rem;font-weight:900;padding:4px 10px;border-radius:99px;white-space:nowrap;flex-shrink:0}
     .badge-pending{background:rgba(255,184,0,.15);color:#FFB800;border:1px solid rgba(255,184,0,.3)}
     .badge-accepted{background:rgba(61,214,140,.12);color:#3DD68C;border:1px solid rgba(61,214,140,.3)}
@@ -54,11 +54,11 @@
     .badge-expired{background:rgba(255,184,0,.08);color:#FFB800;border:1px solid rgba(255,184,0,.2)}
     .badge-waiting_payment{background:rgba(167,139,250,.12);color:#a78bfa;border:1px solid rgba(167,139,250,.3)}
 
-    .log-main{display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;margin-bottom:8px}
-    .log-field{font-size:.78rem;font-weight:700;color:rgba(240,235,248,.55)}
-    .log-field span{color:#F0EBF8;font-weight:800}
+    .log-main{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;margin-bottom:6px}
+    .log-field{font-size:.72rem;font-weight:700;color:rgba(240,235,248,.55)}
+    .log-field span{color:#F0EBF8;font-weight:800;font-size:.75rem}
     .log-field.full{grid-column:span 2}
-    .log-time{font-size:.7rem;color:rgba(240,235,248,.3);font-weight:600;margin-top:6px;padding-top:8px;border-top:1px solid rgba(255,255,255,.05)}
+    .log-time{font-size:.65rem;color:rgba(240,235,248,.3);font-weight:600;margin-top:4px;padding-top:6px;border-top:1px solid rgba(255,255,255,.05)}
 
     .empty{text-align:center;padding:48px 20px;color:rgba(240,235,248,.35)}
     .loading{text-align:center;padding:40px;color:rgba(240,235,248,.4);font-weight:700}
@@ -222,7 +222,7 @@ function renderOrders() {
         <div class="log-field">📋 Layanan: <span>${o.service || '-'}</span></div>
         <div class="log-field">⏱️ Durasi: <span>${o.duration ? o.duration + ' menit' : '-'}</span></div>
         <div class="log-field">💰 Harga: <span>${formatPrice(o.originalPrice || o.price)}</span></div>
-        <div class="log-field">💵 Gaji Talent: <span style="color:#3DD68C">${net ? 'Rp ' + net.toLocaleString('id-ID') : '-'}</span></div>
+        <div class="log-field">💵 Didapat Talent: <span style="color:#3DD68C">${net ? 'Rp ' + net.toLocaleString('id-ID') : '-'}</span></div>
         <div class="log-field">🎟️ Voucher: <span>${o.useVoucher ? (o.voucherCode || 'Ya') : 'Tidak'}</span></div>
         <div class="log-field">🏷️ Admin: <span>${o.adminParam || 'callpay'}</span></div>
         ${o.note ? `<div class="log-field full">📝 Catatan: <span>${o.note}</span></div>` : ''}
