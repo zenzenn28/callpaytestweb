@@ -10,8 +10,6 @@
     .header{display:flex;align-items:center;gap:12px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,.08)}
     .header h1{font-size:1.1rem;font-weight:900;flex:1}
     .header a{font-size:.82rem;color:rgba(240,235,248,.4);text-decoration:none;font-weight:700;white-space:nowrap}
-
-    /* Filter tabs */
     .filter-tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
     .filter-tab{padding:7px 16px;border-radius:99px;font-family:'Nunito',sans-serif;font-size:.78rem;font-weight:800;cursor:pointer;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:rgba(240,235,248,.5);transition:all .2s}
     .filter-tab.active{color:#fff}
@@ -19,52 +17,36 @@
     .filter-tab.unused.active{background:rgba(255,92,92,.15);border-color:rgba(255,92,92,.4);color:#FF5C5C}
     .filter-tab.expired.active{background:rgba(255,184,0,.12);border-color:rgba(255,184,0,.35);color:#FFB800}
     .filter-tab.used.active{background:rgba(61,214,140,.12);border-color:rgba(61,214,140,.35);color:#3DD68C}
-
-    /* Summary */
     .summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
     .summary-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px;text-align:center}
     .summary-icon{font-size:1.4rem;margin-bottom:4px}
     .summary-val{font-size:1.2rem;font-weight:900}
     .summary-lbl{font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:rgba(240,235,248,.4);margin-top:2px}
-
-    /* Voucher list */
     .voucher-list{display:flex;flex-direction:column;gap:10px}
-
     .voucher-card{border-radius:14px;padding:14px 16px;border:1px solid;transition:transform .15s}
     .voucher-card:hover{transform:translateY(-1px)}
-
-    /* Status colors */
     .voucher-card.unused{background:rgba(255,92,92,.04);border-color:rgba(255,92,92,.3)}
     .voucher-card.expired{background:rgba(255,184,0,.04);border-color:rgba(255,184,0,.25)}
     .voucher-card.used{background:rgba(61,214,140,.04);border-color:rgba(61,214,140,.3)}
-
     .vc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:10px}
     .vc-code{font-size:1rem;font-weight:900;letter-spacing:.08em;font-family:monospace}
     .vc-badge{font-size:.68rem;font-weight:900;padding:4px 10px;border-radius:99px;white-space:nowrap;flex-shrink:0}
     .badge-unused{background:rgba(255,92,92,.15);color:#FF5C5C;border:1px solid rgba(255,92,92,.3)}
     .badge-expired{background:rgba(255,184,0,.12);color:#FFB800;border:1px solid rgba(255,184,0,.3)}
     .badge-used{background:rgba(61,214,140,.12);color:#3DD68C;border:1px solid rgba(61,214,140,.3)}
-
     .vc-info{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:8px}
     .vc-info-item{font-size:.78rem;font-weight:700;color:rgba(240,235,248,.6)}
     .vc-info-item span{color:#F0EBF8;font-weight:800}
-
     .vc-meta{font-size:.72rem;color:rgba(240,235,248,.35);font-weight:600}
-
-    /* Used state - ceklis */
     .vc-used-banner{display:flex;align-items:center;gap:8px;margin-top:10px;padding:10px 12px;background:rgba(61,214,140,.08);border-radius:10px;border:1px solid rgba(61,214,140,.2)}
     .vc-used-banner .check{font-size:1.2rem}
     .vc-used-banner p{font-size:.78rem;font-weight:800;color:#3DD68C}
-
     .empty{text-align:center;padding:48px 20px;color:rgba(240,235,248,.35)}
     .loading{text-align:center;padding:40px;color:rgba(240,235,248,.4)}
-
-    /* Search */
     .search-wrap{margin-bottom:16px}
     .search-input{width:100%;padding:10px 14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:10px;color:#F0EBF8;font-family:'Nunito',sans-serif;font-size:.88rem;font-weight:600;outline:none;transition:border-color .2s}
     .search-input:focus{border-color:rgba(249,168,201,.4)}
     .search-input::placeholder{color:rgba(240,235,248,.3)}
-
     @media(max-width:480px){
       .summary{grid-template-columns:1fr 1fr}
       .vc-info{gap:10px}
@@ -78,7 +60,6 @@
   <h1>🎟️ Voucher Tracker</h1>
 </div>
 
-<!-- Summary -->
 <div class="summary">
   <div class="summary-card">
     <div class="summary-icon">🎟️</div>
@@ -102,12 +83,10 @@
   </div>
 </div>
 
-<!-- Search -->
 <div class="search-wrap">
-  <input type="text" class="search-input" id="search-input" placeholder="🔍 Cari kode voucher atau layanan...">
+  <input type="text" class="search-input" id="search-input" placeholder="🔍 Cari kode voucher, layanan, atau nama talent...">
 </div>
 
-<!-- Filter tabs -->
 <div class="filter-tabs">
   <button class="filter-tab all active" onclick="setFilter('all',this)">Semua</button>
   <button class="filter-tab unused" onclick="setFilter('unused',this)">🔴 Belum Dipakai</button>
@@ -115,14 +94,13 @@
   <button class="filter-tab used" onclick="setFilter('used',this)">🟢 Digunakan</button>
 </div>
 
-<!-- Voucher list -->
 <div class="voucher-list" id="voucher-list">
   <div class="loading">⏳ Memuat data voucher...</div>
 </div>
 
 <script type="module">
 import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js';
-import { getFirestore, collection, getDocs, orderBy, query } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js';
+import { getFirestore, collection, getDocs } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js';
 
 const FIREBASE_CONFIG = {
   apiKey           : 'AIzaSyBLPe_yx28LyefI856Ysxz3YEPnwA0ENFU',
@@ -141,7 +119,9 @@ let searchQuery  = '';
 
 function formatDate(iso) {
   if (!iso) return '-';
-  return new Date(iso).toLocaleDateString('id-ID', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+  return new Date(iso).toLocaleDateString('id-ID', {
+    day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit'
+  });
 }
 
 function getVoucherStatus(v) {
@@ -163,7 +143,8 @@ function renderVouchers() {
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       return (v.code||'').toLowerCase().includes(q) ||
-             (v.service||'').toLowerCase().includes(q);
+             (v.service||'').toLowerCase().includes(q) ||
+             (v.talentName||'').toLowerCase().includes(q);
     }
     return true;
   });
@@ -180,7 +161,8 @@ function renderVouchers() {
   document.getElementById('voucher-list').innerHTML = list.map(v => {
     const status = getVoucherStatus(v);
     const { label, cls } = getStatusLabel(status);
-    const custLast4 = v.custWa ? v.custWa.slice(-4) : '----';
+    const custLast4  = v.custWa ? v.custWa.slice(-4) : '----';
+    const talentName = v.talentName || v.acceptedBy || '-';
 
     return `
     <div class="voucher-card ${status}">
@@ -191,17 +173,14 @@ function renderVouchers() {
       <div class="vc-info">
         <div class="vc-info-item">📋 Layanan: <span>${v.service || '-'}</span></div>
         <div class="vc-info-item">⏱️ Durasi: <span>${v.duration || '-'} menit</span></div>
+        <div class="vc-info-item">👤 Talent: <span>${talentName}</span></div>
         <div class="vc-info-item">📱 WA: <span>xxxx-xxxx-${custLast4}</span></div>
       </div>
-      <div class="vc-meta">
-        Dibuat: ${formatDate(v.createdAt)}
-        ${v.usedAt ? ' · Dipakai: ' + formatDate(v.usedAt) : ''}
-        ${v.reason ? ' · Alasan: ' + (v.reason === 'rejected' ? 'Ditolak talent' : v.reason === 'talent_timeout' ? 'Timer habis' : v.reason) : ''}
-      </div>
+      <div class="vc-meta">Dibuat: ${formatDate(v.createdAt)}${v.usedAt ? ' · Dipakai: ' + formatDate(v.usedAt) : ''}</div>
       ${status === 'used' ? `
       <div class="vc-used-banner">
         <span class="check">✅</span>
-        <p>Voucher telah digunakan dan diterima talent</p>
+        <p>Voucher telah diterima oleh talent</p>
       </div>` : ''}
     </div>`;
   }).join('');
@@ -209,9 +188,26 @@ function renderVouchers() {
 
 async function loadVouchers() {
   try {
+    // Ambil data talent untuk mapping talentId → talentName
+    const talentsSnap = await getDocs(collection(db, 'talents'));
+    const talentMap   = {};
+    talentsSnap.forEach(d => {
+      talentMap[d.id] = d.data().name || d.id;
+    });
+
+    // Ambil semua voucher
     const snap = await getDocs(collection(db, 'vouchers'));
     allVouchers = [];
-    snap.forEach(d => allVouchers.push({ id: d.id, ...d.data() }));
+    snap.forEach(d => {
+      const v = { id: d.id, ...d.data() };
+      // Cari nama talent dari acceptedBy atau dari order
+      if (v.acceptedBy && talentMap[v.acceptedBy]) {
+        v.talentName = talentMap[v.acceptedBy];
+      } else if (!v.talentName) {
+        v.talentName = '-';
+      }
+      allVouchers.push(v);
+    });
 
     // Sort: terbaru di atas
     allVouchers.sort((a, b) => new Date(b.createdAt||0) - new Date(a.createdAt||0));
