@@ -2,18 +2,13 @@
 //  CALLPAY — MAIN SCRIPT
 // ============================================================
 import { DB, TALENTS, PRICES as DEFAULT_PRICES, DUR_LABEL } from './admin/data.js';
-
-
 // ── TAG COLOR HELPER ──────────────────────────────────────
-// Layanan dinamis dari Firestore
 let _services = [];
 let _servicesLoaded = false;
-
 function tagClass(s) {
   const svc = _services.find(x => x.name === s);
   return svc ? `svc-dyn-${svc.id}` : 'svc-dyn-default';
 }
-
 function injectServiceStyles() {
   let style = document.getElementById('svc-dyn-styles');
   if (!style) { style = document.createElement('style'); style.id = 'svc-dyn-styles'; document.head.appendChild(style); }
@@ -31,7 +26,6 @@ function injectServiceStyles() {
     return `.svc-dyn-${s.id}{background:${c.bg};color:${c.color};border:1px solid ${c.border}}`;
   }).join('\n') + '\n.svc-dyn-default{background:rgba(255,255,255,.06);color:rgba(240,235,248,.6);border:1px solid rgba(255,255,255,.1)}';
 }
-
 async function loadServicesFromFirestore() {
   return new Promise(async (resolve) => {
     try {
@@ -43,7 +37,6 @@ async function loadServicesFromFirestore() {
         snap.forEach(d => _services.push({ id: d.id, ...d.data() }));
         _services.sort((a,b) => (a.order||99) - (b.order||99));
         injectServiceStyles();
-        // Update SVC mappings (dua arah)
         SVC_LABEL_TO_KEY = {};
         SVC_ICON = {};
         Object.keys(SVC_KEY_TO_LABEL).forEach(k => delete SVC_KEY_TO_LABEL[k]);
@@ -53,100 +46,85 @@ async function loadServicesFromFirestore() {
           SVC_ICON[s.name]         = s.icon || '🎯';
         });
         _servicesLoaded = true;
-        if (_firstLoad) {
-          _firstLoad = false;
-          resolve(); // Selesai load pertama kali → baru render talent
-        } else {
-          // Update berikutnya (realtime) → re-render langsung
-          if (TALENTS.length) renderTalents();
-        }
+        if (_firstLoad) { _firstLoad = false; resolve(); }
+        else { if (TALENTS.length) renderTalents(); }
       });
-    } catch(e) {
-      console.warn('Gagal load services:', e);
-      resolve(); // Tetap lanjut meski gagal
-    }
+    } catch(e) { console.warn('Gagal load services:', e); resolve(); }
   });
 }
-
-// ── STATE ─────────────────────────────────────────────────────
+// ── STATE ─────────────────────────────────────────────────
 let currentFilter = 'all';
 let showAll       = false;
 let activeTalent  = null;
 const ACTIVE_IDS  = new Set([1,2,3,4,9,10,11,12]);
 const DEFAULT_IDS = ACTIVE_IDS;
-
-// PRICES - default dari data.js, akan di-override dari Firestore
 let PRICES = { ...DEFAULT_PRICES };
-
-// Load harga dari Firestore berdasarkan ?admin=
 async function loadPricesFromFirestore() {
   try {
     const { getFirestore, doc, getDoc, onSnapshot } = await import('https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js');
     const db = await getFirebase();
     const _priceMap = { 'callpay':'admin1', 'sleepcallpay':'admin2', 'scallpayz':'admin3' };
     const docId = _priceMap[_adminParam] || 'admin1';
-    // Load sekali
     const snap = await getDoc(doc(db, 'pricelist', docId));
     if (snap.exists()) { PRICES = snap.data(); window.PRICES = PRICES; }
-    // Realtime update kalau owner ubah harga
     onSnapshot(doc(db, 'pricelist', docId), s => {
       if (s.exists()) { PRICES = s.data(); window.PRICES = PRICES; }
     });
   } catch(e) { console.warn('Gagal load pricelist:', e); }
 }
-
-// Nomor WA berdasarkan parameter ?admin=1 atau ?admin=2
 const WA_NUMBERS = {
-  'callpay'     : '62895400709371',   // CallPay
-  'sleepcallpay': '6283832404667',    // SleepcallPay
-  'scallpayz'   : '6283832550027',    // ScallpayZ
+  'callpay'     : '62895400709371',
+  'sleepcallpay': '6283832404667',
+  'scallpayz'   : '6283832550027',
 };
-// Support parameter nama (callpay, sleepcallpay, scallpayz) dan angka lama (1,2,3)
 const _legacyMap = { '1':'callpay', '2':'sleepcallpay', '3':'scallpayz' };
 const _pathMap    = { 'spy':'sleepcallpay', 'z':'scallpayz' };
 const _pathSlug   = window.location.pathname.replace(/^\//, '').split('/')[0];
-const _rawParam   = new URLSearchParams(window.location.search).get('admin') 
-                    || _pathMap[_pathSlug] 
+const _rawParam   = new URLSearchParams(window.location.search).get('admin')
+                    || _pathMap[_pathSlug]
                     || 'callpay';
 const _adminParam = _legacyMap[_rawParam] || _rawParam;
-window._adminParam = _adminParam; // expose ke global
+window._adminParam = _adminParam;
 const WA_NUMBER   = WA_NUMBERS[_adminParam] || WA_NUMBERS['callpay'];
-
-const SVC_KEY_TO_LABEL = { // legacy - masih dipakai untuk decode key dari select dropdown
+const SVC_KEY_TO_LABEL = {
   'temen-call'   : 'Temen Call',
   'sleepcall'    : 'Sleepcall',
   'temen-curhat' : 'Temen Curhat',
   'pacar-virtual': 'Pacar Virtual',
-  'video-call'    : 'Video Call',
+  'video-call'   : 'Video Call',
 };
-// Expose ke window
 window.SVC_KEY_TO_LABEL = SVC_KEY_TO_LABEL;
-
 let SVC_LABEL_TO_KEY = {
   'Temen Call'   : 'temen-call',
   'Sleepcall'    : 'sleepcall',
   'Temen Curhat' : 'temen-curhat',
   'Pacar Virtual': 'pacar-virtual',
-  'Video Call'    : 'video-call',
+  'Video Call'   : 'video-call',
 };
 let SVC_ICON = {
   'Temen Call'   : '📞',
   'Sleepcall'    : '🌙',
   'Temen Curhat' : '🫂',
   'Pacar Virtual': '💕',
-  'Video Call'    : '📹',
+  'Video Call'   : '📹',
 };
-
 // ============================================================
 //  TALENT RENDER
 // ============================================================
 function renderTalents() {
   const grid = document.getElementById('talent-grid');
   if (!grid) return;
-  // Tampilkan semua talent yang ada di TALENTS (sudah difilter approved saat load)
   const allActive = TALENTS;
-  const unsorted = currentFilter === 'all' ? allActive : allActive.filter(t => t.gender === currentFilter);
-  const list = [...unsorted].sort((a, b) => (b.online === true ? 1 : 0) - (a.online === true ? 1 : 0));
+  const unsorted  = currentFilter === 'all' ? allActive : allActive.filter(t => t.gender === currentFilter);
+
+  // Sort: online dulu → abjad nama; offline ke bawah → abjad nama
+  const list = [...unsorted].sort((a, b) => {
+    const aOnline = a.online !== false;
+    const bOnline = b.online !== false;
+    if (aOnline !== bOnline) return bOnline ? 1 : -1; // online di atas
+    return (a.name || '').localeCompare(b.name || '', 'id'); // abjad nama
+  });
+
   grid.innerHTML = list.map(t => {
     const hasAudio = t.audio && t.audio.trim() !== '';
     return `
@@ -174,12 +152,10 @@ function renderTalents() {
   }).join('');
   updateSeeMoreBtn(list);
 }
-
 function updateSeeMoreBtn(list) {
   const wrap = document.getElementById('see-more-wrap');
-  if (wrap) wrap.style.display = 'none'; // semua talent ditampilkan langsung
+  if (wrap) wrap.style.display = 'none';
 }
-
 window.setFilter = function(type, el) {
   currentFilter = type;
   showAll = false;
@@ -189,11 +165,10 @@ window.setFilter = function(type, el) {
   if (type === 'male')   el.classList.add('fm');
   renderTalents();
 };
-
 window.toggleSeeMore = function() {
   showAll = !showAll;
   document.querySelectorAll('.talent-card.extra').forEach(c => c.classList.toggle('show', showAll));
-  const btn  = document.getElementById('see-more-btn');
+  const btn = document.getElementById('see-more-btn');
   const allActive = TALENTS;
   const list = currentFilter === 'all' ? allActive : allActive.filter(t => t.gender === currentFilter);
   const extraCount = currentFilter === 'all'
@@ -207,19 +182,16 @@ window.toggleSeeMore = function() {
   }
   if (!showAll) document.getElementById('talent').scrollIntoView({ behavior: 'smooth' });
 };
-
 // ============================================================
 //  ORDER MODAL
 // ============================================================
 window.openModal = function(id) {
   activeTalent = TALENTS.find(t => String(t.id) === String(id));
   if (!activeTalent) return;
-  window.activeTalent = activeTalent; // expose ke global untuk order-patch.js
+  window.activeTalent = activeTalent;
   document.getElementById('modal-img').src           = activeTalent.img;
   document.getElementById('modal-tname').textContent = activeTalent.name;
   document.getElementById('modal-tmeta').textContent = `${activeTalent.age} tahun · Indonesia`;
-
-  // Generate opsi layanan sesuai services talent
   const svcSel = document.getElementById('modal-service');
   const services = activeTalent.services || [];
   const activeServices = (services||[]).filter(s => !(activeTalent.lockedServices||[]).includes(s));
@@ -234,20 +206,17 @@ window.openModal = function(id) {
       const icon = SVC_ICON[svc] || '';
       return key ? `<option value="${key}">${icon} ${svc}</option>` : '';
     }).join('');
-
   document.getElementById('modal-duration').innerHTML = '<option value="">— Pilih Layanan Dulu —</option>';
-  document.getElementById('modal-note').value        = '';
+  document.getElementById('modal-note').value = '';
   const adminCheck = document.getElementById('admin-fee-check');
   if (adminCheck) adminCheck.checked = false;
   const btn = document.getElementById('modal-wa-btn');
-  if (btn) { btn.disabled = true; }
+  if (btn) btn.disabled = true;
   document.getElementById('order-modal').classList.add('open');
 };
-
 window.closeModal = function() {
   document.getElementById('order-modal').classList.remove('open');
 };
-
 window.updateDurations = function() {
   const svcRaw   = document.getElementById('modal-service').value;
   const durSel   = document.getElementById('modal-duration');
@@ -259,25 +228,22 @@ window.updateDurations = function() {
       const opt = document.createElement('option');
       opt.value = min;
       const label = DUR_LABEL[min] || min + ' menit';
-      const priceStr = 'Rp ' + Number(price).toLocaleString('id-ID');
-      opt.textContent = label + '  —  ' + priceStr;
+      opt.textContent = label + '  —  Rp ' + Number(price).toLocaleString('id-ID');
       durSel.appendChild(opt);
     });
   } else {
     durSel.innerHTML = '<option value="">— Pilih Layanan Dulu —</option>';
   }
 };
-
 window.updateModalPrice = function() {
   const svcRaw   = document.getElementById('modal-service').value;
   const dur      = parseInt(document.getElementById('modal-duration').value);
   const btn      = document.getElementById('modal-wa-btn');
   const svcLabel = SVC_KEY_TO_LABEL[svcRaw];
   const price    = (svcLabel && dur) ? PRICES[svcLabel]?.[dur] : null;
-  const checked = document.getElementById('admin-fee-check')?.checked || false;
+  const checked  = document.getElementById('admin-fee-check')?.checked || false;
   if (btn) btn.disabled = !(price && checked);
 };
-
 window.confirmViaWA = function() {
   const svcRaw   = document.getElementById('modal-service').value;
   const dur      = parseInt(document.getElementById('modal-duration').value);
@@ -285,88 +251,58 @@ window.confirmViaWA = function() {
   const svcLabel = SVC_KEY_TO_LABEL[svcRaw];
   const price    = PRICES[svcLabel]?.[dur] ?? 0;
   const durLabel = DUR_LABEL[dur] || dur + ' menit';
-
-  if (!svcLabel || !dur) {
-    alert('Mohon pilih layanan dan durasi terlebih dahulu!');
-    return;
-  }
-
-  // Buat URL WA dulu
-
+  if (!svcLabel || !dur) { alert('Mohon pilih layanan dan durasi terlebih dahulu!'); return; }
   const msg = [
-    `Halo Admin! 👋`,
-    ``,
+    `Halo Admin! 👋`, ``,
     `Saya ingin memesan layanan:`,
     `👤 Talent: ${activeTalent.name}`,
     `🎯 Layanan: ${svcLabel}`,
     `⏱ Durasi: ${durLabel}`,
     `💰 Harga: Rp ${price.toLocaleString('id-ID')}`,
     note ? `📝 Catatan: ${note}` : '',
-    ``,
-    `Mohon konfirmasinya, terima kasih! 🙏`,
+    ``, `Mohon konfirmasinya, terima kasih! 🙏`,
   ].filter(l => l !== undefined).join('\n');
-
   const url = `https://wa.me/${WA_NUMBER}?text=${encodeURIComponent(msg)}`;
-
-  // Buka WA langsung (synchronous) — penting untuk iOS Safari
-  // iOS memblokir window.open setelah await, jadi buka dulu baru simpan
   location.href = url;
-
-  // Simpan order di background (tidak blocking)
   closeModal();
   DB.addOrder({
-    talentId   : String(activeTalent.id),
-    talentName : activeTalent.name,
-    service    : svcLabel,
-    duration   : dur,
-    price      : price,
-    note       : note,
-    orderType  : 'direct',
+    talentId: String(activeTalent.id), talentName: activeTalent.name,
+    service: svcLabel, duration: dur, price, note, orderType: 'direct',
   }).catch(e => console.warn('Gagal simpan order:', e));
 };
-
 // ============================================================
 //  AUDIO PREVIEW
 // ============================================================
 let _activeAudio = null;
 let _activeBtn   = null;
-
 window.playTalentAudio = function(btn) {
   const tid = btn.dataset.tid;
   const t   = TALENTS.find(x => String(x.id) === String(tid));
   const url = t?.audio || '';
   toggleAudio(tid, url, btn);
 };
-
 window.toggleAudio = function(id, url, btn) {
   if (!url || url.trim() === '') {
     btn.classList.add('shake');
     setTimeout(() => btn.classList.remove('shake'), 500);
     return;
   }
-  // Jika tombol yang sama diklik lagi → stop
   if (_activeAudio && _activeBtn === btn) {
-    _activeAudio.pause();
-    _activeAudio.currentTime = 0;
-    _activeAudio = null;
-    _activeBtn = null;
+    _activeAudio.pause(); _activeAudio.currentTime = 0;
+    _activeAudio = null; _activeBtn = null;
     btn.classList.remove('playing');
     btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
     return;
   }
-  // Stop audio yang sedang main
   if (_activeAudio) {
-    _activeAudio.pause();
-    _activeAudio.currentTime = 0;
+    _activeAudio.pause(); _activeAudio.currentTime = 0;
     _activeBtn.classList.remove('playing');
     _activeBtn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
   }
-  // Play yang baru - pakai Audio langsung tanpa crossOrigin (Cloudinary support)
   const audio = new Audio(url);
   btn.classList.add('playing');
   btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
-  _activeAudio = audio;
-  _activeBtn   = btn;
+  _activeAudio = audio; _activeBtn = btn;
   audio.play().catch(() => {
     btn.classList.remove('playing');
     btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
@@ -375,11 +311,9 @@ window.toggleAudio = function(id, url, btn) {
   audio.onended = () => {
     btn.classList.remove('playing');
     btn.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>';
-    _activeAudio = null;
-    _activeBtn   = null;
+    _activeAudio = null; _activeBtn = null;
   };
 };
-
 // ============================================================
 //  SCROLL ANIMATIONS
 // ============================================================
@@ -389,18 +323,15 @@ function initScrollAnimations() {
       if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); }
     });
   }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
-
   function observeCards() {
     document.querySelectorAll('.service-card,.testi-card,.talent-card').forEach(el => {
-      el.classList.add('anim-card');
-      observer.observe(el);
+      el.classList.add('anim-card'); observer.observe(el);
     });
   }
   observeCards();
   const grid = document.getElementById('talent-grid');
   if (grid) new MutationObserver(observeCards).observe(grid, { childList: true });
 }
-
 // ============================================================
 //  SECRET ADMIN ACCESS
 // ============================================================
@@ -424,16 +355,12 @@ function initScrollAnimations() {
     });
   });
 })();
-
-// ============================================================
-//  LOAD AUDIO FROM FIRESTORE
-// ============================================================
-// ── Firebase init (shared) ────────────────────────────────
+// ── Firebase init ─────────────────────────────────────────
 let _fbApp = null, _fbDb = null;
 async function getFirebase() {
   if (_fbDb) return _fbDb;
   const { initializeApp, getApps } = await import('https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js');
-  const { getFirestore, collection, onSnapshot, addDoc, getDocs, query, orderBy, where, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js');
+  const { getFirestore } = await import('https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js');
   const FIREBASE_CONFIG = {
     apiKey:'AIzaSyBLPe_yx28LyefI856Ysxz3YEPnwA0ENFU',
     authDomain:'callpay-28a28.firebaseapp.com',
@@ -446,7 +373,6 @@ async function getFirebase() {
   _fbDb  = getFirestore(_fbApp);
   return _fbDb;
 }
-
 async function loadAudioFromFirestore() {
   try {
     const { collection, getDocs } = await import('https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js');
@@ -454,7 +380,6 @@ async function loadAudioFromFirestore() {
     const snap = await getDocs(collection(db, 'talents'));
     snap.forEach(d => {
       const data = d.data();
-      // Sync data ke TALENTS array (talent lama berdasarkan nama)
       const t = TALENTS.find(x => x.name.toLowerCase() === d.id || String(x.id) === d.id);
       if (t) {
         t.audio    = data.audio    || t.audio || '';
@@ -464,98 +389,77 @@ async function loadAudioFromFirestore() {
         t.services = data.services && data.services.length ? data.services : t.services;
         t.approved = data.status === 'approved' || !data.status;
       }
-      // Talent baru dari Firestore yang sudah approved
       if (data.status === 'approved') {
         const exists = TALENTS.find(x => x.name.toLowerCase() === d.id || String(x.id) === d.id);
         if (!exists) {
           TALENTS.push({
-            id       : d.id,
-            name     : data.name     || d.id,
-            age      : data.age      || 20,
-            gender   : data.gender   || 'female',
-            img      : data.img      || '',
-            audio          : data.audio    || '',
-            online         : data.online   !== false,
-            bio            : data.bio      || '',
-            services       : data.services || [],
-            lockedServices : data.lockedServices || [],
-            approved       : true,
+            id: d.id, name: data.name||d.id, age: data.age||20,
+            gender: data.gender||'female', img: data.img||'',
+            audio: data.audio||'', online: data.online!==false,
+            bio: data.bio||'', services: data.services||[],
+            lockedServices: data.lockedServices||[], approved: true,
           });
         }
       }
     });
   } catch(e) { console.warn('Gagal load data talent:', e); }
 }
-
-// Realtime status update — update dot tanpa re-render seluruh grid
+// Realtime — re-render grid saat status berubah agar urutan otomatis update
 async function listenTalentStatus() {
   try {
     const { collection, onSnapshot } = await import('https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js');
     const db = await getFirebase();
-    let _prevApprovedIds = new Set(TALENTS.map(t => String(t.id)));
     onSnapshot(collection(db, 'talents'), snap => {
       let needRerender = false;
-
-      // Handle perubahan (added, modified, removed)
       snap.docChanges().forEach(change => {
         const d    = change.doc;
         const data = d.data();
         const idx  = TALENTS.findIndex(x => x.name.toLowerCase() === d.id || String(x.id) === d.id);
-
         if (change.type === 'removed') {
-          // Talent dihapus dari Firestore — hapus dari array dan re-render
           if (idx !== -1) { TALENTS.splice(idx, 1); needRerender = true; }
           return;
         }
-
         if (data.status !== 'approved') {
-          // Talent tidak approved — kalau ada di array, hapus
           if (idx !== -1) { TALENTS.splice(idx, 1); needRerender = true; }
           return;
         }
-
         if (idx !== -1) {
-          // Update data talent yang sudah ada
           const t = TALENTS[idx];
-          t.online          = data.online !== false;
-          t.audio           = data.audio || t.audio || '';
-          t.bio             = data.bio || t.bio || '';
-          t.services        = data.services && data.services.length ? data.services : t.services;
-          t.lockedServices  = data.lockedServices || [];
-          t.approved        = true;
-          // Update DOM langsung tanpa re-render
-          const card = document.querySelector(`[data-talent-id="${t.id}"]`);
-          if (card) {
-            // Update status dot & teks
-            const dot = card.querySelector('.status-dot');
-            const txt = card.querySelector('.status-txt');
-            if (dot) dot.className = 'status-dot' + (t.online ? '' : ' offline');
-            if (txt) txt.textContent = t.online ? 'ONLINE' : 'OFFLINE';
-
-            // Update button Pesan/Tidak Available secara realtime
-            const btn = card.querySelector('.pesan-btn');
-            if (btn) {
-              if (t.online) {
-                btn.textContent = 'Pesan Sekarang';
-                btn.className   = 'pesan-btn';
-                btn.onclick     = (e) => { e.stopPropagation(); openModal(String(t.id)); };
-              } else {
-                btn.textContent = 'Tidak Available';
-                btn.className   = 'pesan-btn offline';
-                btn.onclick     = (e) => { e.stopPropagation(); alert('Talent tidak available'); };
+          const wasOnline = t.online;
+          t.online         = data.online !== false;
+          t.audio          = data.audio || t.audio || '';
+          t.bio            = data.bio || t.bio || '';
+          t.services       = data.services && data.services.length ? data.services : t.services;
+          t.lockedServices = data.lockedServices || [];
+          t.approved       = true;
+          // Kalau status online berubah → re-render agar urutan update
+          if (wasOnline !== t.online) needRerender = true;
+          else {
+            // Hanya update DOM tanpa reorder
+            const card = document.querySelector(`[data-talent-id="${t.id}"]`);
+            if (card) {
+              const dot = card.querySelector('.status-dot');
+              const txt = card.querySelector('.status-txt');
+              if (dot) dot.className = 'status-dot' + (t.online ? '' : ' offline');
+              if (txt) txt.textContent = t.online ? 'ONLINE' : 'OFFLINE';
+              const btn = card.querySelector('.pesan-btn');
+              if (btn) {
+                if (t.online) {
+                  btn.textContent = 'Pesan Sekarang';
+                  btn.className   = 'pesan-btn';
+                  btn.onclick     = (e) => { e.stopPropagation(); openModal(String(t.id)); };
+                } else {
+                  btn.textContent = 'Tidak Available';
+                  btn.className   = 'pesan-btn offline';
+                  btn.onclick     = (e) => { e.stopPropagation(); alert('Talent tidak available'); };
+                }
+                card.onclick = t.online ? () => openModal(String(t.id)) : () => alert('Talent tidak available');
               }
-              // Update onclick card juga
-              card.onclick = t.online
-                ? () => openModal(String(t.id))
-                : () => alert('Talent tidak available');
+              const tagsEl = card.querySelector('.talent-tags');
+              if (tagsEl) tagsEl.innerHTML = (t.services||[]).filter(s => !(t.lockedServices||[]).includes(s)).map(s => `<span class="talent-tag ${tagClass(s)}">${s}</span>`).join('');
             }
-
-            // Update tags
-            const tagsEl = card.querySelector('.talent-tags');
-            if (tagsEl) tagsEl.innerHTML = (t.services||[]).filter(s => !(t.lockedServices||[]).includes(s)).map(s => `<span class="talent-tag ${tagClass(s)}">${s}</span>`).join('');
           }
         } else {
-          // Talent baru yang approved — tambah ke array
           TALENTS.push({
             id: d.id, name: data.name||d.id, age: data.age||20,
             gender: data.gender||'female', img: data.img||'',
@@ -565,24 +469,19 @@ async function listenTalentStatus() {
           needRerender = true;
         }
       });
-
       if (needRerender) renderTalents();
     });
   } catch(e) { console.warn('Gagal listen status:', e); }
 }
-
 // ============================================================
-//  INIT
+//  TESTIMONI
 // ============================================================
-// ── TESTIMONI ─────────────────────────────────────────────
 window.openTestiModal = function() {
-  // Populate talent options
   const sel = document.getElementById('testi-target');
   sel.innerHTML = '<option value="">— Pilih —</option><option value="CallPay Agency">🏢 CallPay Agency (umum)</option>';
   TALENTS.forEach(t => {
     const opt = document.createElement('option');
-    opt.value = t.name;
-    opt.textContent = '👤 ' + t.name;
+    opt.value = t.name; opt.textContent = '👤 ' + t.name;
     sel.appendChild(opt);
   });
   document.getElementById('testi-text').value = '';
@@ -591,17 +490,12 @@ window.openTestiModal = function() {
   document.getElementById('testi-count').textContent = '(0/600 kata)';
   document.getElementById('testi-modal').classList.add('open');
 };
-
-window.closeTestiModal = function() {
-  document.getElementById('testi-modal').classList.remove('open');
-};
-
+window.closeTestiModal = function() { document.getElementById('testi-modal').classList.remove('open'); };
 window.countTestiWords = function(el) {
   const chars = el.value.length;
   document.getElementById('testi-count').textContent = `(${chars}/600 karakter)`;
   if (chars > 600) el.value = el.value.slice(0, 600);
 };
-
 window.submitTesti = async function() {
   const target = document.getElementById('testi-target').value.trim();
   const text   = document.getElementById('testi-text').value.trim();
@@ -609,31 +503,21 @@ window.submitTesti = async function() {
   const errEl  = document.getElementById('testi-err');
   const btn    = document.getElementById('testi-submit-btn');
   errEl.style.display = 'none';
-
   if (!target) { errEl.textContent = 'Pilih dulu untuk siapa testimoni ini.'; errEl.style.display = 'block'; return; }
   if (!text || text.length < 10) { errEl.textContent = 'Testimoni terlalu pendek, minimal 10 karakter.'; errEl.style.display = 'block'; return; }
-
   btn.disabled = true; btn.textContent = 'Mengirim...';
   try {
     const db = await getFirebase();
     const { addDoc, collection, serverTimestamp } = await import('https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js');
-    await addDoc(collection(db, 'pending_testimoni'), {
-      target, text, name,
-      status    : 'pending',
-      createdAt : serverTimestamp(),
-    });
+    await addDoc(collection(db, 'pending_testimoni'), { target, text, name, status:'pending', createdAt:serverTimestamp() });
     closeTestiModal();
     const t = document.getElementById('toast') || (() => { const d=document.createElement('div');d.className='toast';d.id='toast';document.body.appendChild(d);return d; })();
     t.textContent = '✅ Testimoni terkirim! Menunggu review admin.';
     t.className = 'toast show';
     clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 4000);
-  } catch(e) {
-    errEl.textContent = 'Gagal: ' + e.message; errEl.style.display = 'block';
-  }
+  } catch(e) { errEl.textContent = 'Gagal: ' + e.message; errEl.style.display = 'block'; }
   btn.disabled = false; btn.textContent = 'Kirim Testimoni 🚀';
 };
-
-// Load approved testimoni realtime — selalu 6 card total
 async function loadApprovedTestimoni() {
   try {
     const db = await getFirebase();
@@ -642,33 +526,18 @@ async function loadApprovedTestimoni() {
     onSnapshot(q, snap => {
       const grid = document.getElementById('testi-grid');
       if (!grid) return;
-
       const approved = [];
       snap.forEach(d => approved.push(d.data()));
-
-      // Semua card di grid (hardcode + dynamic)
-      const allCards = Array.from(grid.querySelectorAll('.testi-card'));
       const totalSlot = 6;
-
       if (approved.length === 0) {
-        // Tidak ada yang approved, kembalikan semua card hardcode
-        allCards.forEach(c => c.style.display = '');
+        grid.querySelectorAll('.testi-card:not(.testi-card-dynamic)').forEach(c => c.style.display = '');
         grid.querySelectorAll('.testi-card-dynamic').forEach(el => el.remove());
         return;
       }
-
-      // Sembunyikan card hardcode dari belakang sebanyak approved yang ada (maks 6)
       const hideCount = Math.min(approved.length, totalSlot);
       const hardcodeCards = grid.querySelectorAll('.testi-card:not(.testi-card-dynamic)');
-      hardcodeCards.forEach((c, i) => {
-        // Sembunyikan dari card paling belakang
-        c.style.display = (i >= totalSlot - hideCount) ? 'none' : '';
-      });
-
-      // Hapus dynamic card lama
+      hardcodeCards.forEach((c, i) => { c.style.display = (i >= totalSlot - hideCount) ? 'none' : ''; });
       grid.querySelectorAll('.testi-card-dynamic').forEach(el => el.remove());
-
-      // Tambahkan dynamic card baru (maks totalSlot)
       approved.slice(0, totalSlot).forEach(data => {
         const initial    = (data.name || 'A')[0].toUpperCase();
         const colorClass = ['pk','bl'][Math.floor(Math.random()*2)];
@@ -684,17 +553,19 @@ async function loadApprovedTestimoni() {
             : 'background:rgba(168,213,249,.1);border:1px solid rgba(168,213,249,.3);color:#A8D5F9';
           talentBadge = `<span style="display:inline-block;${badgeColor};font-size:.68rem;font-weight:800;padding:2px 8px;border-radius:99px;margin-left:6px">untuk ${data.target}</span>`;
         }
-        card.innerHTML   = `<div class="testi-qmark">"</div><div class="testi-stars">★★★★★</div><p class="testi-text">${data.text}</p><div class="testi-user"><div class="testi-avatar ${colorClass}">${initial}</div><div><div class="testi-uname" style="display:flex;align-items:center;flex-wrap:wrap;gap:4px">${data.name || 'Anonim'}${talentBadge}</div><div class="testi-date">${date}</div></div></div>`;
+        card.innerHTML = `<div class="testi-qmark">"</div><div class="testi-stars">★★★★★</div><p class="testi-text">${data.text}</p><div class="testi-user"><div class="testi-avatar ${colorClass}">${initial}</div><div><div class="testi-uname" style="display:flex;align-items:center;flex-wrap:wrap;gap:4px">${data.name || 'Anonim'}${talentBadge}</div><div class="testi-date">${date}</div></div></div>`;
         grid.appendChild(card);
       });
     });
   } catch(e) { console.warn('loadApprovedTestimoni:', e); }
 }
-
+// ============================================================
+//  INIT
+// ============================================================
 document.addEventListener('DOMContentLoaded', async () => {
   await DB.getSettingsAsync();
   loadPricesFromFirestore();
-  await loadServicesFromFirestore(); // tunggu layanan selesai dimuat sebelum render
+  await loadServicesFromFirestore();
   await loadAudioFromFirestore();
   renderTalents();
   listenTalentStatus();
@@ -702,7 +573,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   if (modal) modal.addEventListener('click', e => { if (e.target === modal) closeModal(); });
   initScrollAnimations();
   loadApprovedTestimoni();
-  // Tutup modal testimoni kalau klik backdrop
   document.getElementById('testi-modal')?.addEventListener('click', e => {
     if (e.target === document.getElementById('testi-modal')) closeTestiModal();
   });
