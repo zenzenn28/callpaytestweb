@@ -15,7 +15,7 @@
     @keyframes livePulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
 
     /* Summary */
-    .summary{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:14px}
+    .summary{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:14px}
     .summary-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:8px 6px;text-align:center;transition:all .2s}
     .summary-card:hover{background:rgba(255,255,255,.07);transform:translateY(-1px)}
     .summary-card.active-filter{border-color:rgba(255,255,255,.3);background:rgba(255,255,255,.08)}
@@ -55,6 +55,7 @@
     .badge-rejected{background:rgba(255,92,92,.12);color:#FF5C5C;border:1px solid rgba(255,92,92,.3)}
     .badge-expired{background:rgba(255,184,0,.08);color:#FFB800;border:1px solid rgba(255,184,0,.2)}
     .badge-waiting_payment{background:rgba(167,139,250,.12);color:#a78bfa;border:1px solid rgba(167,139,250,.3)}
+    .log-card.status-expired{background:rgba(255,184,0,.03);border-color:rgba(255,184,0,.2)}
 
     .log-main{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;margin-bottom:6px}
     .log-field{font-size:.72rem;font-weight:700;color:rgba(240,235,248,.55);word-break:break-all;overflow-wrap:anywhere}
@@ -104,8 +105,13 @@
     <div class="summary-lbl">Ditolak</div>
   </div>
   <div class="summary-card" id="sc-pending" onclick="setFilter('pending','sc-pending')" style="cursor:pointer">
+    <div class="summary-icon">⏳</div>
+    <div class="summary-val" id="sum-pending" style="color:#a78bfa">0</div>
+    <div class="summary-lbl">Pending</div>
+  </div>
+  <div class="summary-card" id="sc-expired" onclick="setFilter('expired','sc-expired')" style="cursor:pointer">
     <div class="summary-icon">⏰</div>
-    <div class="summary-val" id="sum-pending" style="color:#FFB800">0</div>
+    <div class="summary-val" id="sum-expired" style="color:#FFB800">0</div>
     <div class="summary-lbl">Waktu Habis</div>
   </div>
 </div>
@@ -166,18 +172,19 @@ function formatPrice(p) {
 
 function getStatusBadge(status) {
   const map = {
-    pending : { label: '⏰ Waktu Habis', cls: 'badge-pending' },
-    accepted: { label: '✅ Diterima',    cls: 'badge-accepted' },
-    rejected: { label: '❌ Ditolak',     cls: 'badge-rejected' },
+    pending : { label: '⏳ Pending',      cls: 'badge-pending' },
+    expired : { label: '⏰ Waktu Habis',  cls: 'badge-expired' },
+    accepted: { label: '✅ Diterima',     cls: 'badge-accepted' },
+    rejected: { label: '❌ Ditolak',      cls: 'badge-rejected' },
   };
-  return map[status] || null; // null = tidak ditampilkan
+  return map[status] || null;
 }
 
 function renderOrders() {
   let list = allOrders.filter(o => {
-    // Filter status: kalau bukan 'all', hanya tampilkan yang dipilih
-    // Kalau 'all', tampilkan semua order
     if (activeFilter !== 'all' && o.status !== activeFilter) return false;
+    // Kalau all, hanya tampilkan 4 status utama
+    if (activeFilter === 'all' && !['pending','expired','accepted','rejected'].includes(o.status)) return false;
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       return (o.orderId||'').toLowerCase().includes(q) ||
@@ -193,6 +200,7 @@ function renderOrders() {
   document.getElementById('sum-accepted').textContent = allOrders.filter(o => o.status === 'accepted').length;
   document.getElementById('sum-rejected').textContent = allOrders.filter(o => o.status === 'rejected').length;
   document.getElementById('sum-pending').textContent  = allOrders.filter(o => o.status === 'pending').length;
+  document.getElementById('sum-expired').textContent  = allOrders.filter(o => o.status === 'expired').length;
 
   if (!list.length) {
     document.getElementById('log-list').innerHTML = `
@@ -210,7 +218,7 @@ function renderOrders() {
     const custWa = formatWa(o.custWa);
     const net    = o.originalPrice ? Math.round(Number(o.originalPrice) * 0.6) : 0;
     // Tampilkan voucher hanya di rejected dan pending (waktu habis)
-    const showVoucher = ['rejected','pending'].includes(o.status);
+    const showVoucher = ['rejected','expired'].includes(o.status);
     const voucherCode = o.voucherCode || '-';
 
     return `
