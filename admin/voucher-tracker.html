@@ -161,7 +161,13 @@ function renderVouchers() {
   document.getElementById('voucher-list').innerHTML = list.map(v => {
     const status = getVoucherStatus(v);
     const { label, cls } = getStatusLabel(status);
-    const custLast4  = v.custWa ? v.custWa.slice(-4) : '----';
+    let custWaDisplay = '-';
+    if (v.custWa) {
+      let num = v.custWa.toString().replace(/\D/g, '');
+      if (num.startsWith('62')) num = '0' + num.slice(2);
+      else if (!num.startsWith('0')) num = '0' + num;
+      custWaDisplay = num;
+    }
     const talentName = v.talentName || v.acceptedBy || '-';
 
     return `
@@ -174,7 +180,7 @@ function renderVouchers() {
         <div class="vc-info-item">📋 Layanan: <span>${v.service || '-'}</span></div>
         <div class="vc-info-item">⏱️ Durasi: <span>${v.duration || '-'} menit</span></div>
         <div class="vc-info-item">👤 Talent: <span>${talentName}</span></div>
-        <div class="vc-info-item">📱 WA: <span>xxxx-xxxx-${custLast4}</span></div>
+        <div class="vc-info-item">📱 WA: <span>${custWaDisplay}</span></div>
       </div>
       <div class="vc-meta">Dibuat: ${formatDate(v.createdAt)}${v.usedAt ? ' · Dipakai: ' + formatDate(v.usedAt) : ''}</div>
       ${status === 'used' ? `
