@@ -188,25 +188,27 @@ function renderVouchers() {
 
 async function loadVouchers() {
   try {
-    // Ambil data talent untuk mapping talentId → talentName
-    const talentsSnap = await getDocs(collection(db, 'talents'));
-    const talentMap   = {};
-    talentsSnap.forEach(d => {
-      talentMap[d.id] = d.data().name || d.id;
-    });
-
     // Ambil semua voucher
     const snap = await getDocs(collection(db, 'vouchers'));
-    allVouchers = [];
-    snap.forEach(d => {
-      const v = { id: d.id, ...d.data() };
-      // Cari nama talent dari acceptedBy atau dari order
-      if (v.acceptedBy && talentMap[v.acceptedBy]) {
-        v.talentName = talentMap[v.acceptedBy];
-      } else if (!v.talentName) {
-        v.talentName = '-';
+    const rawVouchers = [];
+    snap.forEach(d => rawVouchers.push({ id: d.id, ...d.data() }));
+
+    // Ambil semua order untuk mapping originalOrder → talentName
+    const ordersSnap = await getDocs(collection(db, 'orders'));
+    const orderMap   = {};
+    ordersSnap.forEach(d => {
+      const o = d.data();
+      orderMap[d.id] = o.talentName || o.talentId || '-';
+    });
+
+    allVouchers = rawVouchers.map(v => {
+      // Cari nama talent dari originalOrder
+      if (v.originalOrder && orderMap[v.originalOrder]) {
+        v.talentName = orderMap[v.originalOrder];
+      } else {
+        v.talentName = v.talentName || '-';
       }
-      allVouchers.push(v);
+      return v;
     });
 
     // Sort: terbaru di atas
