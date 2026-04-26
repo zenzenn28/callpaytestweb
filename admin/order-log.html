@@ -121,14 +121,7 @@
   </div>
 </div>
 
-<!-- Voucher Panel -->
-<div id="voucher-panel" style="display:none;background:rgba(249,168,201,.04);border:1px solid rgba(249,168,201,.2);border-radius:12px;padding:14px;margin-bottom:16px">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-    <div style="font-size:.85rem;font-weight:900">🎟️ Voucher Belum Digunakan</div>
-    <button onclick="hideVoucherPanel()" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:rgba(240,235,248,.6);width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:.9rem">×</button>
-  </div>
-  <div id="voucher-panel-list" style="display:flex;flex-direction:column;gap:8px"></div>
-</div>
+
 
 <!-- Log list -->
 <div class="log-list" id="log-list">
@@ -277,8 +270,8 @@ onSnapshot(collection(db, 'vouchers'), snap => {
   // Update count voucher belum dipakai
   const unused = allVouchers.filter(v => !v.used);
   document.getElementById('sum-voucher').textContent = unused.length;
-  renderVoucherPanel(unused);
-  renderOrders();
+  if (_voucherMode) renderVoucherList();
+  else renderOrders();
 });
 
 function formatWaFull(wa) {
@@ -289,36 +282,50 @@ function formatWaFull(wa) {
   return num;
 }
 
-function renderVoucherPanel(unused) {
-  const el = document.getElementById('voucher-panel-list');
-  if (!el) return;
-  if (!unused.length) {
-    el.innerHTML = '<div style="text-align:center;padding:16px;color:rgba(240,235,248,.35);font-size:.82rem">Tidak ada voucher aktif</div>';
-    return;
-  }
-  el.innerHTML = unused.map(v => `
-    <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;padding:8px 10px;background:rgba(255,255,255,.04);border-radius:8px;border:1px solid rgba(255,255,255,.07)">
-      <div style="font-size:.75rem;font-weight:700;color:rgba(240,235,248,.5)">📱 ${formatWaFull(v.custWa)}</div>
-      <div style="font-size:.82rem;font-weight:900;color:#F9A8C9;font-family:monospace;letter-spacing:.06em">${v.code || v.id}</div>
-      <div style="font-size:.7rem;color:rgba(240,235,248,.35);font-weight:600;white-space:nowrap">${v.service || ''} ${v.duration ? v.duration+'m' : ''}</div>
-    </div>`).join('');
-}
+
+
+let _voucherMode = false;
 
 window.showVoucherPanel = function() {
-  const panel = document.getElementById('voucher-panel');
-  const card  = document.getElementById('sc-voucher');
-  if (panel) panel.style.display = 'block';
-  document.querySelectorAll('.summary-card').forEach(c => c.classList.remove('active-filter'));
-  if (card) card.classList.add('active-filter');
-  // Reset order filter
-  activeFilter = 'all';
-  document.getElementById('sc-all').classList.add('active-filter');
+  _voucherMode = true;
+  document.querySelectorAll('.summary-card').forEach(el => el.classList.remove('active-filter'));
+  document.getElementById('sc-voucher').classList.add('active-filter');
+  renderVoucherList();
 };
 
-window.hideVoucherPanel = function() {
-  const panel = document.getElementById('voucher-panel');
-  if (panel) panel.style.display = 'none';
-  document.getElementById('sc-voucher').classList.remove('active-filter');
+function renderVoucherList() {
+  const unused = allVouchers.filter(v => !v.used);
+  const el     = document.getElementById('log-list');
+  if (!unused.length) {
+    el.innerHTML = `<div class="empty"><div style="font-size:2.5rem;margin-bottom:12px">🎟️</div><div style="font-weight:800">Tidak ada voucher yang belum digunakan</div></div>`;
+    return;
+  }
+  el.innerHTML = `
+    <div style="font-size:.8rem;font-weight:800;color:rgba(240,235,248,.4);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em">
+      🎟️ ${unused.length} Voucher Belum Digunakan
+    </div>` +
+  unused.map(v => {
+    const code = v.code || v.id;
+    const wa   = formatWaFull(v.custWa);
+    const svc  = v.service || '-';
+    const dur  = v.duration ? v.duration + ' menit' : '';
+    return `
+    <div style="background:rgba(249,168,201,.04);border:1px solid rgba(249,168,201,.2);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:12px">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:.95rem;font-weight:900;color:#F9A8C9;font-family:monospace;letter-spacing:.08em">${code}</div>
+        <div style="font-size:.75rem;color:rgba(240,235,248,.5);font-weight:700;margin-top:3px">📋 ${svc} ${dur}</div>
+        <div style="font-size:.75rem;color:rgba(240,235,248,.5);font-weight:700;margin-top:1px">📱 ${wa}</div>
+      </div>
+      <button onclick="copyVoucherInfo('${code}','${svc} ${dur}','${wa}')" style="flex-shrink:0;padding:8px 14px;border-radius:8px;background:rgba(249,168,201,.1);border:1px solid rgba(249,168,201,.3);color:#F9A8C9;font-family:'Nunito',sans-serif;font-weight:800;font-size:.78rem;cursor:pointer;white-space:nowrap">📋 Salin</button>
+    </div>`;
+  }).join('');
+}
+
+window.copyVoucherInfo = function(code, svc, wa) {
+  const text = `Voucher: ${code}\nLayanan: ${svc}\nWA: ${wa}`;
+  navigator.clipboard.writeText(text).then(() => {
+    window._showCopyToast();
+  }).catch(() => alert(`Voucher: ${code}\nLayanan: ${svc}\nWA: ${wa}`));
 };
 
 // Realtime listener orders
@@ -329,11 +336,25 @@ onSnapshot(collection(db, 'orders'), snap => {
   renderOrders();
 });
 
+// Toast notif copy
+window._showCopyToast = function() {
+  let toast = document.getElementById('copy-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'copy-toast';
+    toast.style.cssText = 'display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#3DD68C;color:#fff;padding:8px 20px;border-radius:99px;font-size:.82rem;font-weight:800;z-index:9999';
+    toast.textContent = '✅ Tersalin!';
+    document.body.appendChild(toast);
+  }
+  toast.style.display = 'block';
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => { toast.style.display = 'none'; }, 2000);
+};
+
 window.setFilter = function(filter, cardId) {
+  _voucherMode = false;
   activeFilter = filter;
-  // Reset semua summary card
   document.querySelectorAll('.summary-card').forEach(c => c.classList.remove('active-filter'));
-  // Aktifkan card yang dipilih
   const activeCard = document.getElementById(cardId);
   if (activeCard) activeCard.classList.add('active-filter');
   renderOrders();
