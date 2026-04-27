@@ -40,11 +40,14 @@
     /* Order log list */
     .log-list{display:flex;flex-direction:column;gap:10px}
 
-    .log-card{border-radius:12px;padding:10px 12px;border:1px solid;transition:border-color .3s,background .3s}
+    .log-card{border-radius:10px;padding:8px 10px;border:1px solid;transition:border-color .3s,background .3s}
     .log-card.status-pending{background:rgba(255,184,0,.04);border-color:rgba(255,184,0,.3)}
     .log-card.status-accepted{background:rgba(61,214,140,.04);border-color:rgba(61,214,140,.35)}
     .log-card.status-rejected{background:rgba(255,92,92,.04);border-color:rgba(255,92,92,.3)}
     .log-card.status-expired{background:rgba(255,184,0,.03);border-color:rgba(255,184,0,.2)}
+    .log-card.status-baru,.log-card.status-direct,.log-card.status-old{background:rgba(255,255,255,.02);border-color:rgba(255,255,255,.08)}
+    .badge-old{background:rgba(255,255,255,.08);color:rgba(240,235,248,.5);border:1px solid rgba(255,255,255,.12)}
+    .badge-waiting_payment{background:rgba(167,139,250,.12);color:#a78bfa;border:1px solid rgba(167,139,250,.3)}
     .log-card.status-waiting_payment{background:rgba(167,139,250,.04);border-color:rgba(167,139,250,.25)}
 
     .log-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:7px}
@@ -56,8 +59,11 @@
     .badge-expired{background:rgba(255,184,0,.08);color:#FFB800;border:1px solid rgba(255,184,0,.2)}
     .badge-waiting_payment{background:rgba(167,139,250,.12);color:#a78bfa;border:1px solid rgba(167,139,250,.3)}
     .log-card.status-expired{background:rgba(255,184,0,.03);border-color:rgba(255,184,0,.2)}
+    .log-card.status-baru,.log-card.status-direct,.log-card.status-old{background:rgba(255,255,255,.02);border-color:rgba(255,255,255,.08)}
+    .badge-old{background:rgba(255,255,255,.08);color:rgba(240,235,248,.5);border:1px solid rgba(255,255,255,.12)}
+    .badge-waiting_payment{background:rgba(167,139,250,.12);color:#a78bfa;border:1px solid rgba(167,139,250,.3)}
 
-    .log-main{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;margin-bottom:6px}
+    .log-main{display:grid;grid-template-columns:1fr 1fr;gap:3px 10px;margin-bottom:4px}
     .log-field{font-size:.72rem;font-weight:700;color:rgba(240,235,248,.55);word-break:break-all;overflow-wrap:anywhere}
     .log-field span{color:#F0EBF8;font-weight:800;font-size:.75rem;word-break:break-all;overflow-wrap:anywhere}
     .log-field.full{grid-column:span 2}
@@ -130,7 +136,7 @@
 
 <script type="module">
 import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js';
-import { getFirestore, collection, onSnapshot, query, orderBy } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js';
+import { getFirestore, collection, onSnapshot, query, orderBy, doc, deleteDoc } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js';
 
 const FIREBASE_CONFIG = {
   apiKey           : 'AIzaSyBLPe_yx28LyefI856Ysxz3YEPnwA0ENFU',
@@ -179,19 +185,20 @@ function formatPrice(p) {
 
 function getStatusBadge(status) {
   const map = {
-    pending : { label: '⏳ Pending',      cls: 'badge-pending' },
-    expired : { label: '⏰ Waktu Habis',  cls: 'badge-expired' },
-    accepted: { label: '✅ Diterima',     cls: 'badge-accepted' },
-    rejected: { label: '❌ Ditolak',      cls: 'badge-rejected' },
+    pending        : { label: '⏳ Pending',        cls: 'badge-pending' },
+    expired        : { label: '⏰ Waktu Habis',    cls: 'badge-expired' },
+    accepted       : { label: '✅ Diterima',       cls: 'badge-accepted' },
+    rejected       : { label: '❌ Ditolak',        cls: 'badge-rejected' },
+    waiting_payment: { label: '💳 Menunggu Bayar', cls: 'badge-waiting_payment' },
+    baru           : { label: '📩 Order Lama',     cls: 'badge-old' },
+    direct         : { label: '📩 Order Lama',     cls: 'badge-old' },
   };
-  return map[status] || null;
+  return map[status] || { label: `📄 ${status || 'Lama'}`, cls: 'badge-old' };
 }
 
 function renderOrders() {
   let list = allOrders.filter(o => {
     if (activeFilter !== 'all' && o.status !== activeFilter) return false;
-    // Kalau all, hanya tampilkan 4 status utama
-    if (activeFilter === 'all' && !['pending','expired','accepted','rejected'].includes(o.status)) return false;
     if (searchQuery) {
       const q = searchQuery.toLowerCase();
       return (o.orderId||'').toLowerCase().includes(q) ||
@@ -310,16 +317,31 @@ function renderVoucherList() {
     const svc  = v.service || '-';
     const dur  = v.duration ? v.duration + ' menit' : '';
     return `
-    <div style="background:rgba(249,168,201,.04);border:1px solid rgba(249,168,201,.2);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:12px">
-      <div style="flex:1;min-width:0">
-        <div style="font-size:.95rem;font-weight:900;color:#F9A8C9;font-family:monospace;letter-spacing:.08em">${code}</div>
-        <div style="font-size:.75rem;color:rgba(240,235,248,.5);font-weight:700;margin-top:3px">📋 ${svc} ${dur}</div>
-        <div style="font-size:.75rem;color:rgba(240,235,248,.5);font-weight:700;margin-top:1px">📱 ${wa}</div>
+    <div style="background:rgba(249,168,201,.04);border:1px solid rgba(249,168,201,.2);border-radius:12px;padding:12px 14px;margin-bottom:8px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:.95rem;font-weight:900;color:#F9A8C9;font-family:monospace;letter-spacing:.08em">${code}</div>
+          <div style="font-size:.75rem;color:rgba(240,235,248,.5);font-weight:700;margin-top:3px">📋 ${svc} ${dur} · 📱 ${wa}</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0">
+          <button onclick="copyVoucherInfo('${code}','${svc} ${dur}','${wa}')" style="padding:7px 10px;border-radius:8px;background:rgba(249,168,201,.1);border:1px solid rgba(249,168,201,.3);color:#F9A8C9;font-family:'Nunito',sans-serif;font-weight:800;font-size:.72rem;cursor:pointer">📋 Salin</button>
+          <button onclick="deleteVoucher('${code}')" style="padding:7px 10px;border-radius:8px;background:rgba(255,92,92,.1);border:1px solid rgba(255,92,92,.3);color:#FF5C5C;font-family:'Nunito',sans-serif;font-weight:800;font-size:.72rem;cursor:pointer">🗑️ Hapus</button>
+        </div>
       </div>
-      <button onclick="copyVoucherInfo('${code}','${svc} ${dur}','${wa}')" style="flex-shrink:0;padding:8px 14px;border-radius:8px;background:rgba(249,168,201,.1);border:1px solid rgba(249,168,201,.3);color:#F9A8C9;font-family:'Nunito',sans-serif;font-weight:800;font-size:.78rem;cursor:pointer;white-space:nowrap">📋 Salin</button>
     </div>`;
   }).join('');
 }
+
+// Confirm modal untuk hapus/nonaktifkan voucher
+let _pendingVoucherAction = null;
+
+window.deleteVoucher = function(code) {
+  if (!confirm(`Hapus voucher ${code}?\nVoucher akan dihapus permanen dari database.`)) return;
+  const voucherDoc = doc(db, 'vouchers', code);
+  deleteDoc(voucherDoc)
+    .then(() => { window._showCopyToast('🗑️ Voucher dihapus!'); })
+    .catch(e => alert('Gagal: ' + e.message));
+};
 
 window.copyVoucherInfo = function(code, svc, wa) {
   const text = `Voucher: ${code}\nLayanan: ${svc}\nWA: ${wa}`;
@@ -337,15 +359,15 @@ onSnapshot(collection(db, 'orders'), snap => {
 });
 
 // Toast notif copy
-window._showCopyToast = function() {
+window._showCopyToast = function(msg) {
   let toast = document.getElementById('copy-toast');
   if (!toast) {
     toast = document.createElement('div');
     toast.id = 'copy-toast';
     toast.style.cssText = 'display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#3DD68C;color:#fff;padding:8px 20px;border-radius:99px;font-size:.82rem;font-weight:800;z-index:9999';
-    toast.textContent = '✅ Tersalin!';
     document.body.appendChild(toast);
   }
+  toast.textContent = msg || '✅ Tersalin!';
   toast.style.display = 'block';
   clearTimeout(toast._t);
   toast._t = setTimeout(() => { toast.style.display = 'none'; }, 2000);
