@@ -25,7 +25,6 @@ function closeSidebar(){const sb=document.querySelector('.sidebar'),ov=document.
 </script>
 </head>
 <body>
-
 <!-- LOGIN -->
 <div class="login-page" id="login-page" style="display:none">
   <div class="login-card">
@@ -64,12 +63,12 @@ function closeSidebar(){const sb=document.querySelector('.sidebar'),ov=document.
       <a href="services.html"      class="nav-item"><span class="nav-icon">🎯</span>Kelola Layanan</a>
       <a href="pricelist.html"     class="nav-item"><span class="nav-icon">💲</span>Kelola Pricelist</a>
       <a href="salary.html"        class="nav-item"><span class="nav-icon">💰</span>Rekap Gaji</a>
+      <a href="order-log.html"     class="nav-item"><span class="nav-icon">📋</span>Log Aktivitas</a>
       <a href="settings.html"      class="nav-item"><span class="nav-icon">⚙️</span>Pengaturan</a>
       <a href="../index.html"      class="nav-item" id="back-web"><span class="nav-icon">🌐</span>Lihat Website</a>
     </nav>
     <div class="sidebar-footer"><button class="logout-btn" id="logout-btn">Logout →</button></div>
   </aside>
-
   <main class="main">
     <div class="page-header">
       <h1>Owner Panel 👑</h1>
@@ -92,6 +91,11 @@ function closeSidebar(){const sb=document.querySelector('.sidebar'),ov=document.
         <div class="shortcut-title">Rekap Gaji</div>
         <div class="shortcut-desc">Kelola & konfirmasi pembayaran gaji talent</div>
       </a>
+      <a href="order-log.html" class="shortcut-card">
+        <div class="shortcut-icon">📋</div>
+        <div class="shortcut-title">Log Aktivitas</div>
+        <div class="shortcut-desc">Pantau & kelola semua data order</div>
+      </a>
       <a href="settings.html" class="shortcut-card">
         <div class="shortcut-icon">⚙️</div>
         <div class="shortcut-title">Pengaturan</div>
@@ -107,7 +111,6 @@ import { DB } from '../admin/data.js?v=11';
 const SESSION_KEY = 'cp_owner';
 function isOwnerLoggedIn() { return sessionStorage.getItem(SESSION_KEY) === '1'; }
 function setOwnerLogin(v)  { v ? sessionStorage.setItem(SESSION_KEY,'1') : sessionStorage.removeItem(SESSION_KEY); }
-
 async function doLogin() {
   const cfg = await DB.getSettingsAsync();
   const p = document.getElementById('p').value;
@@ -120,13 +123,11 @@ async function doLogin() {
     document.getElementById('p').value = '';
   }
 }
-
 function showDash() {
   document.getElementById('login-page').style.display = 'none';
   document.getElementById('dashboard').style.display  = 'flex';
   loadPendingBadge();
 }
-
 async function loadPendingBadge() {
   try {
     const { initializeApp, getApps } = await import('https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js');
@@ -136,7 +137,7 @@ async function loadPendingBadge() {
       authDomain       : 'callpay-28a28.firebaseapp.com',
       projectId        : 'callpay-28a28',
       storageBucket    : 'callpay-28a28.firebasestorage.app',
-      messagingSenderId: '44722427776',
+      messagingSenderId: '44722427756',
       appId            : '1:44722427776:web:29d1a297746cd83d685365'
     };
     const app  = getApps().length ? getApps()[0] : initializeApp(FIREBASE_CONFIG);
@@ -145,12 +146,11 @@ async function loadPendingBadge() {
     const pendingCount = snap.docs.filter(d => ['pending','edit-pending'].includes(d.data().status)).length;
     const badge = document.getElementById('pending-badge');
     if (pendingCount > 0 && badge) {
-      badge.textContent    = `${pendingCount} menunggu review`;
-      badge.style.display  = 'inline-block';
+      badge.textContent   = `${pendingCount} menunggu review`;
+      badge.style.display = 'inline-block';
     }
   } catch(e) {}
 }
-
 document.getElementById('login-btn').onclick = doLogin;
 document.getElementById('p').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
 document.getElementById('logout-btn').onclick = () => {
