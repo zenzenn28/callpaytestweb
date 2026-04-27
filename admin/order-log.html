@@ -310,7 +310,15 @@ function renderVoucherList() {
   }
   const aktif    = unused.filter(v => !v.deactivated);
   const nonaktif = unused.filter(v => v.deactivated);
-  const semua    = [...aktif, ...nonaktif];
+  // Sort masing-masing: terbaru di atas
+  const sortByDate = arr => arr.sort((a,b) => {
+    const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+    const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+    return tb - ta;
+  });
+  sortByDate(aktif);
+  sortByDate(nonaktif);
+  const semua = [...aktif, ...nonaktif];
 
   el.innerHTML = `
     <div style="font-size:.8rem;font-weight:800;color:rgba(240,235,248,.4);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em">
@@ -329,6 +337,7 @@ function renderVoucherList() {
           ${isNonaktif ? '<div style="font-size:.65rem;font-weight:800;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">🚫 Voucher Nonaktif</div>' : (v.createdBy === 'admin' ? '<div style="font-size:.65rem;font-weight:800;color:#FFB800;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">👑 Dibuat Admin</div>' : '')}
           <div style="font-size:.95rem;font-weight:900;color:${isNonaktif ? 'rgba(240,235,248,.4)' : '#F9A8C9'};font-family:monospace;letter-spacing:.08em;text-decoration:${isNonaktif ? 'line-through' : 'none'}">${code}</div>
           <div style="font-size:.75rem;color:rgba(240,235,248,.5);font-weight:700;margin-top:3px">📋 ${svc} ${dur} · 📱 ${wa}</div>
+          <div style="font-size:.68rem;color:rgba(240,235,248,.3);font-weight:600;margin-top:2px">🕐 ${formatDate(v.createdAt)}</div>
         </div>
         <div style="display:flex;gap:6px;flex-shrink:0">
           ${!isNonaktif ? `
