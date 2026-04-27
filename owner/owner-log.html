@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Log Aktivitas Order — CallPay Owner</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Nunito',sans-serif;background:#0A0A15;color:#F0EBF8;min-height:100vh;padding:20px}
+    .header{display:flex;align-items:center;gap:12px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,.08)}
+    .header h1{font-size:1.1rem;font-weight:900;flex:1}
+    .header a{font-size:.82rem;color:rgba(240,235,248,.4);text-decoration:none;font-weight:700;white-space:nowrap}
+    .live-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:99px;background:rgba(61,214,140,.1);border:1px solid rgba(61,214,140,.3);font-size:.72rem;font-weight:800;color:#3DD68C}
+    .live-dot{width:7px;height:7px;border-radius:50%;background:#3DD68C;animation:livePulse 1.5s ease-in-out infinite}
+    @keyframes livePulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
+
+    /* Summary */
+    .summary{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:14px}
+    .summary-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:8px 6px;text-align:center;transition:all .2s}
+    .summary-card:hover{background:rgba(255,255,255,.07);transform:translateY(-1px)}
+    .summary-card.active-filter{border-color:rgba(255,255,255,.3);background:rgba(255,255,255,.08)}
+    .summary-icon{font-size:1rem;margin-bottom:2px}
+    .summary-val{font-size:.95rem;font-weight:900}
+    .summary-lbl{font-size:.58rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:rgba(240,235,248,.4);margin-top:1px}
+
+    /* Filter & Search */
+    .toolbar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+    .search-input{width:100%;padding:9px 14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:10px;color:#F0EBF8;font-family:'Nunito',sans-serif;font-size:.82rem;font-weight:600;outline:none;box-sizing:border-box}
+    .search-input:focus{border-color:rgba(249,168,201,.4)}
+    .search-input::placeholder{color:rgba(240,235,248,.3)}
+    .filter-tabs{display:flex;gap:6px;flex-wrap:wrap}
+    .filter-tab{padding:6px 14px;border-radius:99px;font-family:'Nunito',sans-serif;font-size:.75rem;font-weight:800;cursor:pointer;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:rgba(240,235,248,.5);transition:all .2s}
+    .filter-tab.active.all{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.3);color:#fff}
+    .filter-tab.active.pending{background:rgba(255,184,0,.12);border-color:rgba(255,184,0,.35);color:#FFB800}
+    .filter-tab.active.accepted{background:rgba(61,214,140,.12);border-color:rgba(61,214,140,.35);color:#3DD68C}
+    .filter-tab.active.rejected{background:rgba(255,92,92,.12);border-color:rgba(255,92,92,.35);color:#FF5C5C}
+    .filter-tab.active.expired{background:rgba(255,184,0,.08);border-color:rgba(255,184,0,.25);color:#FFB800}
+    .filter-tab.active.waiting{background:rgba(167,139,250,.12);border-color:rgba(167,139,250,.35);color:#a78bfa}
+
+    /* Order log list */
+    .log-list{display:flex;flex-direction:column;gap:10px}
+
+    .log-card{border-radius:10px;padding:8px 10px;border:1px solid;transition:border-color .3s,background .3s}
+    .log-card.status-pending{background:rgba(255,184,0,.04);border-color:rgba(255,184,0,.3)}
+    .log-card.status-accepted{background:rgba(61,214,140,.04);border-color:rgba(61,214,140,.35)}
+    .log-card.status-rejected{background:rgba(255,92,92,.04);border-color:rgba(255,92,92,.3)}
+    .log-card.status-expired{background:rgba(255,184,0,.03);border-color:rgba(255,184,0,.2)}
+    .log-card.status-baru,.log-card.status-direct,.log-card.status-old{background:rgba(255,255,255,.02);border-color:rgba(255,255,255,.08)}
+    .badge-old{background:rgba(255,255,255,.08);color:rgba(240,235,248,.5);border:1px solid rgba(255,255,255,.12)}
+    .badge-waiting_payment{background:rgba(167,139,250,.12);color:#a78bfa;border:1px solid rgba(167,139,250,.3)}
+    .log-card.status-waiting_payment{background:rgba(167,139,250,.04);border-color:rgba(167,139,250,.25)}
+
+    .log-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:7px}
+    .log-id{font-size:.65rem;font-family:monospace;color:rgba(240,235,248,.35);font-weight:600;word-break:break-all;overflow-wrap:anywhere}
+    .log-badge{font-size:.68rem;font-weight:900;padding:4px 10px;border-radius:99px;white-space:nowrap;flex-shrink:0}
+    .badge-pending{background:rgba(255,184,0,.15);color:#FFB800;border:1px solid rgba(255,184,0,.3)}
+    .badge-accepted{background:rgba(61,214,140,.12);color:#3DD68C;border:1px solid rgba(61,214,140,.3)}
+    .badge-rejected{background:rgba(255,92,92,.12);color:#FF5C5C;border:1px solid rgba(255,92,92,.3)}
+    .badge-expired{background:rgba(255,184,0,.08);color:#FFB800;border:1px solid rgba(255,184,0,.2)}
+    .badge-waiting_payment{background:rgba(167,139,250,.12);color:#a78bfa;border:1px solid rgba(167,139,250,.3)}
+    .log-card.status-expired{background:rgba(255,184,0,.03);border-color:rgba(255,184,0,.2)}
+    .log-card.status-baru,.log-card.status-direct,.log-card.status-old{background:rgba(255,255,255,.02);border-color:rgba(255,255,255,.08)}
+    .badge-old{background:rgba(255,255,255,.08);color:rgba(240,235,248,.5);border:1px solid rgba(255,255,255,.12)}
+    .badge-waiting_payment{background:rgba(167,139,250,.12);color:#a78bfa;border:1px solid rgba(167,139,250,.3)}
+
+    .log-main{display:grid;grid-template-columns:1fr 1fr;gap:3px 10px;margin-bottom:4px}
+    .log-field{font-size:.72rem;font-weight:700;color:rgba(240,235,248,.55);word-break:break-all;overflow-wrap:anywhere}
+    .log-field span{color:#F0EBF8;font-weight:800;font-size:.75rem;word-break:break-all;overflow-wrap:anywhere}
+    .log-field.full{grid-column:span 2}
+    .log-time{font-size:.65rem;color:rgba(240,235,248,.3);font-weight:600;margin-top:4px;padding-top:6px;border-top:1px solid rgba(255,255,255,.05)}
+
+    .empty{text-align:center;padding:48px 20px;color:rgba(240,235,248,.35)}
+    .loading{text-align:center;padding:40px;color:rgba(240,235,248,.4);font-weight:700}
+
+    @media(max-width:600px){
+      .summary{grid-template-columns:repeat(3,1fr)}
+      .summary-card:nth-child(4),.summary-card:nth-child(5){grid-column:span 1}
+      .log-main{grid-template-columns:1fr}
+      .log-field.full{grid-column:span 1}
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <a href="index.html">← Kembali ke Owner Panel</a>
+  <h1>📋 Log Aktivitas Order</h1>
+  <div class="live-badge"><div class="live-dot"></div> LIVE</div>
+</div>
+
+<!-- Hapus Massal -->
+<div style="display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+  <button onclick="hapusSemua('orders')" style="padding:8px 14px;border-radius:10px;background:rgba(255,92,92,.08);border:1px solid rgba(255,92,92,.25);color:#FF5C5C;font-family:'Nunito',sans-serif;font-weight:800;font-size:.78rem;cursor:pointer">🗑️ Hapus Semua Order</button>
+  <button onclick="hapusSemua('vouchers')" style="padding:8px 14px;border-radius:10px;background:rgba(255,184,0,.08);border:1px solid rgba(255,184,0,.25);color:#FFB800;font-family:'Nunito',sans-serif;font-weight:800;font-size:.78rem;cursor:pointer">🗑️ Hapus Semua Voucher</button>
+  <button onclick="hapusSemua('all')" style="padding:8px 14px;border-radius:10px;background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.25);color:#a78bfa;font-family:'Nunito',sans-serif;font-weight:800;font-size:.78rem;cursor:pointer">🗑️ Hapus Semua</button>
+</div>
+
+<!-- Search -->
+<div style="margin-bottom:14px">
+  <input type="text" class="search-input" id="search-input" placeholder="🔍 Cari talent, layanan, WA, ID order...">
+</div>
+
+<!-- Summary cards (clickable filter) -->
+<div class="summary">
+  <div class="summary-card active-filter" id="sc-all" onclick="setFilter('all','sc-all')" style="cursor:pointer;border-color:rgba(255,255,255,.3);background:rgba(255,255,255,.08)">
+    <div class="summary-icon">📋</div>
+    <div class="summary-val" id="sum-all">0</div>
+    <div class="summary-lbl">Total</div>
+  </div>
+  <div class="summary-card" id="sc-accepted" onclick="setFilter('accepted','sc-accepted')" style="cursor:pointer">
+    <div class="summary-icon">✅</div>
+    <div class="summary-val" id="sum-accepted" style="color:#3DD68C">0</div>
+    <div class="summary-lbl">Diterima</div>
+  </div>
+  <div class="summary-card" id="sc-rejected" onclick="setFilter('rejected','sc-rejected')" style="cursor:pointer">
+    <div class="summary-icon">❌</div>
+    <div class="summary-val" id="sum-rejected" style="color:#FF5C5C">0</div>
+    <div class="summary-lbl">Ditolak</div>
+  </div>
+  <div class="summary-card" id="sc-pending" onclick="setFilter('pending','sc-pending')" style="cursor:pointer">
+    <div class="summary-icon">⏳</div>
+    <div class="summary-val" id="sum-pending" style="color:#a78bfa">0</div>
+    <div class="summary-lbl">Pending</div>
+  </div>
+  <div class="summary-card" id="sc-expired" onclick="setFilter('expired','sc-expired')" style="cursor:pointer">
+    <div class="summary-icon">⏰</div>
+    <div class="summary-val" id="sum-expired" style="color:#FFB800">0</div>
+    <div class="summary-lbl">Waktu Habis</div>
+  </div>
+  <div class="summary-card" id="sc-voucher" onclick="showVoucherPanel()" style="cursor:pointer">
+    <div class="summary-icon">🎟️</div>
+    <div class="summary-val" id="sum-voucher" style="color:#F9A8C9">0</div>
+    <div class="summary-lbl">Belum Digunakan</div>
+  </div>
+</div>
+
+
+
+<!-- Log list -->
+<div class="log-list" id="log-list">
+  <div class="loading">⏳ Memuat log order...</div>
+</div>
+
+<script type="module">
+import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js';
+import { getFirestore, collection, onSnapshot, query, orderBy, doc, updateDoc, deleteDoc, getDocs, writeBatch } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js';
+
+const FIREBASE_CONFIG = {
+  apiKey           : 'AIzaSyBLPe_yx28LyefI856Ysxz3YEPnwA0ENFU',
+  authDomain       : 'callpay-28a28.firebaseapp.com',
+  projectId        : 'callpay-28a28',
+  storageBucket    : 'callpay-28a28.firebasestorage.app',
+  messagingSenderId: '44722427776',
+  appId            : '1:44722427776:web:29d1a297746cd83d685365'
+};
+const app = getApps().length ? getApps()[0] : initializeApp(FIREBASE_CONFIG);
+const db  = getFirestore(app);
+
+let allOrders    = [];
+let activeFilter = 'all';
+let searchQuery  = '';
+
+function formatDate(iso) {
+  if (!iso) return '-';
+  try {
+    // Handle Firestore Timestamp object
+    let date;
+    if (iso && typeof iso === 'object' && iso.seconds) {
+      date = new Date(iso.seconds * 1000);
+    } else {
+      date = new Date(iso);
+    }
+    if (isNaN(date.getTime())) return '-';
+    return date.toLocaleDateString('id-ID', {
+      weekday:'short', day:'2-digit', month:'short',
+      year:'numeric', hour:'2-digit', minute:'2-digit'
+    });
+  } catch(e) { return '-'; }
+}
+
+function formatWa(wa) {
+  if (!wa) return '-';
+  let num = wa.toString().replace(/\D/g, '');
+  if (num.startsWith('62')) num = '0' + num.slice(2);
+  else if (!num.startsWith('0')) num = '0' + num;
+  return num;
+}
+
+function formatPrice(p) {
+  return p ? 'Rp ' + Number(p).toLocaleString('id-ID') : '-';
+}
+
+function getStatusBadge(status) {
+  const map = {
+    pending        : { label: '⏳ Pending',        cls: 'badge-pending' },
+    expired        : { label: '⏰ Waktu Habis',    cls: 'badge-expired' },
+    accepted       : { label: '✅ Diterima',       cls: 'badge-accepted' },
+    rejected       : { label: '❌ Ditolak',        cls: 'badge-rejected' },
+    waiting_payment: { label: '💳 Menunggu Bayar', cls: 'badge-waiting_payment' },
+    baru           : { label: '📩 Order Lama',     cls: 'badge-old' },
+    direct         : { label: '📩 Order Lama',     cls: 'badge-old' },
+  };
+  return map[status] || { label: `📄 ${status || 'Lama'}`, cls: 'badge-old' };
+}
+
+function renderOrders() {
+  let list = allOrders.filter(o => {
+    if (activeFilter !== 'all' && o.status !== activeFilter) return false;
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      return (o.orderId||'').toLowerCase().includes(q) ||
+             (o.talentName||'').toLowerCase().includes(q) ||
+             (o.service||'').toLowerCase().includes(q) ||
+             (o.custWa||'').includes(q);
+    }
+    return true;
+  });
+
+  // Update summary
+  document.getElementById('sum-all').textContent      = allOrders.length;
+  document.getElementById('sum-accepted').textContent = allOrders.filter(o => o.status === 'accepted').length;
+  document.getElementById('sum-rejected').textContent = allOrders.filter(o => o.status === 'rejected').length;
+  document.getElementById('sum-pending').textContent  = allOrders.filter(o => o.status === 'pending').length;
+  document.getElementById('sum-expired').textContent  = allOrders.filter(o => o.status === 'expired').length;
+
+  if (!list.length) {
+    document.getElementById('log-list').innerHTML = `
+      <div class="empty">
+        <div style="font-size:2.5rem;margin-bottom:12px">📭</div>
+        <div style="font-weight:800">Tidak ada order ditemukan</div>
+      </div>`;
+    return;
+  }
+
+  document.getElementById('log-list').innerHTML = list.map(o => {
+    const badge = getStatusBadge(o.status);
+    if (!badge) return '';
+    const { label, cls } = badge;
+    const custWa = formatWa(o.custWa);
+    const net    = o.originalPrice ? Math.round(Number(o.originalPrice) * 0.6) : 0;
+    // Tampilkan voucher hanya di rejected dan pending (waktu habis)
+    // Tampilkan voucher: kalau ditolak/waktu habis ATAU kalau order pakai voucher
+    const showVoucher = ['rejected','expired'].includes(o.status) || (o.useVoucher && o.voucherCode);
+    const voucherCode = o.voucherCode || voucherMap[o.orderId || o.id] || '-';
+
+    return `
+    <div class="log-card status-${o.status}">
+      <div class="log-top">
+        <div class="log-id">${o.orderId || o.id || '-'}</div>
+        <div class="log-badge ${cls}">${label}</div>
+      </div>
+      <div class="log-main">
+        <div class="log-field">👤 Talent: <span>${o.talentName || o.talentId || '-'}</span></div>
+        <div class="log-field">📱 WA Customer: <span>${custWa}</span></div>
+        <div class="log-field">📋 Layanan: <span>${o.service || '-'}</span></div>
+        <div class="log-field">⏱️ Durasi: <span>${o.duration ? o.duration + ' menit' : '-'}</span></div>
+        <div class="log-field">💰 Harga: <span>${formatPrice(o.originalPrice || o.price)}</span></div>
+        <div class="log-field">💵 Didapat Talent: <span style="color:#3DD68C">${net ? 'Rp ' + net.toLocaleString('id-ID') : '-'}</span></div>
+        ${showVoucher ? `<div class="log-field full">🎟️ Kode Voucher: <span style="color:#FFB800;font-family:monospace;letter-spacing:.08em">${voucherCode}</span></div>` : ''}
+        <div class="log-field">🏷️ Admin: <span>${o.adminParam || 'callpay'}</span></div>
+        ${o.note ? `<div class="log-field full">📝 Catatan: <span>${o.note}</span></div>` : ''}
+      </div>
+      <div class="log-time">
+        🕐 Order masuk: ${formatDate(o.createdAt)}
+        ${o.respondedAt ? ' · Respons: ' + formatDate(o.respondedAt) : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// Map orderId → voucherCode (dari koleksi vouchers)
+let voucherMap = {};
+let allVouchers = [];
+
+// Load vouchers realtime
+onSnapshot(collection(db, 'vouchers'), snap => {
+  voucherMap = {};
+  allVouchers = [];
+  snap.forEach(d => {
+    const v = { id: d.id, ...d.data() };
+    allVouchers.push(v);
+    if (v.originalOrder) voucherMap[v.originalOrder] = v.code || d.id;
+  });
+  // Update count voucher belum dipakai
+  const unused = allVouchers.filter(v => !v.used || v.deactivated);
+  const aktifCount = allVouchers.filter(v => !v.used && !v.deactivated).length;
+  document.getElementById('sum-voucher').textContent = aktifCount;
+  if (_voucherMode) renderVoucherList();
+  else renderOrders();
+});
+
+function formatWaFull(wa) {
+  if (!wa) return '-';
+  let num = wa.toString().replace(/\D/g, '');
+  if (num.startsWith('62')) num = '0' + num.slice(2);
+  else if (!num.startsWith('0')) num = '0' + num;
+  return num;
+}
+
+
+
+let _voucherMode = false;
+
+window.showVoucherPanel = function() {
+  _voucherMode = true;
+  document.querySelectorAll('.summary-card').forEach(el => el.classList.remove('active-filter'));
+  document.getElementById('sc-voucher').classList.add('active-filter');
+  renderVoucherList();
+};
+
+function renderVoucherList() {
+  const unused = allVouchers.filter(v => !v.used || v.deactivated);
+  const el     = document.getElementById('log-list');
+  if (!unused.length) {
+    el.innerHTML = `<div class="empty"><div style="font-size:2.5rem;margin-bottom:12px">🎟️</div><div style="font-weight:800">Tidak ada voucher yang belum digunakan</div></div>`;
+    return;
+  }
+  const aktif    = unused.filter(v => !v.deactivated);
+  const nonaktif = unused.filter(v => v.deactivated);
+  // Sort masing-masing: terbaru di atas
+  const sortByDate = arr => arr.sort((a,b) => {
+    const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+    const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+    return tb - ta;
+  });
+  sortByDate(aktif);
+  sortByDate(nonaktif);
+  const semua = [...aktif, ...nonaktif];
+
+  el.innerHTML = `
+    <div style="font-size:.8rem;font-weight:800;color:rgba(240,235,248,.4);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em">
+      🎟️ ${aktif.length} Voucher Aktif · ${nonaktif.length} Nonaktif
+    </div>` +
+  semua.map(v => {
+    const code       = v.code || v.id;
+    const wa         = formatWaFull(v.custWa);
+    const svc        = v.service || '-';
+    const dur        = v.duration ? v.duration + ' menit' : '';
+    const isNonaktif = !!v.deactivated;
+    return `
+    <div style="background:${isNonaktif ? 'rgba(255,255,255,.02)' : 'rgba(249,168,201,.04)'};border:1px solid ${isNonaktif ? 'rgba(255,255,255,.08)' : 'rgba(249,168,201,.2)'};border-radius:12px;padding:12px 14px;margin-bottom:8px;opacity:${isNonaktif ? '0.45' : '1'}">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div style="flex:1;min-width:0">
+          ${isNonaktif ? '<div style="font-size:.65rem;font-weight:800;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">🚫 Voucher Nonaktif</div>' : (v.createdBy === 'admin' ? '<div style="font-size:.65rem;font-weight:800;color:#FFB800;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">👑 Dibuat Admin</div>' : '')}
+          <div style="font-size:.95rem;font-weight:900;color:${isNonaktif ? 'rgba(240,235,248,.4)' : '#F9A8C9'};font-family:monospace;letter-spacing:.08em;text-decoration:${isNonaktif ? 'line-through' : 'none'}">${code}</div>
+          <div style="font-size:.75rem;color:rgba(240,235,248,.5);font-weight:700;margin-top:3px">📋 ${svc} ${dur} · 📱 ${wa}</div>
+          <div style="font-size:.68rem;color:rgba(240,235,248,.3);font-weight:600;margin-top:2px">🕐 ${formatDate(v.createdAt)}</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0">
+          ${!isNonaktif ? `
+          <button onclick="copyVoucherInfo('${code}','${svc} ${dur}','${wa}')" style="padding:7px 10px;border-radius:8px;background:rgba(249,168,201,.1);border:1px solid rgba(249,168,201,.3);color:#F9A8C9;font-family:'Nunito',sans-serif;font-weight:800;font-size:.72rem;cursor:pointer">📋 Salin</button>
+          <button onclick="deactivateVoucher('${code}')" style="padding:7px 10px;border-radius:8px;background:rgba(255,92,92,.1);border:1px solid rgba(255,92,92,.3);color:#FF5C5C;font-family:'Nunito',sans-serif;font-weight:800;font-size:.72rem;cursor:pointer">🚫 Nonaktifkan</button>
+          ` : ''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// Confirm modal untuk hapus/nonaktifkan voucher
+let _pendingVoucherAction = null;
+
+window.deactivateVoucher = function(code) {
+  if (!confirm(`Nonaktifkan voucher ${code}?\nVoucher tidak bisa diaktifkan kembali.`)) return;
+  const voucherDoc = doc(db, 'vouchers', code);
+  updateDoc(voucherDoc, { deactivated: true, deactivatedAt: new Date().toISOString() })
+    .then(() => { window._showCopyToast('🚫 Voucher dinonaktifkan!'); })
+    .catch(e => alert('Gagal: ' + e.message));
+};
+
+window.copyVoucherInfo = function(code, svc, wa) {
+  const text = `Voucher: ${code}\nLayanan: ${svc}\nWA: ${wa}`;
+  navigator.clipboard.writeText(text).then(() => {
+    window._showCopyToast();
+  }).catch(() => alert(`Voucher: ${code}\nLayanan: ${svc}\nWA: ${wa}`));
+};
+
+// Realtime listener orders
+onSnapshot(collection(db, 'orders'), snap => {
+  allOrders = [];
+  snap.forEach(d => allOrders.push({ id: d.id, ...d.data() }));
+  // Sort by createdAt — handle string ISO, Firestore Timestamp, dan kosong
+  function getTime(o) {
+    const v = o.createdAt;
+    if (!v) return 0;
+    if (typeof v === 'object' && v.seconds) return v.seconds * 1000; // Firestore Timestamp
+    const d = new Date(v);
+    return isNaN(d) ? 0 : d.getTime();
+  }
+  allOrders.sort((a, b) => getTime(b) - getTime(a));
+  renderOrders();
+});
+
+// Hapus massal
+window.hapusSemua = async function(target) {
+  const labels = {
+    orders  : 'semua data order',
+    vouchers: 'semua data voucher',
+    all     : 'semua data order DAN voucher',
+  };
+  if (!confirm(`⚠️ Yakin hapus ${labels[target]}?\n\nTindakan ini tidak bisa dibatalkan!`)) return;
+  if (!confirm(`Konfirmasi sekali lagi — hapus ${labels[target]} secara permanen?`)) return;
+
+  try {
+    const batch = writeBatch(db);
+    let count = 0;
+
+    if (target === 'orders' || target === 'all') {
+      const snap = await getDocs(collection(db, 'orders'));
+      snap.forEach(d => { batch.delete(doc(db, 'orders', d.id)); count++; });
+    }
+    if (target === 'vouchers' || target === 'all') {
+      const snap = await getDocs(collection(db, 'vouchers'));
+      snap.forEach(d => { batch.delete(doc(db, 'vouchers', d.id)); count++; });
+    }
+
+    await batch.commit();
+    window._showCopyToast(`🗑️ ${count} data berhasil dihapus!`);
+  } catch(e) {
+    alert('Gagal hapus: ' + e.message);
+  }
+};
+
+// Toast notif copy
+window._showCopyToast = function(msg) {
+  let toast = document.getElementById('copy-toast');
+  if (!toast) {
+    toast = document.createElement('div');
+    toast.id = 'copy-toast';
+    toast.style.cssText = 'display:none;position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#3DD68C;color:#fff;padding:8px 20px;border-radius:99px;font-size:.82rem;font-weight:800;z-index:9999';
+    document.body.appendChild(toast);
+  }
+  toast.textContent = msg || '✅ Tersalin!';
+  toast.style.display = 'block';
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => { toast.style.display = 'none'; }, 2000);
+};
+
+window.setFilter = function(filter, cardId) {
+  _voucherMode = false;
+  activeFilter = filter;
+  document.querySelectorAll('.summary-card').forEach(c => c.classList.remove('active-filter'));
+  const activeCard = document.getElementById(cardId);
+  if (activeCard) activeCard.classList.add('active-filter');
+  renderOrders();
+};
+
+document.getElementById('search-input').addEventListener('input', function() {
+  searchQuery = this.value.trim();
+  renderOrders();
+});
+</script>
+</body>
+</html>
