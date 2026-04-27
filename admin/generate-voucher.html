@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Generate Voucher — CallPay Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Nunito',sans-serif;background:#0A0A15;color:#F0EBF8;min-height:100vh;padding:20px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+    .header{width:100%;max-width:480px;display:flex;align-items:center;gap:12px;margin-bottom:24px}
+    .header h1{font-size:1.1rem;font-weight:900;flex:1}
+    .header a{font-size:.82rem;color:rgba(240,235,248,.4);text-decoration:none;font-weight:700}
+    .card{width:100%;max-width:480px;background:linear-gradient(145deg,#16162A,#1E1E35);border:1px solid rgba(255,255,255,.08);border-radius:20px;padding:28px}
+    .card-title{font-size:1rem;font-weight:900;margin-bottom:6px}
+    .card-sub{font-size:.78rem;color:rgba(240,235,248,.4);font-weight:600;margin-bottom:24px;line-height:1.5}
+    .form-label{font-size:.72rem;font-weight:800;color:rgba(240,235,248,.5);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;display:block}
+    .form-input{width:100%;padding:10px 14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:10px;color:#F0EBF8;font-family:'Nunito',sans-serif;font-size:.9rem;font-weight:600;outline:none;margin-bottom:14px}
+    .form-input:focus{border-color:rgba(249,168,201,.4)}
+    .form-select{width:100%;padding:10px 14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:10px;color:#F0EBF8;font-family:'Nunito',sans-serif;font-size:.9rem;font-weight:600;outline:none;margin-bottom:14px;cursor:pointer}
+    .form-select option{background:#16162A}
+    .btn-generate{width:100%;padding:14px;border-radius:12px;background:linear-gradient(135deg,#E8628A,#F9A8C9);border:none;color:#fff;font-family:'Nunito',sans-serif;font-weight:900;font-size:1rem;cursor:pointer;transition:opacity .2s,transform .2s;box-shadow:0 4px 18px rgba(232,98,138,.3);margin-top:4px}
+    .btn-generate:hover{opacity:.9;transform:translateY(-1px)}
+    .btn-generate:disabled{opacity:.5;cursor:not-allowed;transform:none}
+    .result-box{margin-top:20px;background:rgba(61,214,140,.06);border:1px solid rgba(61,214,140,.25);border-radius:14px;padding:18px;display:none;text-align:center}
+    .result-code{font-size:1.8rem;font-weight:900;color:#3DD68C;font-family:monospace;letter-spacing:.12em;margin:10px 0}
+    .result-info{font-size:.78rem;color:rgba(240,235,248,.5);font-weight:600;margin-bottom:14px}
+    .btn-copy{padding:10px 24px;border-radius:10px;background:rgba(61,214,140,.12);border:1px solid rgba(61,214,140,.3);color:#3DD68C;font-family:'Nunito',sans-serif;font-weight:800;font-size:.85rem;cursor:pointer}
+    .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#3DD68C;color:#fff;padding:8px 20px;border-radius:99px;font-size:.82rem;font-weight:800;display:none;z-index:9999}
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <a href="index.html">← Kembali</a>
+  <h1>🎟️ Generate Voucher</h1>
+</div>
+
+<div class="card">
+  <div class="card-title">Buat Voucher Manual</div>
+  <div class="card-sub">Voucher yang dibuat di sini akan ditandai sebagai voucher Admin dan bisa dilihat di Log Order.</div>
+
+  <label class="form-label">Layanan *</label>
+  <select class="form-select" id="svc-select">
+    <option value="">— Pilih Layanan —</option>
+  </select>
+
+  <label class="form-label">Durasi *</label>
+  <select class="form-select" id="dur-select">
+    <option value="">— Pilih Layanan Dulu —</option>
+  </select>
+
+  <label class="form-label">Nomor WA Penerima (opsional)</label>
+  <input type="tel" class="form-input" id="wa-input" placeholder="Contoh: 08123456789">
+
+  <label class="form-label">Catatan (opsional)</label>
+  <input type="text" class="form-input" id="note-input" placeholder="Contoh: Refund order #123">
+
+  <button class="btn-generate" id="btn-generate" onclick="generateVoucher()">✨ Generate Voucher</button>
+
+  <div class="result-box" id="result-box">
+    <div style="font-size:.78rem;font-weight:800;color:#3DD68C;margin-bottom:4px">✅ Voucher Berhasil Dibuat!</div>
+    <div class="result-code" id="result-code">VC-XXXXXXXX</div>
+    <div class="result-info" id="result-info"></div>
+    <button class="btn-copy" onclick="copyCode()">📋 Salin Kode</button>
+  </div>
+</div>
+
+<div class="toast" id="toast">✅ Tersalin!</div>
+
+<script type="module">
+import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js';
+import { getFirestore, collection, doc, setDoc, getDocs, onSnapshot } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js';
+
+const FIREBASE_CONFIG = {
+  apiKey           : 'AIzaSyBLPe_yx28LyefI856Ysxz3YEPnwA0ENFU',
+  authDomain       : 'callpay-28a28.firebaseapp.com',
+  projectId        : 'callpay-28a28',
+  storageBucket    : 'callpay-28a28.firebasestorage.app',
+  messagingSenderId: '44722427776',
+  appId            : '1:44722427776:web:29d1a297746cd83d685365'
+};
+const app = getApps().length ? getApps()[0] : initializeApp(FIREBASE_CONFIG);
+const db  = getFirestore(app);
+
+// Load services dari Firestore
+let _services = [];
+let _prices   = {};
+
+async function loadServices() {
+  const snap = await getDocs(collection(db, 'services'));
+  _services  = [];
+  snap.forEach(d => _services.push({ id: d.id, ...d.data() }));
+  _services.sort((a,b) => (a.order||99) - (b.order||99));
+
+  const svcSel = document.getElementById('svc-select');
+  svcSel.innerHTML = '<option value="">— Pilih Layanan —</option>' +
+    _services.map(s => `<option value="${s.name}">${s.icon || ''} ${s.name}</option>`).join('');
+
+  svcSel.addEventListener('change', loadDurations);
+}
+
+async function loadDurations() {
+  const svc    = document.getElementById('svc-select').value;
+  const durSel = document.getElementById('dur-select');
+  durSel.innerHTML = '<option value="">— Pilih Durasi —</option>';
+  if (!svc) return;
+
+  // Ambil harga dari pricelist admin1
+  const snap = await getDocs(collection(db, 'pricelist'));
+  snap.forEach(d => { if (d.id === 'admin1') _prices = d.data(); });
+
+  const priceMap = _prices[svc];
+  if (priceMap) {
+    Object.entries(priceMap).forEach(([min, price]) => {
+      const opt = document.createElement('option');
+      opt.value = min;
+      opt.textContent = `${min} menit — Rp ${Number(price).toLocaleString('id-ID')}`;
+      durSel.appendChild(opt);
+    });
+  }
+}
+
+function generateCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = 'VC-';
+  for (let i = 0; i < 8; i++) code += chars[Math.floor(Math.random() * chars.length)];
+  return code;
+}
+
+window.generateVoucher = async function() {
+  const svc  = document.getElementById('svc-select').value;
+  const dur  = document.getElementById('dur-select').value;
+  const wa   = document.getElementById('wa-input').value.trim().replace(/\D/g, '');
+  const note = document.getElementById('note-input').value.trim();
+
+  if (!svc) { alert('Pilih layanan dulu!'); return; }
+  if (!dur) { alert('Pilih durasi dulu!'); return; }
+
+  const btn = document.getElementById('btn-generate');
+  btn.disabled = true; btn.textContent = 'Membuat voucher...';
+
+  try {
+    const code = generateCode();
+    const now  = new Date().toISOString();
+
+    await setDoc(doc(db, 'vouchers', code), {
+      code,
+      service     : svc,
+      duration    : dur,
+      used        : false,
+      createdAt   : now,
+      reason      : 'admin_generated',
+      custWa      : wa || '',
+      note        : note || '',
+      createdBy   : 'admin',  // ← tanda voucher dari admin
+    });
+
+    // Tampilkan hasil
+    document.getElementById('result-code').textContent = code;
+    document.getElementById('result-info').textContent = `${svc} · ${dur} menit${wa ? ' · WA: 0'+wa.replace(/^62/,'').replace(/^0/,'') : ''}${note ? ' · '+note : ''}`;
+    document.getElementById('result-box').style.display = 'block';
+
+    // Reset form
+    document.getElementById('wa-input').value   = '';
+    document.getElementById('note-input').value = '';
+
+  } catch(e) {
+    alert('Gagal: ' + e.message);
+  }
+
+  btn.disabled = false; btn.textContent = '✨ Generate Voucher';
+};
+
+window.copyCode = function() {
+  const code = document.getElementById('result-code').textContent;
+  navigator.clipboard.writeText(code).then(() => {
+    const toast = document.getElementById('toast');
+    toast.style.display = 'block';
+    clearTimeout(toast._t);
+    toast._t = setTimeout(() => toast.style.display = 'none', 2000);
+  }).catch(() => alert(code));
+};
+
+loadServices();
+</script>
+</body>
+</html>
