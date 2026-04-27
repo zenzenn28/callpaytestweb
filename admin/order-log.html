@@ -136,7 +136,7 @@
 
 <script type="module">
 import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js';
-import { getFirestore, collection, onSnapshot, query, orderBy, doc, deleteDoc } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js';
+import { getFirestore, collection, onSnapshot, query, orderBy, doc, updateDoc } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js';
 
 const FIREBASE_CONFIG = {
   apiKey           : 'AIzaSyBLPe_yx28LyefI856Ysxz3YEPnwA0ENFU',
@@ -275,8 +275,9 @@ onSnapshot(collection(db, 'vouchers'), snap => {
     if (v.originalOrder) voucherMap[v.originalOrder] = v.code || d.id;
   });
   // Update count voucher belum dipakai
-  const unused = allVouchers.filter(v => !v.used);
-  document.getElementById('sum-voucher').textContent = unused.length;
+  const unused = allVouchers.filter(v => !v.used || v.deactivated);
+  const aktifCount = allVouchers.filter(v => !v.used && !v.deactivated).length;
+  document.getElementById('sum-voucher').textContent = aktifCount;
   if (_voucherMode) renderVoucherList();
   else renderOrders();
 });
@@ -301,31 +302,39 @@ window.showVoucherPanel = function() {
 };
 
 function renderVoucherList() {
-  const unused = allVouchers.filter(v => !v.used);
+  const unused = allVouchers.filter(v => !v.used || v.deactivated);
   const el     = document.getElementById('log-list');
   if (!unused.length) {
     el.innerHTML = `<div class="empty"><div style="font-size:2.5rem;margin-bottom:12px">🎟️</div><div style="font-weight:800">Tidak ada voucher yang belum digunakan</div></div>`;
     return;
   }
+  const aktif    = unused.filter(v => !v.deactivated);
+  const nonaktif = unused.filter(v => v.deactivated);
+  const semua    = [...aktif, ...nonaktif];
+
   el.innerHTML = `
     <div style="font-size:.8rem;font-weight:800;color:rgba(240,235,248,.4);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em">
-      🎟️ ${unused.length} Voucher Belum Digunakan
+      🎟️ ${aktif.length} Voucher Aktif · ${nonaktif.length} Nonaktif
     </div>` +
-  unused.map(v => {
-    const code = v.code || v.id;
-    const wa   = formatWaFull(v.custWa);
-    const svc  = v.service || '-';
-    const dur  = v.duration ? v.duration + ' menit' : '';
+  semua.map(v => {
+    const code       = v.code || v.id;
+    const wa         = formatWaFull(v.custWa);
+    const svc        = v.service || '-';
+    const dur        = v.duration ? v.duration + ' menit' : '';
+    const isNonaktif = !!v.deactivated;
     return `
-    <div style="background:rgba(249,168,201,.04);border:1px solid rgba(249,168,201,.2);border-radius:12px;padding:12px 14px;margin-bottom:8px">
+    <div style="background:${isNonaktif ? 'rgba(255,255,255,.02)' : 'rgba(249,168,201,.04)'};border:1px solid ${isNonaktif ? 'rgba(255,255,255,.08)' : 'rgba(249,168,201,.2)'};border-radius:12px;padding:12px 14px;margin-bottom:8px;opacity:${isNonaktif ? '0.45' : '1'}">
       <div style="display:flex;align-items:center;gap:10px">
         <div style="flex:1;min-width:0">
-          <div style="font-size:.95rem;font-weight:900;color:#F9A8C9;font-family:monospace;letter-spacing:.08em">${code}</div>
+          ${isNonaktif ? '<div style="font-size:.65rem;font-weight:800;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">🚫 Voucher Nonaktif</div>' : ''}
+          <div style="font-size:.95rem;font-weight:900;color:${isNonaktif ? 'rgba(240,235,248,.4)' : '#F9A8C9'};font-family:monospace;letter-spacing:.08em;text-decoration:${isNonaktif ? 'line-through' : 'none'}">${code}</div>
           <div style="font-size:.75rem;color:rgba(240,235,248,.5);font-weight:700;margin-top:3px">📋 ${svc} ${dur} · 📱 ${wa}</div>
         </div>
         <div style="display:flex;gap:6px;flex-shrink:0">
+          ${!isNonaktif ? `
           <button onclick="copyVoucherInfo('${code}','${svc} ${dur}','${wa}')" style="padding:7px 10px;border-radius:8px;background:rgba(249,168,201,.1);border:1px solid rgba(249,168,201,.3);color:#F9A8C9;font-family:'Nunito',sans-serif;font-weight:800;font-size:.72rem;cursor:pointer">📋 Salin</button>
-          <button onclick="deleteVoucher('${code}')" style="padding:7px 10px;border-radius:8px;background:rgba(255,92,92,.1);border:1px solid rgba(255,92,92,.3);color:#FF5C5C;font-family:'Nunito',sans-serif;font-weight:800;font-size:.72rem;cursor:pointer">🗑️ Hapus</button>
+          <button onclick="deactivateVoucher('${code}')" style="padding:7px 10px;border-radius:8px;background:rgba(255,92,92,.1);border:1px solid rgba(255,92,92,.3);color:#FF5C5C;font-family:'Nunito',sans-serif;font-weight:800;font-size:.72rem;cursor:pointer">🚫 Nonaktifkan</button>
+          ` : ''}
         </div>
       </div>
     </div>`;
@@ -335,11 +344,11 @@ function renderVoucherList() {
 // Confirm modal untuk hapus/nonaktifkan voucher
 let _pendingVoucherAction = null;
 
-window.deleteVoucher = function(code) {
-  if (!confirm(`Hapus voucher ${code}?\nVoucher akan dihapus permanen dari database.`)) return;
+window.deactivateVoucher = function(code) {
+  if (!confirm(`Nonaktifkan voucher ${code}?\nVoucher tidak bisa diaktifkan kembali.`)) return;
   const voucherDoc = doc(db, 'vouchers', code);
-  deleteDoc(voucherDoc)
-    .then(() => { window._showCopyToast('🗑️ Voucher dihapus!'); })
+  updateDoc(voucherDoc, { deactivated: true, deactivatedAt: new Date().toISOString() })
+    .then(() => { window._showCopyToast('🚫 Voucher dinonaktifkan!'); })
     .catch(e => alert('Gagal: ' + e.message));
 };
 
