@@ -24,7 +24,7 @@ const db  = getFirestore(app);
 
 const CLOUDINARY_CLOUD  = 'dnbjw43hp';
 const CLOUDINARY_PRESET = 'callpay_audio';
-let ALL_SERVICES = ['Temen Call','Sleepcall','Temen Curhat','Pacar Virtual','Video Call']; // default, akan diupdate dari Firestore
+let ALL_SERVICES = ['Temen Call','Sleepcall','Temen Curhat','Pacar Virtual','Video Call'];
 
 async function loadServicesForTalent() {
   try {
@@ -34,12 +34,12 @@ async function loadServicesForTalent() {
       snap.forEach(d => svcs.push({ id: d.id, ...d.data() }));
       svcs.sort((a,b) => (a.order||99) - (b.order||99));
       ALL_SERVICES = svcs.map(s => s.name);
-      // Re-render settings panel kalau sedang terbuka
       const settingsEl = document.getElementById('settings-content');
       if (settingsEl && settingsEl.innerHTML) renderSettingsPanel();
     });
   } catch(e) { console.warn('Gagal load services untuk talent:', e); }
 }
+
 const SESSION_KEY  = 'cp_talent_v2';
 const POINT_MAX    = 250;
 
@@ -147,15 +147,12 @@ function updatePointDisplay(points) {
     </div>`;
 }
 
-
 // ── SALARY SYSTEM ─────────────────────────────────────────
-
 function getCurrentPeriod() {
   const now = new Date();
   const year = now.getFullYear();
   const month = now.getMonth();
   const day = now.getDate();
-  // Periode: tgl 5 - tgl 20
   if (day >= 5 && day <= 20) {
     const start = new Date(year, month, 5);
     const end   = new Date(year, month, 20);
@@ -165,7 +162,6 @@ function getCurrentPeriod() {
       start, end
     };
   } else {
-    // Periode: tgl 21 - tgl 4 bulan berikutnya
     const startMonth = day > 20 ? month : month - 1;
     const startYear  = startMonth < 0 ? year - 1 : year;
     const endMonth   = day > 20 ? month + 1 : month;
@@ -185,9 +181,7 @@ async function loadSalaryData() {
   const period = getCurrentPeriod();
   const salaryEl = document.getElementById('talent-salary-box');
   if (!salaryEl) return;
-
   try {
-    // Ambil semua order accepted talent di periode ini
     const { collection, query, where, getDocs } = await import('https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js');
     const q = query(
       collection(db, 'orders'),
@@ -198,16 +192,12 @@ async function loadSalaryData() {
     let totalGross = 0;
     snap.forEach(d => {
       const order = d.data();
-      // Filter sesuai periode
       const createdAt = order.createdAt ? new Date(order.createdAt) : null;
       if (createdAt && createdAt >= period.start && createdAt <= period.end) {
         totalGross += Number(order.originalPrice || order.price || 0);
       }
     });
-
     const totalNet = Math.round(totalGross * 0.6);
-    const potongan = totalGross - totalNet;
-
     salaryEl.innerHTML = `
       <div onclick="openSalaryModal()" style="background:rgba(61,214,140,.06);border:1px solid rgba(61,214,140,.2);border-radius:14px;padding:16px 18px;margin-bottom:16px;cursor:pointer;transition:border-color .2s" onmouseover="this.style.borderColor='rgba(61,214,140,.4)'" onmouseout="this.style.borderColor='rgba(61,214,140,.2)'">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
@@ -239,22 +229,17 @@ window.openSalaryModal = async function() {
   listEl.innerHTML = '<div style="text-align:center;padding:30px;color:rgba(240,235,248,.45)">Memuat riwayat...</div>';
   try {
     const { collection, query, orderBy, getDocs } = await import('https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js');
-    const q = query(
-      collection(db, 'salary_periods'),
-      orderBy('createdAt', 'desc')
-    );
+    const q = query(collection(db, 'salary_periods'), orderBy('createdAt', 'desc'));
     const snap = await getDocs(q);
     const periods = [];
     snap.forEach(d => {
       const data = d.data();
       if (data.talentId === _docId) periods.push({ id: d.id, ...data });
     });
-
     if (!periods.length) {
       listEl.innerHTML = '<div style="text-align:center;padding:30px;color:rgba(240,235,248,.45)"><div style="font-size:2rem;margin-bottom:8px">📭</div><p style="font-size:.85rem">Belum ada riwayat gaji</p></div>';
       return;
     }
-
     listEl.innerHTML = periods.map(p => {
       const isPaid   = p.status === 'paid';
       const color    = isPaid ? '#3DD68C' : '#FFB800';
@@ -289,7 +274,7 @@ window.closeSalaryModal = function() {
   if (modal) modal.style.display = 'none';
 };
 
-// ── POINT MODAL (history) ─────────────────────────────────
+// ── POINT MODAL ───────────────────────────────────────────
 window.openPointModal = async function() {
   const modal = document.getElementById('point-modal');
   modal.style.display = 'flex';
@@ -331,7 +316,7 @@ window.closePointModal = function() {
 };
 
 // ── CONFIG ────────────────────────────────────────────────
-const VERCEL_URL = 'https://callpay-order-15no.vercel.app'; // Ganti setelah deploy
+const VERCEL_URL = 'https://callpay-order-15no.vercel.app';
 
 // ── ORDER SYSTEM ──────────────────────────────────────────
 let _orderListener = null;
@@ -358,10 +343,7 @@ function renderOrders() {
 function listenOrders() {
   if (!_docId) return;
   import('https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js').then(({ collection, query, where, onSnapshot }) => {
-    const q = query(
-      collection(db, 'orders'),
-      where('talentId', '==', _docId)
-    );
+    const q = query(collection(db, 'orders'), where('talentId', '==', _docId));
     if (_orderListener) _orderListener();
     _orderListener = onSnapshot(q, snap => {
       const orders = [];
@@ -371,7 +353,6 @@ function listenOrders() {
           orders.push({ id: d.id, ...data });
         }
       });
-      // Sort: terbaru di atas berdasarkan tanggal masuk
       orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
       renderOrderList(orders);
       const pendingCount = orders.filter(o => o.status === 'pending').length;
@@ -384,25 +365,17 @@ function listenOrders() {
   });
 }
 
-
 function formatOrderDate(isoString) {
   if (!isoString) return '';
   const d = new Date(isoString);
   const days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
   const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
-  const day = days[d.getDay()];
-  const date = d.getDate();
-  const month = months[d.getMonth()];
-  const year = d.getFullYear();
-  const hour = d.getHours().toString().padStart(2,'0');
-  const min = d.getMinutes().toString().padStart(2,'0');
-  return day + ', ' + date + ' ' + month + ' ' + year + ' · ' + hour + ':' + min;
+  return days[d.getDay()] + ', ' + d.getDate() + ' ' + months[d.getMonth()] + ' ' + d.getFullYear() + ' · ' + String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0');
 }
 
 function renderOrderList(orders) {
   const el = document.getElementById('orders-content');
   if (!el) return;
-
   if (!orders.length) {
     el.innerHTML = `
       <div style="text-align:center;padding:48px 20px">
@@ -412,9 +385,7 @@ function renderOrderList(orders) {
       </div>`;
     return;
   }
-
   el.innerHTML = orders.map(order => {
-    // ── ACCEPTED ──
     if (order.status === 'accepted') {
       const raw = (order.custWa || '');
       let clean = raw.replace(/\D/g, '');
@@ -438,8 +409,6 @@ function renderOrderList(orders) {
         </div>
       </div>`;
     }
-
-    // ── REJECTED ──
     if (order.status === 'rejected') {
       return `
       <div class="order-card" id="ocard-${order.orderId}" style="background:rgba(255,92,92,.03);border:1px solid rgba(255,92,92,.25);border-radius:16px;padding:18px;margin-bottom:12px;opacity:.7">
@@ -451,8 +420,6 @@ function renderOrderList(orders) {
         <div style="font-size:.75rem;color:rgba(240,235,248,.35);font-weight:600">Customer mendapat voucher pengganti</div>
       </div>`;
     }
-
-    // ── EXPIRED ──
     if (order.status === 'expired') {
       return `
       <div class="order-card" id="ocard-${order.orderId}" style="background:rgba(255,184,0,.03);border:1px solid rgba(255,184,0,.2);border-radius:16px;padding:18px;margin-bottom:12px;opacity:.7">
@@ -464,7 +431,6 @@ function renderOrderList(orders) {
         <div style="font-size:.75rem;color:rgba(240,235,248,.35);font-weight:600">Tidak ada respons — customer mendapat voucher</div>
       </div>`;
     }
-
     const exp     = new Date(order.expiredAt);
     const now     = new Date();
     const secLeft = Math.max(0, Math.floor((exp - now) / 1000));
@@ -475,13 +441,13 @@ function renderOrderList(orders) {
       <div style="font-size:.7rem;color:rgba(240,235,248,.35);font-weight:600;margin-bottom:6px">${formatOrderDate(order.createdAt)}</div>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
         <div style="font-size:.72rem;font-weight:800;color:rgba(240,235,248,.4);text-transform:uppercase;letter-spacing:.06em">Order Baru 🔔</div>
-        <div style="font-size:.82rem;font-weight:900;color:#FFB800" id="timer-${order.orderId}">${mins}:${secs.toString().padStart(2,'0')}</div>
+        <div style="font-size:.82rem;font-weight:900;color:#FFB800" id="timer-${order.orderId}">${mins}:${String(secs).padStart(2,'0')}</div>
       </div>
       <div style="margin-bottom:12px">
         <div style="font-size:.95rem;font-weight:900;margin-bottom:4px">📋 ${order.service}</div>
         <div style="font-size:.82rem;color:rgba(240,235,248,.6);font-weight:700">⏱️ ${order.duration} menit · 💰 Rp ${Number(order.price||0).toLocaleString('id-ID')}</div>
-        <div style="font-size:.78rem;color:rgba(240,235,248,.4);font-weight:700;margin-top:4px">📱 xxxx-xxxx-${(order.custWa||''). slice(-4)}</div>
-        ${order.note ? `<div style="font-size:.8rem;color:rgba(240,235,248,.5);margin-top:4px;font-style:italic">\${order.note}\</div>` : ''}
+        <div style="font-size:.78rem;color:rgba(240,235,248,.4);font-weight:700;margin-top:4px">📱 xxxx-xxxx-${(order.custWa||'').slice(-4)}</div>
+        ${order.note ? `<div style="font-size:.8rem;color:rgba(240,235,248,.5);margin-top:4px;font-style:italic">${order.note}</div>` : ''}
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
         <button onclick="respondOrder('${order.orderId}','reject')" style="padding:11px;border-radius:12px;background:rgba(255,92,92,.1);border:1px solid rgba(255,92,92,.3);color:#FF5C5C;font-family:'Nunito',sans-serif;font-weight:800;font-size:.85rem;cursor:pointer">❌ Tolak</button>
@@ -489,7 +455,6 @@ function renderOrderList(orders) {
       </div>
     </div>`;
   }).join('');
-
   orders.filter(o => o.status === 'pending').forEach(order => startOrderTimer(order.orderId, order.expiredAt));
 }
 
@@ -500,17 +465,12 @@ function startOrderTimer(orderId, expiredAt) {
     const left = Math.max(0, Math.floor((new Date(expiredAt) - new Date()) / 1000));
     const m    = Math.floor(left / 60);
     const s    = left % 60;
-    if (el) el.textContent = `${m}:${s.toString().padStart(2,'0')}`;
-    if (left <= 0) {
-      clearInterval(int);
-      // Auto expire
-      fetch(`${VERCEL_URL}/api/expire-orders`).catch(()=>{});
-    }
+    if (el) el.textContent = `${m}:${String(s).padStart(2,'0')}`;
+    if (left <= 0) { clearInterval(int); fetch(`${VERCEL_URL}/api/expire-orders`).catch(()=>{}); }
   }, 1000);
 }
 
 window.respondOrder = async function(orderId, action) {
-  const btn = document.querySelector(`#ocard-${orderId} button`);
   try {
     const res  = await fetch(`${VERCEL_URL}/api/respond-order`, {
       method : 'POST',
@@ -518,9 +478,7 @@ window.respondOrder = async function(orderId, action) {
       body   : JSON.stringify({ orderId, action, talentId: _docId })
     });
     const data = await res.json();
-
     if (action === 'accept' && data.custWa) {
-      // Tampilkan nomor WA cust
       let custClean = data.custWa.replace(/\D/g,'');
       if (custClean.startsWith('62')) custClean = custClean.slice(2);
       if (custClean.startsWith('0')) custClean = custClean.slice(1);
@@ -550,11 +508,6 @@ window.respondOrder = async function(orderId, action) {
     toast('❌ Gagal: ' + e.message);
   }
 };
-
-// ── POINT SYSTEM OTOMATIS ─────────────────────────────────
-
-
-
 
 // ── STATUS ────────────────────────────────────────────────
 function listenStatus() {
@@ -657,7 +610,14 @@ function buildProfileForm(t, isSettingMode) {
     <div class="setup-section">
       <div class="setup-label">📱 Nomor WhatsApp *</div>
       <input type="tel" id="s-wa" class="setup-input" value="${t.waNumber||''}" placeholder="Contoh: 08123456789">
-      <div style="font-size:.72rem;color:var(--muted);font-weight:600;margin-top:4px">Digunakan untuk menerima notifikasi order masuk</div>
+      <div style="font-size:.72rem;color:var(--muted);font-weight:600;margin-top:4px">Digunakan untuk keperluan internal agensi</div>
+    </div>
+    <div class="setup-section">
+      <div class="setup-label">🔔 Telegram Chat ID (untuk notifikasi order)</div>
+      <input type="text" id="s-telegram" class="setup-input" value="${t.telegramChatId||''}" placeholder="Contoh: 123456789">
+      <div style="font-size:.72rem;color:var(--muted);font-weight:600;margin-top:4px">
+        Buka <b>@callpaynotif_bot</b> di Telegram → ketik <b>/start</b> → salin angka yang dikirim bot
+      </div>
     </div>
     <div class="setup-section">
       <div class="setup-label">🏦 Rekening Bank (untuk transfer gaji)</div>
@@ -669,7 +629,7 @@ function buildProfileForm(t, isSettingMode) {
       <div class="setup-label">🎯 Layanan *</div>
       <div style="display:flex;flex-wrap:wrap;gap:8px" id="svc-wrap">
         ${ALL_SERVICES.map(s=>{
-          const isLocked = (t.lockedServices||[]).includes(s);
+          const isLocked  = (t.lockedServices||[]).includes(s);
           const isChecked = (t.services||[]).includes(s) && !isLocked;
           return `
         <label style="cursor:pointer;display:inline-flex;align-items:center;gap:6px" onclick="${isLocked ? `showLockedPopup('${s}');return false;` : ''}">
@@ -678,18 +638,15 @@ function buildProfileForm(t, isSettingMode) {
         </label>`;}).join('')}
       </div>
     </div>
-
     <p id="s-err" style="color:var(--red);font-size:.82rem;font-weight:700;display:none;margin-bottom:8px"></p>
     <button id="s-submit" onclick="submitProfile()" style="width:100%;padding:13px;border-radius:99px;background:var(--pink-mid);color:white;border:none;font-weight:800;font-size:.9rem;cursor:pointer;transition:opacity .2s;box-shadow:0 0 18px var(--pink-glow)">
       ${btnText}
     </button>
-
     ${!isSettingMode && (t.status==='approved'||t.status==='pending') ? `<button onclick="showPage('dashboard')" style="width:100%;margin-top:10px;padding:11px;border-radius:99px;background:transparent;border:1.5px solid var(--border);color:var(--muted);font-weight:800;font-size:.85rem;cursor:pointer">← Kembali</button>` : ''}
   </div>`;
 }
 
 window.showLockedPopup = function(svc) {
-  // Popup layanan terkunci
   let popup = document.getElementById('locked-popup');
   if (!popup) {
     popup = document.createElement('div');
@@ -749,61 +706,32 @@ window.previewPhoto = function(input) {
   xhr.send(fd);
 };
 
-window.handleAudio = function(input) {
-  const file = input.files[0]; if (!file) return;
-  if (file.size > 10*1024*1024) { alert('Maks 10MB!'); return; }
-  document.getElementById('audio-lbl').textContent = '⏳ Mengupload...';
-  document.getElementById('audio-prog').style.display = 'block';
-  const bar = document.getElementById('audio-bar');
-  const txt = document.getElementById('audio-prog-txt');
-  const fd  = new FormData();
-  fd.append('file', file);
-  fd.append('upload_preset', CLOUDINARY_PRESET);
-  const xhr = new XMLHttpRequest();
-  xhr.open('POST', `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD}/video/upload`);
-  xhr.upload.onprogress = e => { if (e.lengthComputable) { const p=Math.round(e.loaded/e.total*100); bar.style.width=p+'%'; txt.textContent=`${p}%`; } };
-  xhr.onload = () => {
-    if (xhr.status===200) {
-      const res = JSON.parse(xhr.responseText);
-      _uploadedAudioUrl = res.secure_url;
-      txt.textContent = '✅ Berhasil!'; bar.style.background='var(--green)';
-      document.getElementById('audio-lbl').textContent = '✅ ' + file.name;
-      const el = document.getElementById('audio-new-el');
-      if (el) { el.src=_uploadedAudioUrl; document.getElementById('audio-new').style.display='block'; }
-      setTimeout(()=>{ document.getElementById('audio-prog').style.display='none'; bar.style.width='0%'; bar.style.background='linear-gradient(90deg,#E8628A,#F9A8C9)'; }, 2500);
-    } else { txt.textContent='❌ Gagal.'; }
-  };
-  xhr.onerror = ()=>{ txt.textContent='❌ Gagal.'; };
-  xhr.send(fd);
-};
-
 window.submitProfile = async function() {
-  const name      = document.getElementById('s-name')?.value.trim();
-  const age       = parseInt(document.getElementById('s-age')?.value);
-  const bio       = document.getElementById('s-bio')?.value.trim();
-  const waNumber  = document.getElementById('s-wa')?.value.trim().replace(/^\+62/, '').replace(/^62/, '').replace(/^0/, '') || '';
-  const services  = [...document.querySelectorAll('.svc-ck:checked')].map(c=>c.value);
-  const errEl     = document.getElementById('s-err');
-  const btn       = document.getElementById('s-submit');
-  errEl.style.display = 'none';
-  // Pakai data lama kalau tidak diubah
+  const name           = document.getElementById('s-name')?.value.trim();
+  const age            = parseInt(document.getElementById('s-age')?.value);
+  const bio            = document.getElementById('s-bio')?.value.trim();
+  const waNumber       = document.getElementById('s-wa')?.value.trim().replace(/^\+62/, '').replace(/^62/, '').replace(/^0/, '') || '';
+  const telegramChatId = document.getElementById('s-telegram')?.value.trim() || '';
+  const services       = [...document.querySelectorAll('.svc-ck:checked')].map(c=>c.value);
+  const errEl          = document.getElementById('s-err');
+  const btn            = document.getElementById('s-submit');
+  errEl.style.display  = 'none';
+
   const finalName = name || currentTalent.name || '';
   const finalAge  = (!isNaN(age) && age >= 18 && age <= 35) ? age : currentTalent.age;
   if (!finalName)            { errEl.textContent='Nama wajib diisi.'; errEl.style.display='block'; return; }
   if (!finalAge||finalAge<18||finalAge>35) { errEl.textContent='Umur harus 18–35 tahun.'; errEl.style.display='block'; return; }
   if (!services.length)      { errEl.textContent='Pilih minimal 1 layanan.'; errEl.style.display='block'; return; }
-  // Foto wajib ada (bisa dari upload baru atau data lama)
   if (!_uploadedPhotoUrl && !currentTalent.img) { errEl.textContent='Upload foto profil terlebih dahulu.'; errEl.style.display='block'; return; }
-  // Audio tidak wajib kalau sudah ada, tapi kalau belum pernah ada memang wajib
-  // (dibiarkan opsional — talent bisa simpan tanpa ganti audio)
+
   btn.disabled=true; btn.textContent='Mengirim...';
   try {
-    const finalImg   = _uploadedPhotoUrl   || currentTalent.img   || '';
-    const finalAudio = _uploadedAudioUrl   || currentTalent.audio || '';
-    // Simpan langsung ke Firestore tanpa review admin
-    const bankName   = document.getElementById('s-bank-name')?.value.trim() || '';
+    const finalImg   = _uploadedPhotoUrl || currentTalent.img   || '';
+    const finalAudio = _uploadedAudioUrl || currentTalent.audio || '';
+    const bankName   = document.getElementById('s-bank-name')?.value.trim()   || '';
     const bankNumber = document.getElementById('s-bank-number')?.value.trim() || '';
     const bankHolder = document.getElementById('s-bank-holder')?.value.trim() || '';
+
     await setDoc(doc(db, 'talents', _docId), {
       name    : finalName,
       age     : finalAge,
@@ -812,12 +740,14 @@ window.submitProfile = async function() {
       img     : finalImg,
       audio   : finalAudio,
       waNumber,
+      telegramChatId,
       bankName,
       bankNumber,
       bankHolder,
       _pendingEdit: false,
     }, { merge: true });
-    currentTalent = { ...currentTalent, name:finalName, age:finalAge, bio, services, img:finalImg, audio:finalAudio };
+
+    currentTalent = { ...currentTalent, name:finalName, age:finalAge, bio, services, img:finalImg, audio:finalAudio, telegramChatId };
     toast('✅ Profil berhasil disimpan!');
     _uploadedAudioUrl = ''; _uploadedPhotoUrl = '';
     renderSettingsPanel();
@@ -826,7 +756,7 @@ window.submitProfile = async function() {
     errEl.textContent='Gagal: '+e.message; errEl.style.display='block';
   }
   btn.disabled=false;
-  btn.textContent = currentTalent.status === 'approved' ? '📤 Simpan & Minta Persetujuan' : (currentTalent.status==='rejected' ? '📤 Kirim Ulang' : '📤 Submit untuk Review');
+  btn.textContent = '💾 Simpan Profil';
 };
 
 // ── INIT ──────────────────────────────────────────────────
@@ -859,7 +789,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   };
   document.getElementById('status-toggle').onclick = toggleStatus;
   document.getElementById('tab-settings').onclick  = () => switchTab('settings');
-  // Tutup modal point kalau klik backdrop
   document.getElementById('point-modal').addEventListener('click', function(e) {
     if (e.target === this) closePointModal();
   });
