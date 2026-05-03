@@ -69,7 +69,7 @@
 
 <script type="module">
 import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js';
-import { getFirestore, collection, doc, setDoc, getDocs, onSnapshot } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js';
+import { getFirestore, collection, doc, setDoc, getDoc, getDocs, onSnapshot } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js';
 
 const FIREBASE_CONFIG = {
   apiKey           : 'AIzaSyACJjz3XP7vbzxkeZmW_sCXKurAFXZ_vwU',
@@ -99,9 +99,9 @@ async function loadServices() {
 
   // Load pricelist admin1 sekalian saat init
   try {
-    const { getDoc, doc: fsDoc } = await import('https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js');
-    const snap = await getDoc(fsDoc(db, 'pricelist', 'admin1'));
+    const snap = await getDoc(doc(db, 'pricelist', 'admin1'));
     if (snap.exists()) _prices = snap.data();
+    console.log('Pricelist loaded:', Object.keys(_prices));
   } catch(e) { console.warn('Gagal load pricelist:', e); }
 }
 
