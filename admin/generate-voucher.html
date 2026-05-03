@@ -87,38 +87,48 @@ let _services = [];
 let _prices   = {};
 
 async function loadServices() {
-  const snap = await getDocs(collection(db, 'services'));
-  _services  = [];
-  snap.forEach(d => _services.push({ id: d.id, ...d.data() }));
+  // Load services
+  const snapSvc = await getDocs(collection(db, 'services'));
+  _services = [];
+  snapSvc.forEach(d => _services.push({ id: d.id, ...d.data() }));
   _services.sort((a,b) => (a.order||99) - (b.order||99));
 
   const svcSel = document.getElementById('svc-select');
   svcSel.innerHTML = '<option value="">— Pilih Layanan —</option>' +
     _services.map(s => `<option value="${s.name}">${s.icon || ''} ${s.name}</option>`).join('');
 
-  svcSel.addEventListener('change', loadDurations);
+  // Load pricelist admin1 sekalian saat init
+  try {
+    const { getDoc, doc: fsDoc } = await import('https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js');
+    const snap = await getDoc(fsDoc(db, 'pricelist', 'admin1'));
+    if (snap.exists()) _prices = snap.data();
+  } catch(e) { console.warn('Gagal load pricelist:', e); }
 }
 
-async function loadDurations() {
+function loadDurations() {
   const svc    = document.getElementById('svc-select').value;
   const durSel = document.getElementById('dur-select');
   durSel.innerHTML = '<option value="">— Pilih Durasi —</option>';
   if (!svc) return;
 
-  // Ambil harga dari pricelist admin1
-  const snap = await getDocs(collection(db, 'pricelist'));
-  snap.forEach(d => { if (d.id === 'admin1') _prices = d.data(); });
-
   const priceMap = _prices[svc];
-  if (priceMap) {
-    Object.entries(priceMap).forEach(([min, price]) => {
-      const opt = document.createElement('option');
-      opt.value = min;
-      opt.textContent = `${min} menit — Rp ${Number(price).toLocaleString('id-ID')}`;
-      durSel.appendChild(opt);
-    });
+  if (priceMap && Object.keys(priceMap).length) {
+    // Urutkan durasi dari kecil ke besar
+    Object.entries(priceMap)
+      .sort((a, b) => Number(a[0]) - Number(b[0]))
+      .forEach(([min, price]) => {
+        const opt = document.createElement('option');
+        opt.value = min;
+        opt.textContent = `${min} menit — Rp ${Number(price).toLocaleString('id-ID')}`;
+        durSel.appendChild(opt);
+      });
+  } else {
+    durSel.innerHTML = '<option value="">— Durasi tidak tersedia —</option>';
   }
 }
+
+// Pasang event listener sekali di luar fungsi
+document.getElementById('svc-select').addEventListener('change', loadDurations);
 
 function generateCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
