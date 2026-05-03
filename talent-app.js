@@ -483,24 +483,32 @@ window.respondOrder = async function(orderId, action) {
       if (custClean.startsWith('62')) custClean = custClean.slice(2);
       if (custClean.startsWith('0')) custClean = custClean.slice(1);
       const displayNum = '0' + custClean;
+      const waLink = 'https://wa.me/62' + custClean + '?text=' + encodeURIComponent('Halo! Saya talent dari CallPay, saya menerima ordermu. Siap memulai? 😊');
       const card = document.getElementById(`ocard-${orderId}`);
       if (card) {
+        card.style.background = 'rgba(61,214,140,.06)';
         card.style.borderColor = 'rgba(61,214,140,.5)';
         card.innerHTML = `
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
-            <div style="display:flex;align-items:center;gap:8px;flex:1;min-width:0">
-              <span style="font-size:1rem">🎉</span>
-              <div style="min-width:0">
-                <div style="font-size:.8rem;font-weight:900;color:#3DD68C">✅ Diterima · 💵 Rp ${Math.round(Number(data.price||0)*0.6).toLocaleString('id-ID')}</div>
-                <div style="font-size:.82rem;font-weight:800;color:#F0EBF8;letter-spacing:.03em">${displayNum}</div>
-              </div>
-            </div>
-            <button onclick="navigator.clipboard.writeText('${displayNum}').then(()=>window.toast('✅ Nomor tersalin!')).catch(()=>alert('${displayNum}'))" style="flex-shrink:0;padding:7px 12px;border-radius:8px;background:rgba(61,214,140,.15);border:1px solid rgba(61,214,140,.35);color:#3DD68C;font-family:'Nunito',sans-serif;font-weight:800;font-size:.78rem;cursor:pointer;white-space:nowrap">
-              📋 Salin
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+            <span style="font-size:1rem">🎉</span>
+            <div style="font-size:.85rem;font-weight:900;color:#3DD68C">Order Diterima!</div>
+          </div>
+          <div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:10px 14px;margin-bottom:10px">
+            <div style="font-size:.7rem;font-weight:800;color:rgba(240,235,248,.4);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">Nomor WhatsApp Customer</div>
+            <div style="font-size:1rem;font-weight:900;color:#F0EBF8;letter-spacing:.04em">${displayNum}</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <button onclick="navigator.clipboard.writeText('${displayNum}').then(()=>window.toast('✅ Nomor tersalin!')).catch(()=>alert('${displayNum}'))"
+              style="padding:10px;border-radius:10px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:#F0EBF8;font-family:'Nunito',sans-serif;font-weight:800;font-size:.82rem;cursor:pointer">
+              📋 Salin Nomor
             </button>
+            <a href="${waLink}" target="_blank"
+              style="padding:10px;border-radius:10px;background:#25D366;border:none;color:#fff;font-family:'Nunito',sans-serif;font-weight:800;font-size:.82rem;cursor:pointer;text-decoration:none;display:flex;align-items:center;justify-content:center;gap:6px">
+              💬 Chat WA
+            </a>
           </div>`;
       }
-      toast('✅ Order diterima! Hubungi customer sekarang.');
+      toast('✅ Order diterima! Nomor WA customer sudah tersedia.');
     } else if (action === 'reject') {
       toast('Order ditolak. Customer mendapat kode voucher.');
     }
