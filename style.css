@@ -679,10 +679,12 @@ button{cursor:pointer;font-family:'Nunito',sans-serif}
 
 /* Mobile CTA item — tersembunyi di desktop */
 .nav-mobile-cta { display: none; }
+.nav-mobile-voucher { display: none; }
 
 @media(max-width:768px) {
   .nav-hamburger { display: flex; }
   .nav-cta { display: none; }
+  .nav-cta-voucher { display: none; }
   .nav-mobile-cta { display: block !important; }
   .nav-mobile-cta a {
     margin: 10px 16px 6px !important;
@@ -695,6 +697,18 @@ button{cursor:pointer;font-family:'Nunito',sans-serif}
     border-bottom: none !important;
   }
   .nav-mobile-cta a:hover { opacity: .88; background: var(--pink-mid) !important; }
+  .nav-mobile-voucher { display: block !important; }
+  .nav-mobile-voucher a {
+    margin: 6px 16px !important;
+    padding: 12px !important;
+    text-align: center;
+    background: transparent !important;
+    color: var(--pink) !important;
+    border-radius: 99px !important;
+    font-weight: 800 !important;
+    border: 2px solid var(--border-pink) !important;
+    display: block;
+  }
 
   /* Mobile dropdown menu */
   .nav-links {
