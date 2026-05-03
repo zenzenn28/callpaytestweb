@@ -362,12 +362,12 @@ async function getFirebase() {
   const { initializeApp, getApps } = await import('https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js');
   const { getFirestore } = await import('https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js');
   const FIREBASE_CONFIG = {
-    apiKey:'AIzaSyBLPe_yx28LyefI856Ysxz3YEPnwA0ENFU',
-    authDomain:'callpay-28a28.firebaseapp.com',
-    projectId:'callpay-28a28',
-    storageBucket:'callpay-28a28.firebasestorage.app',
-    messagingSenderId:'44722427776',
-    appId:'1:44722427776:web:29d1a297746cd83d685365'
+    apiKey:'AIzaSyACJjz3XP7vbzxkeZmW_sCXKurAFXZ_vwU',
+    authDomain:'testweb-9b2f8.firebaseapp.com',
+    projectId:'testweb-9b2f8',
+    storageBucket:'testweb-9b2f8.firebasestorage.app',
+    messagingSenderId:'223987046525',
+    appId:'1:223987046525:web:29d1a297746cd83d685365'
   };
   _fbApp = getApps().length ? getApps()[0] : initializeApp(FIREBASE_CONFIG);
   _fbDb  = getFirestore(_fbApp);
