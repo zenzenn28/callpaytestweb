@@ -38,6 +38,13 @@
     .admin-fee-wrap input[type=checkbox]{width:17px;height:17px;margin-top:2px;flex-shrink:0;accent-color:var(--pink);cursor:pointer}
     .admin-fee-wrap label{font-size:.8rem;font-weight:700;color:rgba(240,235,248,.75);line-height:1.5;cursor:pointer}
     .admin-fee-wrap label span{color:#FFB800;font-weight:800}
+    .nav-cta-voucher{
+      background:transparent;color:var(--pink);border:2px solid var(--border-pink);
+      padding:7px 18px;border-radius:99px;
+      font-weight:800;font-size:0.87rem;
+      transition:all .2s;
+    }
+    .nav-cta-voucher:hover{background:var(--pink-glow);border-color:var(--pink)}
     @media(max-width:600px){.modal-scroll{padding:16px}}
   </style>
 </head>
@@ -54,7 +61,8 @@
     <li><a href="#testimoni" onclick="closeMobileNav()">Testimoni</a></li>
     <li class="nav-mobile-cta"><a href="#talent" onclick="closeMobileNav()">Pesan Sekarang</a></li>
   </ul>
-  <div style="display:flex;align-items:center;gap:12px">
+  <div style="display:flex;align-items:center;gap:10px">
+    <a id="nav-beli-voucher" href="#" class="nav-cta-voucher" onclick="beliVoucher(event)">🎟️ Beli Voucher</a>
     <a href="#talent" class="nav-cta">Pesan Sekarang</a>
     <button class="nav-hamburger" id="nav-hamburger" onclick="toggleMobileNav()" aria-label="Menu">
       <span></span><span></span><span></span>
@@ -211,6 +219,15 @@ document.addEventListener('click', function(e) {
   const btn = document.getElementById('nav-hamburger');
   if (!nav.contains(e.target) && !btn.contains(e.target)) closeMobileNav();
 });
+function beliVoucher(e) {
+  e.preventDefault();
+  // WA sesuai agensi (WA_NUMBER sudah di-set di script.js via _adminParam)
+  const waNum = window.WA_NUMBER || '62895400709371';
+  const msg = encodeURIComponent(
+    'Halo Admin! 👋\n\nSaya ingin membeli voucher CallPay.\n\nMohon info layanan dan harga yang tersedia. Terima kasih! 🙏'
+  );
+  window.open('https://wa.me/' + waNum + '?text=' + msg, '_blank');
+}
 </script>
 </body>
 </html>
