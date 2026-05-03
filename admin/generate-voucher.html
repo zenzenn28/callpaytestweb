@@ -146,6 +146,7 @@ window.generateVoucher = async function() {
   if (!svc) { alert('Pilih layanan dulu!'); return; }
   if (!dur) { alert('Pilih durasi dulu!'); return; }
 
+  const price = Number(_prices[svc]?.[dur]) || 0;
   const btn = document.getElementById('btn-generate');
   btn.disabled = true; btn.textContent = 'Membuat voucher...';
 
@@ -157,17 +158,19 @@ window.generateVoucher = async function() {
       code,
       service     : svc,
       duration    : dur,
+      price,
       used        : false,
       createdAt   : now,
       reason      : 'admin_generated',
       custWa      : wa || '',
       note        : note || '',
-      createdBy   : 'admin',  // ← tanda voucher dari admin
+      createdBy   : 'admin',
     });
 
     // Tampilkan hasil
+    const priceStr = price ? ' · Rp ' + price.toLocaleString('id-ID') : '';
     document.getElementById('result-code').textContent = code;
-    document.getElementById('result-info').textContent = `${svc} · ${dur} menit${wa ? ' · WA: 0'+wa.replace(/^62/,'').replace(/^0/,'') : ''}${note ? ' · '+note : ''}`;
+    document.getElementById('result-info').textContent = `${svc} · ${dur} menit${priceStr}${wa ? ' · WA: 0'+wa.replace(/^62/,'').replace(/^0/,'') : ''}${note ? ' · '+note : ''}`;
     document.getElementById('result-box').style.display = 'block';
 
     // Reset form
