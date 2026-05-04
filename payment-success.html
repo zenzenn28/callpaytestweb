@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Pembayaran Berhasil — CallPay</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Pacifico&display=swap" rel="stylesheet">
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Nunito',sans-serif;background:#0A0A15;color:#F0EBF8;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;text-align:center}
+    .logo{font-family:'Pacifico',cursive;font-size:1.6rem;color:#E8628A;margin-bottom:24px}
+    .icon{font-size:3.5rem;margin-bottom:16px}
+    .title{font-size:1.3rem;font-weight:900;margin-bottom:8px}
+    .sub{font-size:.85rem;color:rgba(240,235,248,.5);font-weight:600;margin-bottom:24px;line-height:1.6;max-width:340px}
+    .voucher-box{background:rgba(61,214,140,.06);border:1px solid rgba(61,214,140,.25);border-radius:14px;padding:20px 24px;margin-bottom:20px;width:100%;max-width:380px}
+    .vc-label{font-size:.7rem;font-weight:800;color:rgba(61,214,140,.6);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+    .vc-code{font-size:1.8rem;font-weight:900;color:#3DD68C;letter-spacing:.12em;font-family:monospace;margin-bottom:6px}
+    .vc-note{font-size:.75rem;color:rgba(240,235,248,.4);font-weight:600}
+    .btn{padding:12px 28px;border-radius:12px;border:none;font-family:'Nunito',sans-serif;font-weight:800;font-size:.9rem;cursor:pointer;transition:opacity .2s;margin:6px}
+    .btn-copy{background:rgba(61,214,140,.12);border:1px solid rgba(61,214,140,.3);color:#3DD68C}
+    .btn-home{background:linear-gradient(135deg,#E8628A,#F9A8C9);color:#fff;box-shadow:0 4px 18px rgba(232,98,138,.3)}
+    .loading{color:rgba(240,235,248,.5);font-weight:700;font-size:.9rem}
+  </style>
+</head>
+<body>
+  <div class="logo">CallPay</div>
+  <div id="content">
+    <div class="loading">⏳ Mengecek pembayaran...</div>
+  </div>
+
+<script type="module">
+const p       = new URLSearchParams(window.location.search);
+const orderId = p.get('orderId') || '';
+const wa      = p.get('wa')      || '';
+
+async function checkAndShow() {
+  const content = document.getElementById('content');
+  try {
+    // Cek status payment ke Vercel
+    const res  = await fetch(`https://callpay-order-15no.vercel.app/api/check-payment?orderId=${encodeURIComponent(orderId)}`);
+    const data = await res.json();
+
+    if (data.status === 'completed' && data.voucherCode) {
+      content.innerHTML = `
+        <div class="icon">🎉</div>
+        <div class="title">Pembayaran Berhasil!</div>
+        <div class="sub">Kode voucher kamu sudah siap digunakan. Simpan kode ini baik-baik ya!</div>
+        <div class="voucher-box">
+          <div class="vc-label">Kode Voucher Kamu</div>
+          <div class="vc-code" id="vc-code">${data.voucherCode}</div>
+          <div class="vc-note">Berlaku untuk semua layanan sesuai nominal · Sekali pakai</div>
+        </div>
+        <div>
+          <button class="btn btn-copy" onclick="copyCode('${data.voucherCode}')">📋 Salin Kode</button>
+          <button class="btn btn-home" onclick="window.location.href='index.html'">← Kembali & Pesan</button>
+        </div>
+      `;
+    } else if (data.status === 'pending') {
+      content.innerHTML = `
+        <div class="icon">⏳</div>
+        <div class="title">Menunggu Pembayaran</div>
+        <div class="sub">Pembayaran belum terkonfirmasi. Jika sudah bayar, tunggu beberapa saat lalu refresh halaman ini.</div>
+        <button class="btn btn-home" onclick="location.reload()">🔄 Refresh</button>
+      `;
+    } else {
+      content.innerHTML = `
+        <div class="icon">❌</div>
+        <div class="title">Pembayaran Tidak Ditemukan</div>
+        <div class="sub">Hubungi admin jika kamu sudah melakukan pembayaran.</div>
+        <button class="btn btn-home" onclick="window.location.href='index.html'">← Kembali</button>
+      `;
+    }
+  } catch(e) {
+    content.innerHTML = `
+      <div class="icon">⚠️</div>
+      <div class="title">Gagal Cek Status</div>
+      <div class="sub">Coba refresh halaman. Jika voucher tidak muncul dalam 5 menit, hubungi admin.</div>
+      <button class="btn btn-home" onclick="location.reload()">🔄 Refresh</button>
+    `;
+  }
+}
+
+window.copyCode = function(code) {
+  navigator.clipboard.writeText(code).then(() => alert('✅ Kode tersalin: ' + code)).catch(() => alert(code));
+};
+
+checkAndShow();
+</script>
+</body>
+</html>
