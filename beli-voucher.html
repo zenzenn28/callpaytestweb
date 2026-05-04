@@ -67,7 +67,7 @@ async function init() {
   const card = document.getElementById('main-card');
   try {
     // Ambil settings
-    const settingsSnap = await getDoc(doc(db, 'settings', adminParam));
+    const settingsSnap = await getDoc(doc(db, 'settings', 'config'));
     const settings     = settingsSnap.exists() ? settingsSnap.data() : {};
 
     const pgEnabled = settings.pgEnabled === true;
