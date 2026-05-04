@@ -230,9 +230,27 @@ function renderOrders() {
     if (!badge) return '';
     const { label, cls } = badge;
     const custWa = formatWa(o.custWa);
-    const net    = o.originalPrice ? Math.round(Number(o.originalPrice) * 0.6) : 0;
-    // Tampilkan voucher hanya di rejected dan pending (waktu habis)
-    // Tampilkan voucher: kalau ditolak/waktu habis ATAU kalau order pakai voucher
+
+    // Tampilan khusus untuk pembelian voucher via Pak Kasir
+    if (o.type === 'voucher_purchase') {
+      return `
+      <div class="log-card status-${o.status}" style="border-left:3px solid #FFB800">
+        <div class="log-top">
+          <div class="log-id">${o.orderId || o.id || '-'}</div>
+          <div class="log-badge" style="background:rgba(255,184,0,.15);color:#FFB800;border:1px solid rgba(255,184,0,.3)">🎟️ Beli Voucher</div>
+        </div>
+        <div class="log-main">
+          <div class="log-field">📱 WA Customer: <span>${custWa}</span></div>
+          <div class="log-field">💰 Dibayar: <span>${formatPrice(o.bayar || o.price)}</span></div>
+          <div class="log-field">🎟️ Nilai Voucher: <span style="color:#FFB800">${formatPrice(o.price)}</span></div>
+          <div class="log-field full">🔑 Kode Voucher: <span style="color:#FFB800;font-family:monospace;letter-spacing:.08em;font-weight:900">${o.voucherCode || '-'}</span></div>
+          <div class="log-field">🏷️ Agensi: <span>${o.adminParam || 'admin1'}</span></div>
+        </div>
+        <div class="log-time">🕐 Pembelian: ${formatDate(o.createdAt)}</div>
+      </div>`;
+    }
+
+    const net = o.originalPrice ? Math.round(Number(o.originalPrice) * 0.6) : 0;
     const showVoucher = ['rejected','expired'].includes(o.status) || (o.useVoucher && o.voucherCode);
     const voucherCode = o.voucherCode || voucherMap[o.orderId || o.id] || '-';
 
