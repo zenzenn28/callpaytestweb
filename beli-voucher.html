@@ -76,9 +76,17 @@ async function init() {
     const agencyName = settings.agencyName || 'CallPay';
 
     if (!pgEnabled) {
-      // PG off → redirect ke WA
+      // PG off → buka WA di tab baru, lalu tampilkan pesan di halaman ini
       const waMsg = encodeURIComponent(`Halo admin ${agencyName}, saya ingin membeli voucher CallPay.`);
-      window.location.href = `https://wa.me/${waAdmin}?text=${waMsg}`;
+      window.open(`https://wa.me/${waAdmin}?text=${waMsg}`, '_blank');
+      card.innerHTML = `
+        <h2>🎟️ Beli Voucher</h2>
+        <div class="info-box" style="display:block;margin-top:12px">
+          Pembelian voucher saat ini dilakukan via <b>WhatsApp Admin</b>.<br>
+          Chat admin sudah dibuka di tab baru. Silakan konfirmasi pembelian disana.
+        </div>
+        <button class="btn" style="margin-top:16px" onclick="history.back()">← Kembali</button>
+      `;
       return;
     }
 
