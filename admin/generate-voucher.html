@@ -130,7 +130,7 @@ window.onNominalChange = function() {
       rows.push(`
         <div class="preview-row">
           <span class="preview-svc">${s.icon || '🎯'} ${s.name}</span>
-          <span class="preview-dur">${match[0]} menit</span>
+          <span class="preview-dur">${formatDur(match[0])}</span>
         </div>`);
     }
   });
