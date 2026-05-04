@@ -41,7 +41,7 @@ async function loadServicesForTalent() {
 }
 
 const SESSION_KEY  = 'cp_talent_v2';
-const POINT_MAX    = 250;
+const POINT_MAX    = 100;
 
 let currentTalent    = null;
 let _docId           = null;
