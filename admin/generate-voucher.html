@@ -18,6 +18,12 @@
     .form-input:focus{border-color:rgba(249,168,201,.4)}
     .form-select{width:100%;padding:10px 14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:10px;color:#F0EBF8;font-family:'Nunito',sans-serif;font-size:.9rem;font-weight:600;outline:none;margin-bottom:14px;cursor:pointer}
     .form-select option{background:#16162A}
+    .preview-box{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px;margin-bottom:14px;display:none}
+    .preview-title{font-size:.7rem;font-weight:800;color:rgba(240,235,248,.4);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px}
+    .preview-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:.82rem}
+    .preview-row:last-child{border-bottom:none}
+    .preview-svc{font-weight:700;color:rgba(240,235,248,.7)}
+    .preview-dur{font-weight:800;color:#a78bfa}
     .btn-generate{width:100%;padding:14px;border-radius:12px;background:linear-gradient(135deg,#E8628A,#F9A8C9);border:none;color:#fff;font-family:'Nunito',sans-serif;font-weight:900;font-size:1rem;cursor:pointer;transition:opacity .2s,transform .2s;box-shadow:0 4px 18px rgba(232,98,138,.3);margin-top:4px}
     .btn-generate:hover{opacity:.9;transform:translateY(-1px)}
     .btn-generate:disabled{opacity:.5;cursor:not-allowed;transform:none}
@@ -37,23 +43,24 @@
 
 <div class="card">
   <div class="card-title">Buat Voucher Manual</div>
-  <div class="card-sub">Voucher yang dibuat di sini akan ditandai sebagai voucher Admin dan bisa dilihat di Log Order.</div>
+  <div class="card-sub">Pilih nominal voucher. Customer bisa pakai voucher ini untuk semua layanan sesuai durasi yang tersedia di harga tersebut.</div>
 
-  <label class="form-label">Layanan *</label>
-  <select class="form-select" id="svc-select">
-    <option value="">— Pilih Layanan —</option>
+  <label class="form-label">Nominal Voucher *</label>
+  <select class="form-select" id="nominal-select" onchange="onNominalChange()">
+    <option value="">— Pilih Nominal —</option>
   </select>
 
-  <label class="form-label">Durasi *</label>
-  <select class="form-select" id="dur-select">
-    <option value="">— Pilih Layanan Dulu —</option>
-  </select>
+  <!-- Preview durasi per layanan -->
+  <div class="preview-box" id="preview-box">
+    <div class="preview-title">📋 Yang didapat customer</div>
+    <div id="preview-list"></div>
+  </div>
 
   <label class="form-label">Nomor WA Penerima (opsional)</label>
-  <input type="tel" class="form-input" id="wa-input" placeholder="Contoh: 08123456789">
+  <input type="tel" class="form-input" id="wa-input" placeholder="Contoh: 08123456789" style="font-size:16px">
 
   <label class="form-label">Catatan (opsional)</label>
-  <input type="text" class="form-input" id="note-input" placeholder="Contoh: Refund order #123">
+  <input type="text" class="form-input" id="note-input" placeholder="Contoh: Refund order #123" style="font-size:16px">
 
   <button class="btn-generate" id="btn-generate" onclick="generateVoucher()">✨ Generate Voucher</button>
 
@@ -69,7 +76,7 @@
 
 <script type="module">
 import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js';
-import { getFirestore, collection, doc, setDoc, getDoc, getDocs, onSnapshot } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js';
+import { getFirestore, collection, doc, setDoc, getDoc, getDocs } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js';
 
 const FIREBASE_CONFIG = {
   apiKey           : 'AIzaSyACJjz3XP7vbzxkeZmW_sCXKurAFXZ_vwU',
@@ -82,53 +89,52 @@ const FIREBASE_CONFIG = {
 const app = getApps().length ? getApps()[0] : initializeApp(FIREBASE_CONFIG);
 const db  = getFirestore(app);
 
-// Load services dari Firestore
-let _services = [];
-let _prices   = {};
+let _prices   = {}; // { NamaLayanan: { 30: 10000, 60: 20000, ... } }
+let _services = []; // [ { name, icon, ... } ]
+let _nominals = []; // [ 10000, 20000, 30000, ... ] unik, urut
 
-async function loadServices() {
-  // Load services
-  const snapSvc = await getDocs(collection(db, 'services'));
-  _services = [];
-  snapSvc.forEach(d => _services.push({ id: d.id, ...d.data() }));
-  _services.sort((a,b) => (a.order||99) - (b.order||99));
+// Build daftar nominal unik dari semua pricelist
+function buildNominals() {
+  const set = new Set();
+  Object.values(_prices).forEach(durMap => {
+    Object.values(durMap).forEach(price => { if (price > 0) set.add(Number(price)); });
+  });
+  _nominals = [...set].sort((a,b) => a - b);
 
-  const svcSel = document.getElementById('svc-select');
-  svcSel.innerHTML = '<option value="">— Pilih Layanan —</option>' +
-    _services.map(s => `<option value="${s.name}">${s.icon || ''} ${s.name}</option>`).join('');
-
-  // Load pricelist admin1 sekalian saat init
-  try {
-    const snap = await getDoc(doc(db, 'pricelist', 'admin1'));
-    if (snap.exists()) _prices = snap.data();
-    console.log('Pricelist loaded:', Object.keys(_prices));
-  } catch(e) { console.warn('Gagal load pricelist:', e); }
+  const sel = document.getElementById('nominal-select');
+  sel.innerHTML = '<option value="">— Pilih Nominal —</option>' +
+    _nominals.map(n => `<option value="${n}">Rp ${n.toLocaleString('id-ID')}</option>`).join('');
 }
 
-function loadDurations() {
-  const svc    = document.getElementById('svc-select').value;
-  const durSel = document.getElementById('dur-select');
-  durSel.innerHTML = '<option value="">— Pilih Durasi —</option>';
-  if (!svc) return;
+// Saat nominal dipilih, tampilkan preview durasi per layanan
+window.onNominalChange = function() {
+  const nominal = Number(document.getElementById('nominal-select').value);
+  const preview = document.getElementById('preview-box');
+  const list    = document.getElementById('preview-list');
+  if (!nominal) { preview.style.display = 'none'; return; }
 
-  const priceMap = _prices[svc];
-  if (priceMap && Object.keys(priceMap).length) {
-    // Urutkan durasi dari kecil ke besar
-    Object.entries(priceMap)
-      .sort((a, b) => Number(a[0]) - Number(b[0]))
-      .forEach(([min, price]) => {
-        const opt = document.createElement('option');
-        opt.value = min;
-        opt.textContent = `${min} menit — Rp ${Number(price).toLocaleString('id-ID')}`;
-        durSel.appendChild(opt);
-      });
+  const rows = [];
+  _services.forEach(s => {
+    const durMap = _prices[s.name] || {};
+    // Cari durasi yang harganya = nominal
+    const match = Object.entries(durMap).find(([,p]) => Number(p) === nominal);
+    if (match) {
+      rows.push(`
+        <div class="preview-row">
+          <span class="preview-svc">${s.icon || '🎯'} ${s.name}</span>
+          <span class="preview-dur">${match[0]} menit</span>
+        </div>`);
+    }
+  });
+
+  if (rows.length) {
+    list.innerHTML = rows.join('');
+    preview.style.display = 'block';
   } else {
-    durSel.innerHTML = '<option value="">— Durasi tidak tersedia —</option>';
+    list.innerHTML = '<div style="font-size:.78rem;color:rgba(240,235,248,.4);font-weight:600">Tidak ada layanan untuk nominal ini.</div>';
+    preview.style.display = 'block';
   }
-}
-
-// Pasang event listener sekali di luar fungsi
-document.getElementById('svc-select').addEventListener('change', loadDurations);
+};
 
 function generateCode() {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -138,15 +144,12 @@ function generateCode() {
 }
 
 window.generateVoucher = async function() {
-  const svc  = document.getElementById('svc-select').value;
-  const dur  = document.getElementById('dur-select').value;
-  const wa   = document.getElementById('wa-input').value.trim().replace(/\D/g, '');
-  const note = document.getElementById('note-input').value.trim();
+  const nominal = Number(document.getElementById('nominal-select').value);
+  const wa      = document.getElementById('wa-input').value.trim().replace(/\D/g, '');
+  const note    = document.getElementById('note-input').value.trim();
 
-  if (!svc) { alert('Pilih layanan dulu!'); return; }
-  if (!dur) { alert('Pilih durasi dulu!'); return; }
+  if (!nominal) { alert('Pilih nominal voucher dulu!'); return; }
 
-  const price = Number(_prices[svc]?.[dur]) || 0;
   const btn = document.getElementById('btn-generate');
   btn.disabled = true; btn.textContent = 'Membuat voucher...';
 
@@ -156,9 +159,7 @@ window.generateVoucher = async function() {
 
     await setDoc(doc(db, 'vouchers', code), {
       code,
-      service     : svc,
-      duration    : dur,
-      price,
+      price       : nominal,
       used        : false,
       createdAt   : now,
       reason      : 'admin_generated',
@@ -167,19 +168,16 @@ window.generateVoucher = async function() {
       createdBy   : 'admin',
     });
 
-    // Tampilkan hasil
-    const priceStr = price ? ' · Rp ' + price.toLocaleString('id-ID') : '';
+    const waDisplay = wa ? ' · WA: 0' + wa.replace(/^62/,'').replace(/^0/,'') : '';
     document.getElementById('result-code').textContent = code;
-    document.getElementById('result-info').textContent = `${svc} · ${dur} menit${priceStr}${wa ? ' · WA: 0'+wa.replace(/^62/,'').replace(/^0/,'') : ''}${note ? ' · '+note : ''}`;
+    document.getElementById('result-info').textContent =
+      `Rp ${nominal.toLocaleString('id-ID')}${waDisplay}${note ? ' · ' + note : ''}`;
     document.getElementById('result-box').style.display = 'block';
 
-    // Reset form
     document.getElementById('wa-input').value   = '';
     document.getElementById('note-input').value = '';
 
-  } catch(e) {
-    alert('Gagal: ' + e.message);
-  }
+  } catch(e) { alert('Gagal: ' + e.message); }
 
   btn.disabled = false; btn.textContent = '✨ Generate Voucher';
 };
@@ -194,7 +192,19 @@ window.copyCode = function() {
   }).catch(() => alert(code));
 };
 
-loadServices();
+// Init
+async function init() {
+  const [snapSvc, snapPrice] = await Promise.all([
+    getDocs(collection(db, 'services')),
+    getDoc(doc(db, 'pricelist', 'admin1'))
+  ]);
+  _services = [];
+  snapSvc.forEach(d => _services.push({ id: d.id, ...d.data() }));
+  _services.sort((a,b) => (a.order||99) - (b.order||99));
+  if (snapPrice.exists()) _prices = snapPrice.data();
+  buildNominals();
+}
+init();
 </script>
 </body>
 </html>
