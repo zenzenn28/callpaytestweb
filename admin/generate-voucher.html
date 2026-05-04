@@ -107,6 +107,14 @@ function buildNominals() {
 }
 
 // Saat nominal dipilih, tampilkan preview durasi per layanan
+function formatDur(menit) {
+  const m = Number(menit);
+  if (m <= 90) return m + ' menit';
+  const jam  = Math.floor(m / 60);
+  const sisa = m % 60;
+  return sisa > 0 ? jam + ' jam ' + sisa + ' menit' : jam + ' jam';
+}
+
 window.onNominalChange = function() {
   const nominal = Number(document.getElementById('nominal-select').value);
   const preview = document.getElementById('preview-box');
