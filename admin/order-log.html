@@ -250,7 +250,7 @@ function renderOrders() {
       </div>`;
     }
 
-    const net = o.originalPrice ? Math.round(Number(o.originalPrice) * 0.6) : 0;
+    const net = Math.round(Number(o.originalPrice || o.price || 0) * 0.6);
     const showVoucher = ['rejected','expired'].includes(o.status) || (o.useVoucher && o.voucherCode);
     const voucherCode = o.voucherCode || voucherMap[o.orderId || o.id] || '-';
 
