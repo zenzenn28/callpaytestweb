@@ -71,6 +71,28 @@ if (sessionStorage.getItem('cp_owner') !== '1') {
       <div style="margin-top:18px"><button class="btn btn-pink" id="save-owner-cred">👑 Ubah Password Owner</button></div>
     </div>
 
+    <div class="settings-section">
+      <h3>💳 Payment Gateway</h3>
+      <p class="sec-desc">Aktifkan Pak Kasir sebagai payment gateway untuk pembelian voucher. Jika dimatikan, customer konfirmasi pembelian via WhatsApp admin.</p>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:16px">
+        <div>
+          <div style="font-weight:800;font-size:.9rem;margin-bottom:3px">Pak Kasir Payment Gateway</div>
+          <div style="font-size:.8rem;color:var(--muted);font-weight:600">Customer bisa bayar voucher langsung via QRIS/VA</div>
+        </div>
+        <label style="position:relative;display:inline-block;width:48px;height:26px;cursor:pointer">
+          <input type="checkbox" id="pg-toggle" style="opacity:0;width:0;height:0">
+          <span id="pg-toggle-ui" style="position:absolute;inset:0;border-radius:99px;background:rgba(255,255,255,.1);transition:.3s;display:flex;align-items:center;padding:3px">
+            <span style="width:20px;height:20px;border-radius:50%;background:#fff;transition:.3s;display:block"></span>
+          </span>
+        </label>
+      </div>
+      <div class="form-grid" id="pg-config" style="display:none">
+        <div class="form-group"><label>Slug Proyek Pak Kasir</label><input type="text" id="pg-slug" placeholder="callpay"><p class="form-note">Terlihat di halaman Detail Proyek → Integrasi</p></div>
+        <div class="form-group"><label>API Key Pak Kasir</label><input type="password" id="pg-apikey" placeholder="••••••••••••••••"><p class="form-note">Jangan share API Key ke siapapun</p></div>
+      </div>
+      <div style="margin-top:14px"><button class="btn btn-pink" id="save-pg">💾 Simpan Pengaturan Payment</button></div>
+    </div>
+
     <div class="settings-section danger-zone">
       <h3>⚠️ Danger Zone</h3>
       <p class="sec-desc">Tindakan permanen dan tidak bisa dibatalkan.</p>
@@ -162,6 +184,32 @@ document.getElementById('del-confirm').onclick=async()=>{
   toast('🗑️ Semua order dihapus dari database');
 };
 
+// Toggle payment gateway UI
+const pgToggle = document.getElementById('pg-toggle');
+const pgToggleUI = document.getElementById('pg-toggle-ui');
+const pgConfig = document.getElementById('pg-config');
+
+function updateToggleUI(enabled) {
+  const dot = pgToggleUI.querySelector('span');
+  pgToggleUI.style.background = enabled ? 'var(--pink-mid, #E8628A)' : 'rgba(255,255,255,.1)';
+  dot.style.transform = enabled ? 'translateX(22px)' : 'translateX(0)';
+  pgConfig.style.display = enabled ? 'grid' : 'none';
+}
+
+pgToggle.addEventListener('change', () => updateToggleUI(pgToggle.checked));
+
+document.getElementById('save-pg').onclick = async () => {
+  const enabled = pgToggle.checked;
+  const slug    = document.getElementById('pg-slug').value.trim();
+  const apikey  = document.getElementById('pg-apikey').value.trim();
+  const cfg     = DB.getSettings();
+  cfg.pgEnabled = enabled;
+  if (slug)   cfg.pgSlug   = slug;
+  if (apikey) cfg.pgApiKey = apikey;
+  await DB.saveSettings(cfg);
+  toast('✅ Pengaturan payment gateway disimpan!');
+};
+
 document.addEventListener('DOMContentLoaded',async()=>{
   if(sessionStorage.getItem('cp_owner')!=='1'){window.location.href='index.html';return;}
   const cfg=await DB.getSettingsAsync();
@@ -170,6 +218,12 @@ document.addEventListener('DOMContentLoaded',async()=>{
   document.getElementById('s-ig').value=cfg.instagram||'';
   document.getElementById('s-cut').value=cfg.agencyCut||40;
   document.getElementById('s-user').value=cfg.username||'';
+  // Load payment gateway settings
+  const pgEnabled = cfg.pgEnabled === true;
+  pgToggle.checked = pgEnabled;
+  updateToggleUI(pgEnabled);
+  if (cfg.pgSlug)   document.getElementById('pg-slug').value   = cfg.pgSlug;
+  if (cfg.pgApiKey) document.getElementById('pg-apikey').value = cfg.pgApiKey;
 
   document.querySelectorAll('.nav-item').forEach(a=>a.addEventListener('click',()=>{if(window.innerWidth<=768)closeSidebar();}));
 });
