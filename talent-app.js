@@ -45,6 +45,7 @@ const POINT_MAX    = 100;
 
 let currentTalent    = null;
 let _docId           = null;
+let _totalGrossSesi  = 0; // akumulasi gaji kotor sesi ini (realtime)
 let _uploadedAudioUrl = '';
 let _uploadedPhotoUrl = '';
 
@@ -154,8 +155,8 @@ function getCurrentPeriod() {
   const month = now.getMonth();
   const day = now.getDate();
   if (day >= 5 && day <= 20) {
-    const start = new Date(year, month, 5);
-    const end   = new Date(year, month, 20);
+    const start = new Date(year, month, 5, 0, 0, 0);
+    const end   = new Date(year, month, 20, 23, 59, 59);
     return {
       id    : `${year}-${String(month+1).padStart(2,'0')}-1`,
       label : `5 ${start.toLocaleDateString('id-ID',{month:'short'})} - 20 ${end.toLocaleDateString('id-ID',{month:'short',year:'numeric'})}`,
@@ -166,8 +167,8 @@ function getCurrentPeriod() {
     const startYear  = startMonth < 0 ? year - 1 : year;
     const endMonth   = day > 20 ? month + 1 : month;
     const endYear    = endMonth > 11 ? year + 1 : year;
-    const start = new Date(startYear, (startMonth + 12) % 12, 21);
-    const end   = new Date(endYear, endMonth % 12, 4);
+    const start = new Date(startYear, (startMonth + 12) % 12, 21, 0, 0, 0);
+    const end   = new Date(endYear, endMonth % 12, 4, 23, 59, 59);
     return {
       id    : `${startYear}-${String(((startMonth+12)%12)+1).padStart(2,'0')}-2`,
       label : `21 ${start.toLocaleDateString('id-ID',{month:'short'})} - 4 ${end.toLocaleDateString('id-ID',{month:'short',year:'numeric'})}`,
@@ -201,6 +202,7 @@ async function loadSalaryData() {
       }
     });
     const totalNet = Math.round(totalGross * 0.6);
+    _totalGrossSesi = totalGross; // sinkronkan dengan data Firestore
     salaryEl.innerHTML = `
       <div onclick="openSalaryModal()" style="background:rgba(61,214,140,.06);border:1px solid rgba(61,214,140,.2);border-radius:14px;padding:16px 18px;margin-bottom:16px;cursor:pointer;transition:border-color .2s" onmouseover="this.style.borderColor='rgba(61,214,140,.4)'" onmouseout="this.style.borderColor='rgba(61,214,140,.2)'">
         <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
@@ -215,7 +217,7 @@ async function loadSalaryData() {
         </div>
         <div style="background:rgba(61,214,140,.08);border-radius:10px;padding:12px 14px">
           <div style="font-size:.68rem;font-weight:800;color:#3DD68C;text-transform:uppercase;margin-bottom:3px">Gaji Bersih</div>
-          <div style="font-size:1.3rem;font-weight:900;color:#3DD68C">Rp ${totalNet.toLocaleString('id-ID')}</div>
+          <div class="salary-net-val" style="font-size:1.3rem;font-weight:900;color:#3DD68C">Rp ${totalNet.toLocaleString('id-ID')}</div>
         </div>
       </div>`;
   } catch(e) {
@@ -510,6 +512,20 @@ window.respondOrder = async function(orderId, action) {
               💬 Chat WA
             </a>
           </div>`;
+      }
+      // Tambah gaji realtime dari response
+      const orderPrice = Number(data.price || 0);
+      if (orderPrice > 0) {
+        _totalGrossSesi += orderPrice;
+        const netSesi = Math.round(_totalGrossSesi * 0.6);
+        // Update display gaji langsung
+        const gajiEl = document.querySelector('#talent-salary-box .salary-net-val');
+        if (gajiEl) {
+          gajiEl.textContent = 'Rp ' + netSesi.toLocaleString('id-ID');
+        } else {
+          // Kalau element belum ada, reload salary data
+          loadSalaryData();
+        }
       }
       toast('✅ Order diterima! Nomor WA customer sudah tersedia.');
     } else if (action === 'reject') {
