@@ -323,7 +323,7 @@ document.getElementById('create-btn').onclick = async () => {
     await setDoc(doc(_db, 'talents', docId), {
       username:docId, password:pass, name, gender, age, bio,
       services:_selectedServices, img:imgUrl, audio:audioUrl,
-      online:false, active:true, status:'approved', points:100,
+      online:false, active:true, status:'approved', points:50,
       createdAt:new Date().toISOString(),
     });
 
