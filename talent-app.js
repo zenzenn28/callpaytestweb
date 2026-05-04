@@ -526,7 +526,7 @@ function listenStatus() {
     const online = data.online !== false;
     updateStatusUI(online);
     updateBanner();
-    updatePointDisplay(data.points !== undefined ? data.points : 100);
+    updatePointDisplay(data.points !== undefined ? data.points : 50);
     loadSalaryData();
     document.getElementById('t-avatar').textContent   = (data.name || _docId)[0].toUpperCase();
     document.getElementById('t-name-top').textContent = data.name || _docId;
