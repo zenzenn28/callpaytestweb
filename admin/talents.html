@@ -137,7 +137,7 @@ function render(){
 
 function getPoints(t) {
   const fsData = firestoreMap[t._docId || t.id] || firestoreMap[String(t.id)] || {};
-  return fsData.points !== undefined ? fsData.points : 100;
+  return fsData.points !== undefined ? fsData.points : 50;
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
