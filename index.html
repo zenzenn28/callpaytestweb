@@ -208,12 +208,9 @@ document.addEventListener('click', function(e) {
 });
 function beliVoucher(e) {
   e.preventDefault();
-  // WA sesuai agensi (WA_NUMBER sudah di-set di script.js via _adminParam)
-  const waNum = window.WA_NUMBER || '62895400709371';
-  const msg = encodeURIComponent(
-    'Halo Admin! 👋\n\nSaya ingin membeli voucher CallPay.\n\nMohon info layanan dan harga yang tersedia. Terima kasih! 🙏'
-  );
-  window.open('https://wa.me/' + waNum + '?text=' + msg, '_blank');
+  // Redirect ke halaman beli voucher — halaman itu yang handle PG on/off
+  const admin = window._adminParam || 'admin1';
+  window.location.href = 'beli-voucher.html?admin=' + admin;
 }
 </script>
 </body>
