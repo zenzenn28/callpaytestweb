@@ -183,15 +183,18 @@ async function loadSalaryData() {
   if (!salaryEl) return;
   try {
     const { collection, query, where, getDocs } = await import('https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js');
+    // Query hanya filter talentId — tidak pakai double where agar tidak butuh composite index
     const q = query(
       collection(db, 'orders'),
-      where('talentId', '==', _docId),
-      where('status', '==', 'accepted')
+      where('talentId', '==', _docId)
     );
     const snap = await getDocs(q);
     let totalGross = 0;
     snap.forEach(d => {
       const order = d.data();
+      // Filter accepted dan dalam periode di client
+      if (order.status !== 'accepted') return;
+      if (order.type === 'voucher_purchase') return; // skip entry beli voucher
       const createdAt = order.createdAt ? new Date(order.createdAt) : null;
       if (createdAt && createdAt >= period.start && createdAt <= period.end) {
         totalGross += Number(order.originalPrice || order.price || 0);
