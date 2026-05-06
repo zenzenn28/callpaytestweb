@@ -6,31 +6,77 @@
   <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Pacifico&display=swap" rel="stylesheet">
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
-    :root{--pink:#F9A8C9;--pink-mid:#E8628A;--gold:#FFD166;--surface:#16162A;--surface2:#1E1E35;--border:rgba(255,255,255,.08);--muted:rgba(240,235,248,.45);--green:#3DD68C;--red:#FF5C5C}
+    :root{--pink:#F9A8C9;--pink-mid:#E8628A;--surface:#16162A;--surface2:#1E1E35;--border:rgba(255,255,255,.08);--muted:rgba(240,235,248,.45)}
     body{font-family:'Nunito',sans-serif;background:#0A0A15;color:#F0EBF8;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px}
-    .logo{font-family:'Pacifico',cursive;font-size:1.6rem;color:var(--pink-mid);margin-bottom:24px;text-align:center}
-    .card{width:100%;max-width:420px;background:linear-gradient(145deg,#16162A,#1E1E35);border:1px solid var(--border);border-radius:20px;padding:28px}
-    h2{font-size:1rem;font-weight:900;margin-bottom:6px}
-    .sub{font-size:.78rem;color:var(--muted);font-weight:600;margin-bottom:24px;line-height:1.5}
-    label{display:block;font-size:.72rem;font-weight:800;color:rgba(240,235,248,.5);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
-    input,select{width:100%;padding:11px 14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:10px;color:#F0EBF8;font-family:'Nunito',sans-serif;font-size:16px;font-weight:600;outline:none;margin-bottom:16px;transition:border-color .2s}
-    input:focus,select:focus{border-color:rgba(249,168,201,.4)}
+    .logo{font-family:'Pacifico',cursive;font-size:1.8rem;color:var(--pink-mid);margin-bottom:24px;text-align:center}
+    .card{width:100%;max-width:440px;background:linear-gradient(145deg,#16162A,#1E1E35);border:1px solid var(--border);border-radius:20px;padding:24px}
+    .card-title{display:flex;align-items:center;gap:10px;font-size:1.05rem;font-weight:900;margin-bottom:6px}
+    .card-sub{font-size:.78rem;color:var(--muted);font-weight:600;margin-bottom:20px;line-height:1.6}
+    label{display:block;font-size:.7rem;font-weight:900;color:rgba(240,235,248,.45);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+    select,input{width:100%;padding:12px 14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:10px;color:#F0EBF8;font-family:'Nunito',sans-serif;font-size:16px;font-weight:600;outline:none;margin-bottom:14px;transition:border-color .2s}
+    select:focus,input:focus{border-color:rgba(249,168,201,.4)}
     select option{background:#16162A}
-    .btn{width:100%;padding:13px;border-radius:12px;background:linear-gradient(135deg,#E8628A,#F9A8C9);border:none;color:#fff;font-family:'Nunito',sans-serif;font-weight:900;font-size:1rem;cursor:pointer;transition:opacity .2s;box-shadow:0 4px 18px rgba(232,98,138,.3)}
-    .btn:hover{opacity:.9}
-    .btn:disabled{opacity:.5;cursor:not-allowed}
-    .info-box{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;padding:12px 14px;margin-bottom:16px;font-size:.78rem;color:var(--muted);font-weight:600;line-height:1.6}
-    .info-box b{color:#F0EBF8}
+    .info-box{background:rgba(167,139,250,.05);border:1px solid rgba(167,139,250,.2);border-radius:12px;padding:14px;margin-bottom:16px;display:none}
+    .info-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:.82rem}
+    .info-row:last-child{border-bottom:none}
+    .info-svc{font-weight:700;color:rgba(240,235,248,.8)}
+    .info-dur{font-weight:900;color:#a78bfa}
+    .info-total{display:flex;justify-content:space-between;align-items:center;margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.08)}
+    .info-total-label{font-size:.75rem;color:var(--muted);font-weight:700}
+    .info-total-val{font-size:.92rem;font-weight:900;color:#3DD68C}
+    .divider{height:1px;background:rgba(255,255,255,.06);margin:18px 0}
+    .btn-method{width:100%;display:flex;align-items:center;gap:14px;padding:16px 18px;border-radius:14px;border:none;cursor:pointer;font-family:'Nunito',sans-serif;transition:opacity .2s,transform .2s;margin-bottom:10px;text-align:left}
+    .btn-method:hover{opacity:.92;transform:translateY(-1px)}
+    .btn-method:disabled{opacity:.4;cursor:not-allowed;transform:none}
+    .btn-wa{background:linear-gradient(135deg,#E8628A,#F9A8C9);color:#fff}
+    .btn-web{background:linear-gradient(135deg,#5B21B6,#7C3AED);color:#fff}
+    .btn-icon{width:42px;height:42px;border-radius:10px;background:rgba(255,255,255,.15);display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0}
+    .btn-text{flex:1}
+    .btn-text-title{font-size:.95rem;font-weight:900}
+    .btn-text-sub{font-size:.72rem;opacity:.8;margin-top:2px;font-weight:600}
+    .btn-arrow{font-size:1rem;opacity:.7}
     .loading{text-align:center;padding:40px;color:var(--muted);font-weight:700}
-    .err{text-align:center;padding:40px;color:var(--red);font-weight:700}
   </style>
 </head>
 <body>
-
 <div class="logo">CallPay</div>
+<div class="card">
+  <div class="card-title">🎟️ Beli Voucher</div>
+  <p class="card-sub">Pilih nominal voucher dan masukkan nomor WhatsApp kamu. Setelah pembayaran berhasil, kode voucher akan otomatis dikirim.</p>
 
-<div class="card" id="main-card">
-  <div class="loading">⏳ Memuat...</div>
+  <label>Pilih Nominal</label>
+  <select id="nominal-sel" onchange="updateInfo()">
+    <option value="">— Pilih Nominal —</option>
+  </select>
+
+  <label>Nomor WhatsApp Kamu</label>
+  <input type="tel" id="wa-input" placeholder="Contoh: 08123456789">
+
+  <!-- Info detail layanan -->
+  <div class="info-box" id="info-box"></div>
+
+  <div class="divider"></div>
+
+  <!-- Tombol pilihan -->
+  <button class="btn-method btn-wa" id="btn-wa" onclick="beliViaWA()" disabled>
+    <div class="btn-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="22" height="22" fill="white"><path d="M24 4C13 4 4 13 4 24c0 3.6 1 7 2.7 9.9L4 44l10.4-2.7C17.2 43 20.5 44 24 44c11 0 20-9 20-20S35 4 24 4zm0 36c-3.1 0-6.1-.8-8.7-2.4l-.6-.4-6.2 1.6 1.7-6-.4-.6C8.8 30.1 8 27.1 8 24 8 15.2 15.2 8 24 8s16 7.2 16 16-7.2 16-16 16zm8.7-11.8c-.5-.2-2.8-1.4-3.2-1.5-.4-.2-.7-.2-1 .2-.3.4-1.2 1.5-1.4 1.8-.3.3-.5.4-1 .1-.5-.2-2-.7-3.8-2.3-1.4-1.2-2.3-2.8-2.6-3.2-.3-.5 0-.7.2-1 .2-.2.5-.5.7-.8.2-.3.3-.5.4-.8.1-.3 0-.6-.1-.8-.1-.2-1-2.5-1.4-3.4-.4-.9-.8-.8-1-.8h-.9c-.3 0-.8.1-1.2.6-.4.5-1.6 1.6-1.6 3.8s1.7 4.4 1.9 4.7c.2.3 3.3 5.1 8.1 7.1 1.1.5 2 .8 2.7 1 1.1.3 2.2.3 3 .2.9-.1 2.8-1.1 3.2-2.2.4-1.1.4-2 .3-2.2-.2-.3-.5-.4-1-.6z"/></svg>
+    </div>
+    <div class="btn-text">
+      <div class="btn-text-title">Beli via Admin</div>
+      <div class="btn-text-sub">Pembelian melalui admin WhatsApp</div>
+    </div>
+    <div class="btn-arrow">›</div>
+  </button>
+
+  <button class="btn-method btn-web" id="btn-web" onclick="beliViaWeb()" disabled style="display:none">
+    <div class="btn-icon">💳</div>
+    <div class="btn-text">
+      <div class="btn-text-title">Beli via Website</div>
+      <div class="btn-text-sub">Bayar otomatis, voucher langsung dikirim</div>
+    </div>
+    <div class="btn-arrow">›</div>
+  </button>
 </div>
 
 <script type="module">
@@ -48,12 +94,16 @@ const FIREBASE_CONFIG = {
 const app = getApps().length ? getApps()[0] : initializeApp(FIREBASE_CONFIG);
 const db  = getFirestore(app);
 
-// Ambil adminParam dari URL
 const p          = new URLSearchParams(window.location.search);
-const adminParam = p.get('admin') || 'admin1';
+const adminRaw   = p.get('admin') || 'admin1';
+const ADMIN_MAP  = { 'callpay': 'admin1', 'sleepcallpay': 'admin2', 'scallpayz': 'admin3' };
+const adminParam = ADMIN_MAP[adminRaw] || adminRaw;
 
-// Pricelist default — diambil dari Firestore
-// nominal = nilai voucher, bayar = yang dibayar customer (sudah termasuk biaya admin Rp 3.000)
+let _prices    = {};
+let _pgEnabled = false;
+let _pgSlug    = 'callpay';
+let _waAdmin   = '';
+
 const NOMINALS = [
   { nominal: 10000, bayar: 13000 },
   { nominal: 20000, bayar: 23000 },
@@ -63,92 +113,86 @@ const NOMINALS = [
   { nominal: 60000, bayar: 63000 },
 ];
 
-async function init() {
-  const card = document.getElementById('main-card');
-  try {
-    // Ambil settings
-    const settingsSnap = await getDoc(doc(db, 'settings', 'config'));
-    const settings     = settingsSnap.exists() ? settingsSnap.data() : {};
+const SVC_ICONS = {
+  'Temen Call': '📞', 'Sleepcall': '🌙',
+  'Temen Curhat': '🫂', 'Pacar Virtual': '💕', 'Video Call': '📹',
+};
 
-    const pgEnabled = settings.pgEnabled === true;
-    const pgSlug    = settings.pgSlug    || 'callpay';
-    const waAdmin   = settings.waNumber  || '';
-    const agencyName = settings.agencyName || 'CallPay';
-
-    if (!pgEnabled) {
-      // PG off → buka WA di tab baru, lalu tampilkan pesan di halaman ini
-      const waMsg = encodeURIComponent(`Halo admin ${agencyName}, saya ingin membeli voucher CallPay.`);
-      window.open(`https://wa.me/${waAdmin}?text=${waMsg}`, '_blank');
-      card.innerHTML = `
-        <h2>🎟️ Beli Voucher</h2>
-        <div class="info-box" style="display:block;margin-top:12px">
-          Pembelian voucher saat ini dilakukan via <b>WhatsApp Admin</b>.<br>
-          Chat admin sudah dibuka di tab baru. Silakan konfirmasi pembelian disana.
-        </div>
-        <button class="btn" style="margin-top:16px" onclick="history.back()">← Kembali</button>
-      `;
-      return;
-    }
-
-    // PG on → tampilkan form
-    card.innerHTML = `
-      <h2>🎟️ Beli Voucher</h2>
-      <p class="sub">Pilih nominal voucher dan masukkan nomor WhatsApp kamu. Setelah pembayaran berhasil, kode voucher akan otomatis dikirim.</p>
-
-      <label>Pilih Nominal</label>
-      <select id="nominal-sel">
-        <option value="">— Pilih Nominal —</option>
-        ${NOMINALS.map(n => `<option value="${n.nominal}" data-bayar="${n.bayar}">Rp ${n.nominal.toLocaleString('id-ID')} (bayar Rp ${n.bayar.toLocaleString('id-ID')})</option>`).join('')}
-      </select>
-
-      <label>Nomor WhatsApp Kamu</label>
-      <input type="tel" id="wa-input" placeholder="Contoh: 08123456789">
-
-      <div class="info-box" id="info-box" style="display:none"></div>
-
-      <button class="btn" id="btn-bayar" onclick="bayar('${pgSlug}')">💳 Bayar Sekarang</button>
-    `;
-
-    document.getElementById('nominal-sel').addEventListener('change', updateInfo);
-
-  } catch(e) {
-    card.innerHTML = `<div class="err">❌ Gagal memuat halaman. Coba refresh.</div>`;
-    console.error(e);
-  }
+function formatDur(menit) {
+  const m = Number(menit);
+  if (m <= 90) return m + ' menit';
+  const jam = Math.floor(m / 60), sisa = m % 60;
+  return sisa > 0 ? `${jam} jam ${sisa} menit` : `${jam} jam`;
 }
 
-function updateInfo() {
+window.updateInfo = function() {
   const sel     = document.getElementById('nominal-sel');
   const nominal = Number(sel.value);
   const bayar   = Number(sel.options[sel.selectedIndex]?.dataset?.bayar || 0);
   const infoBox = document.getElementById('info-box');
-  if (!nominal) { infoBox.style.display = 'none'; return; }
+  const btnWa   = document.getElementById('btn-wa');
+  const btnWeb  = document.getElementById('btn-web');
+
+  if (!nominal) {
+    infoBox.style.display = 'none';
+    btnWa.disabled = true; btnWeb.disabled = true;
+    return;
+  }
+
+  // Baris layanan sesuai nominal
+  const rows = [];
+  Object.entries(_prices).forEach(([svc, durMap]) => {
+    if (typeof durMap !== 'object') return;
+    const match = Object.entries(durMap).find(([, price]) => Number(price) === nominal);
+    if (match) {
+      rows.push(`
+        <div class="info-row">
+          <span class="info-svc">${SVC_ICONS[svc]||'🎯'} ${svc}</span>
+          <span class="info-dur">${formatDur(match[0])}</span>
+        </div>`);
+    }
+  });
+
   infoBox.style.display = 'block';
   infoBox.innerHTML = `
-    Nilai voucher: <b>Rp ${nominal.toLocaleString('id-ID')}</b><br>
-    Biaya admin: <b>Rp 3.000</b><br>
-    <b style="color:#F0EBF8">Total bayar: Rp ${bayar.toLocaleString('id-ID')}</b>
+    <div style="font-size:.7rem;font-weight:900;color:rgba(240,235,248,.4);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Yang kamu dapat</div>
+    ${rows.join('') || '<div style="font-size:.78rem;color:rgba(240,235,248,.4)">Tidak ada layanan</div>'}
+    <div class="info-total">
+      <div class="info-total-label">Nilai voucher: Rp ${nominal.toLocaleString('id-ID')} + admin Rp 3.000</div>
+      <div class="info-total-val">Total: Rp ${bayar.toLocaleString('id-ID')}</div>
+    </div>
   `;
-}
 
-window.bayar = async function(slug) {
+  btnWa.disabled  = false;
+  btnWeb.disabled = false;
+};
+
+window.beliViaWA = function() {
+  const msg = encodeURIComponent(
+    `Halo Admin! 👋\nSaya ingin membeli voucher CallPay.\n\n` +
+    `💰 Nominal: Rp ${Number(document.getElementById('nominal-sel').value).toLocaleString('id-ID')}\n` +
+    `📱 WA saya: ${document.getElementById('wa-input').value || '-'}\n\nMohon info selanjutnya, terima kasih! 🙏`
+  );
+  window.open(`https://wa.me/${_waAdmin}?text=${msg}`, '_blank');
+};
+
+window.beliViaWeb = async function() {
   const sel     = document.getElementById('nominal-sel');
   const nominal = Number(sel.value);
   const bayar   = Number(sel.options[sel.selectedIndex]?.dataset?.bayar || 0);
-  const wa      = document.getElementById('wa-input').value.trim().replace(/\D/g,'');
-  const btn     = document.getElementById('btn-bayar');
+  const wa      = document.getElementById('wa-input').value.trim().replace(/\D/g, '');
+  const btn     = document.getElementById('btn-web');
 
   if (!nominal || !bayar) { alert('Pilih nominal voucher dulu!'); return; }
   if (!wa || wa.length < 9) { alert('Masukkan nomor WhatsApp yang valid!'); return; }
 
   btn.disabled    = true;
-  btn.textContent = '⏳ Memproses...';
+  btn.querySelector('.btn-text-title').textContent = 'Memproses...';
 
   const orderId = 'VC-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5).toUpperCase();
 
-  // Simpan pending payment — nominal = nilai voucher, bayar = total dibayar
   try {
-    const res = await fetch('https://callpay-order-15no.vercel.app/api/create-payment', {
+    const res  = await fetch('https://callpay-order-15no.vercel.app/api/create-payment', {
       method : 'POST',
       headers: { 'Content-Type': 'application/json' },
       body   : JSON.stringify({ orderId, nominal, bayar, custWa: wa, adminParam })
@@ -157,19 +201,53 @@ window.bayar = async function(slug) {
     if (!data.success) throw new Error(data.error || 'Gagal');
   } catch(e) {
     alert('Gagal membuat transaksi: ' + e.message);
-    btn.disabled    = false;
-    btn.textContent = '💳 Bayar Sekarang';
+    btn.disabled = false;
+    btn.querySelector('.btn-text-title').textContent = 'Beli via Website';
     return;
   }
 
-  // Redirect ke Pak Kasir — pakai harga bayar (sudah termasuk biaya admin)
   const redirectUrl = encodeURIComponent(
-    `https://zenzenn28.github.io/callpaytestweb/payment-success.html?orderId=${orderId}&wa=${wa}`
+    `${location.origin}${location.pathname.replace('beli-voucher.html','')}payment-success.html?orderId=${orderId}&wa=${wa}`
   );
-  const pakasirUrl = `https://app.pakasir.com/pay/${slug}/${bayar}?order_id=${orderId}&redirect=${redirectUrl}`;
-  window.location.href = pakasirUrl;
+  window.location.href = `https://app.pakasir.com/pay/${_pgSlug}/${bayar}?order_id=${orderId}&qris_only=1&redirect=${redirectUrl}`;
 };
 
+async function init() {
+  const card = document.querySelector('.card');
+  try {
+    const [settingsSnap, priceSnap] = await Promise.all([
+      getDoc(doc(db, 'settings', 'config')),
+      getDoc(doc(db, 'pricelist', 'admin1')),
+    ]);
+    const settings = settingsSnap.exists() ? settingsSnap.data() : {};
+    if (priceSnap.exists()) _prices = priceSnap.data();
+
+    _pgEnabled = settings.pgEnabled === true;
+    _pgSlug    = settings.pgSlug    || 'callpay';
+    _waAdmin   = settings.waNumber  || '62895400709371';
+
+    // Populate dropdown nominal
+    const sel = document.getElementById('nominal-sel');
+    NOMINALS.forEach(n => {
+      const opt = document.createElement('option');
+      opt.value = n.nominal;
+      opt.dataset.bayar = n.bayar;
+      opt.textContent = `Rp ${n.nominal.toLocaleString('id-ID')} (bayar Rp ${n.bayar.toLocaleString('id-ID')})`;
+      sel.appendChild(opt);
+    });
+
+    // Tampilkan/sembunyikan tombol web sesuai settings
+    const btnWeb = document.getElementById('btn-web');
+    if (_pgEnabled) {
+      btnWeb.style.display = 'flex';
+    } else {
+      btnWeb.style.display = 'none';
+    }
+
+  } catch(e) {
+    console.error(e);
+  }
+}
 init();
 </script>
 </body>
