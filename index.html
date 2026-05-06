@@ -179,6 +179,13 @@
     <div class="footer-contact"><h4>Kontak</h4><p>📱 WhatsApp: <a href="https://wa.me/62895400709371">+62 895-400-709371</a></p><p>📸 Instagram: @callpay.id</p><p>🕐 Online: 24 Jam / 7 Hari</p></div>
   </div>
   <hr class="footer-hr">
+  <div style="display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:6px 20px;margin-bottom:12px">
+    <a href="#" onclick="openPolicy('terms');return false" style="font-size:.75rem;color:rgba(240,235,248,.35);font-weight:700;text-decoration:none;transition:color .2s" onmouseover="this.style.color='#F9A8C9'" onmouseout="this.style.color='rgba(240,235,248,.35)'">Terms & Conditions</a>
+    <span style="color:rgba(255,255,255,.1)">·</span>
+    <a href="#" onclick="openPolicy('privacy');return false" style="font-size:.75rem;color:rgba(240,235,248,.35);font-weight:700;text-decoration:none;transition:color .2s" onmouseover="this.style.color='#F9A8C9'" onmouseout="this.style.color='rgba(240,235,248,.35)'">Privacy Policy</a>
+    <span style="color:rgba(255,255,255,.1)">·</span>
+    <a href="#" onclick="openPolicy('refund');return false" style="font-size:.75rem;color:rgba(240,235,248,.35);font-weight:700;text-decoration:none;transition:color .2s" onmouseover="this.style.color='#F9A8C9'" onmouseout="this.style.color='rgba(240,235,248,.35)'">Refund Policy</a>
+  </div>
   <div class="footer-copy">© 2021–2030 CallPay Agency. All rights reserved.</div>
 </footer>
 
@@ -253,13 +260,53 @@ function openBantuan() {
   const msg = encodeURIComponent('Halo Admin CallPay! 👋\nSaya butuh bantuan mengenai...');
   window.open('https://wa.me/' + waNum + '?text=' + msg, '_blank');
 }
-function openPolicy(type) {
-  const policies = {
-    terms  : 'Syarat & Ketentuan CallPay\n\n1. Layanan CallPay hanya untuk pengguna 18 tahun ke atas.\n2. Pembayaran voucher bersifat final dan tidak dapat dikembalikan kecuali talent menolak.\n3. Dilarang menggunakan layanan untuk konten negatif atau melanggar hukum.\n4. CallPay berhak menangguhkan akun yang melanggar ketentuan.',
-    privacy: 'Kebijakan Privasi CallPay\n\n1. Data nomor WhatsApp kamu hanya digunakan untuk keperluan layanan.\n2. Kami tidak menjual data kamu ke pihak ketiga.\n3. Data transaksi disimpan secara aman di server kami.\n4. Kamu dapat meminta penghapusan data dengan menghubungi admin.',
-    refund : 'Kebijakan Refund CallPay\n\n1. Jika talent menolak ordermu, voucher kamu aktif kembali otomatis.\n2. Jika talent tidak merespons dalam 2 menit, voucher kamu aktif kembali.\n3. Voucher yang sudah digunakan tidak dapat di-refund.\n4. Untuk komplain, hubungi admin dalam 1x24 jam setelah transaksi.',
+async function openPolicy(type) {
+  const TITLES = { terms:'Terms & Conditions', privacy:'Privacy Policy', refund:'Refund Policy' };
+  const DEFAULTS = {
+    terms  : 'Syarat & Ketentuan CallPay\n\nBelum diatur oleh admin.',
+    privacy: 'Kebijakan Privasi CallPay\n\nBelum diatur oleh admin.',
+    refund : 'Kebijakan Refund CallPay\n\nBelum diatur oleh admin.',
   };
-  alert(policies[type] || 'Informasi tidak tersedia.');
+  // Buka modal policy
+  let text = DEFAULTS[type] || 'Informasi tidak tersedia.';
+  try {
+    const { getFirestore, doc, getDoc } = await import('https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js');
+    const { initializeApp, getApps } = await import('https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js');
+    const FIREBASE_CONFIG = {
+      apiKey:'AIzaSyACJjz3XP7vbzxkeZmW_sCXKurAFXZ_vwU',
+      authDomain:'testweb-9b2f8.firebaseapp.com',
+      projectId:'testweb-9b2f8',
+      storageBucket:'testweb-9b2f8.firebasestorage.app',
+      messagingSenderId:'223987046525',
+      appId:'1:223987046525:web:9434307a1fe9e9cc147914'
+    };
+    const app = getApps().length ? getApps()[0] : initializeApp(FIREBASE_CONFIG);
+    const db  = getFirestore(app);
+    const snap = await getDoc(doc(db,'settings','config'));
+    if (snap.exists() && snap.data()[type]) text = snap.data()[type];
+  } catch(e) {}
+  showPolicyModal(TITLES[type] || 'Info', text);
+}
+
+function showPolicyModal(title, text) {
+  let modal = document.getElementById('policy-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'policy-modal';
+    modal.style.cssText = 'position:fixed;inset:0;z-index:3000;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);display:flex;align-items:center;justify-content:center;padding:20px';
+    modal.innerHTML = `
+      <div style="background:#16162A;border:1px solid rgba(255,255,255,.1);border-radius:20px;width:100%;max-width:520px;max-height:85vh;display:flex;flex-direction:column">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px 14px;border-bottom:1px solid rgba(255,255,255,.08);flex-shrink:0">
+          <div id="policy-modal-title" style="font-size:1rem;font-weight:900;color:#F0EBF8"></div>
+          <button onclick="document.getElementById('policy-modal').remove()" style="background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.08);border-radius:8px;width:32px;height:32px;color:#F0EBF8;cursor:pointer;font-size:.9rem">✕</button>
+        </div>
+        <div id="policy-modal-body" style="overflow-y:auto;padding:18px 20px;font-size:.85rem;line-height:1.8;color:rgba(240,235,248,.75);font-weight:600;white-space:pre-wrap"></div>
+      </div>`;
+    modal.addEventListener('click', e => { if (e.target === modal) modal.remove(); });
+    document.body.appendChild(modal);
+  }
+  document.getElementById('policy-modal-title').textContent = title;
+  document.getElementById('policy-modal-body').textContent  = text;
 }
 // Tutup drawer dengan swipe kanan
 (function() {
