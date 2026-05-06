@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Pengaturan Pembayaran — CallPay Admin</title>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Pacifico&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="admin.css?v=11">
+  <style>
+    .toggle-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+    .toggle-info{flex:1}
+    .toggle-title{font-size:.95rem;font-weight:900;margin-bottom:4px}
+    .toggle-sub{font-size:.78rem;color:var(--muted);font-weight:600;line-height:1.5}
+    .toggle-status{font-size:.72rem;font-weight:800;margin-top:6px;padding:3px 10px;border-radius:99px;display:inline-block}
+    .status-on{background:rgba(61,214,140,.12);color:#3DD68C;border:1px solid rgba(61,214,140,.25)}
+    .status-off{background:rgba(255,92,92,.1);color:#FF5C5C;border:1px solid rgba(255,92,92,.2)}
+    .toggle-switch{position:relative;display:inline-block;width:52px;height:28px;cursor:pointer;flex-shrink:0}
+    .toggle-switch input{opacity:0;width:0;height:0}
+    .toggle-ui{position:absolute;inset:0;border-radius:99px;background:rgba(255,255,255,.1);transition:.3s;display:flex;align-items:center;padding:4px}
+    .toggle-dot{width:20px;height:20px;border-radius:50%;background:#fff;transition:.3s;display:block}
+  </style>
+<script>
+function toggleSidebar(){const sb=document.querySelector('.sidebar'),ov=document.getElementById('sidebar-overlay'),btn=document.getElementById('hamburger-btn');if(!sb||!ov||!btn)return;const open=sb.classList.toggle('open');ov.classList.toggle('open',open);btn.textContent=open?'✕':'☰';}
+function closeSidebar(){const sb=document.querySelector('.sidebar'),ov=document.getElementById('sidebar-overlay'),btn=document.getElementById('hamburger-btn');if(!sb||!ov||!btn)return;sb.classList.remove('open');ov.classList.remove('open');btn.textContent='☰';}
+</script>
+</head>
+<body>
+<div class="app">
+  <div class="mobile-topbar"><span class="mobile-logo">CallPay</span><button class="hamburger" onclick="toggleSidebar()" id="hamburger-btn">☰</button></div>
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+  <aside class="sidebar">
+    <div class="sidebar-logo"><div class="sidebar-logo-text">CallPay</div><div class="sidebar-logo-sub">Admin Panel</div></div>
+    <nav class="sidebar-nav">
+      <a href="index.html"              class="nav-item"><span class="nav-icon">📊</span>Dashboard</a>
+      <a href="order-log.html"          class="nav-item"><span class="nav-icon">📋</span>Log Aktivitas</a>
+      <a href="talents.html"            class="nav-item"><span class="nav-icon">⭐</span>Point Talent</a>
+      <a href="status.html"             class="nav-item"><span class="nav-icon">🟢</span>Talent Online</a>
+      <a href="generate-voucher.html"   class="nav-item"><span class="nav-icon">🎟️</span>Generate Voucher</a>
+      <a href="hapus-order.html"        class="nav-item"><span class="nav-icon">🗑️</span>Hapus Order Talent</a>
+      <a href="payment-settings.html"   class="nav-item active"><span class="nav-icon">💳</span>Pengaturan Pembayaran</a>
+      <a href="review-testimoni.html"   class="nav-item"><span class="nav-icon">💬</span>Review Testimoni</a>
+      <a href="../index.html"           class="nav-item" id="back-web"><span class="nav-icon">🌐</span>Lihat Website</a>
+    </nav>
+    <div class="sidebar-footer"><button class="logout-btn" id="logout-btn">Logout →</button></div>
+  </aside>
+
+  <main class="main">
+    <div class="page-header">
+      <h1>💳 Pengaturan Pembayaran</h1>
+      <p>Aktifkan atau nonaktifkan metode pembelian voucher untuk customer.</p>
+    </div>
+
+    <div class="toggle-card" id="card-web">
+      <div class="toggle-info">
+        <div class="toggle-title">💳 Beli via Website (Pak Kasir)</div>
+        <div class="toggle-sub">Customer bayar otomatis via QRIS, voucher langsung dikirim ke WhatsApp</div>
+        <div class="toggle-status status-off" id="status-web">⏳ Memuat...</div>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="toggle-web" onchange="saveToggle('web')">
+        <span class="toggle-ui" id="ui-web"><span class="toggle-dot"></span></span>
+      </label>
+    </div>
+
+    <div class="toggle-card" id="card-wa">
+      <div class="toggle-info">
+        <div class="toggle-title">📱 Beli via Admin (WhatsApp)</div>
+        <div class="toggle-sub">Customer konfirmasi pembelian lewat chat WhatsApp admin secara manual</div>
+        <div class="toggle-status status-off" id="status-wa">⏳ Memuat...</div>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="toggle-wa" onchange="saveToggle('wa')">
+        <span class="toggle-ui" id="ui-wa"><span class="toggle-dot"></span></span>
+      </label>
+    </div>
+
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js';
+import { getFirestore, doc, getDoc, setDoc } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js';
+import { DB } from './data.js?v=11';
+
+const FIREBASE_CONFIG = {
+  apiKey           : 'AIzaSyACJjz3XP7vbzxkeZmW_sCXKurAFXZ_vwU',
+  authDomain       : 'testweb-9b2f8.firebaseapp.com',
+  projectId        : 'testweb-9b2f8',
+  storageBucket    : 'testweb-9b2f8.firebasestorage.app',
+  messagingSenderId: '223987046525',
+  appId            : '1:223987046525:web:9434307a1fe9e9cc147914'
+};
+const app = getApps().length ? getApps()[0] : initializeApp(FIREBASE_CONFIG);
+const db  = getFirestore(app);
+
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function applyToggle(id, enabled) {
+  const ui     = document.getElementById('ui-' + id);
+  const dot    = ui.querySelector('.toggle-dot');
+  const status = document.getElementById('status-' + id);
+  const input  = document.getElementById('toggle-' + id);
+  input.checked      = enabled;
+  ui.style.background = enabled ? '#E8628A' : 'rgba(255,255,255,.1)';
+  dot.style.transform = enabled ? 'translateX(24px)' : 'translateX(0)';
+  status.textContent  = enabled ? '✅ Aktif' : '🔴 Nonaktif';
+  status.className    = 'toggle-status ' + (enabled ? 'status-on' : 'status-off');
+}
+
+window.saveToggle = async function(id) {
+  const enabled = document.getElementById('toggle-' + id).checked;
+  applyToggle(id, enabled);
+  try {
+    const cfg = DB.getSettings();
+    if (id === 'web') cfg.pgEnabled = enabled;
+    if (id === 'wa')  cfg.waEnabled = enabled;
+    await DB.saveSettings(cfg);
+    toast(`✅ ${id === 'web' ? 'Via Website' : 'Via Admin'} ${enabled ? 'diaktifkan' : 'dinonaktifkan'}!`);
+  } catch(e) {
+    toast('❌ Gagal simpan: ' + e.message);
+  }
+};
+
+document.getElementById('logout-btn').onclick = () => { sessionStorage.removeItem('cp_admin_v2'); window.location.href = 'index.html'; };
+document.getElementById('back-web').addEventListener('click', e => { e.preventDefault(); window.open('../index.html','_blank'); });
+
+document.addEventListener('DOMContentLoaded', async () => {
+  if (sessionStorage.getItem('cp_admin_v2') !== '1') { window.location.href = 'index.html'; return; }
+  document.querySelectorAll('.nav-item').forEach(a => a.addEventListener('click', () => { if(window.innerWidth<=768) closeSidebar(); }));
+
+  await DB.getSettingsAsync();
+  const cfg = DB.getSettings();
+  applyToggle('web', cfg.pgEnabled === true);
+  applyToggle('wa',  cfg.waEnabled !== false);
+});
+</script>
+</body>
+</html>
