@@ -2,319 +2,325 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Rekap Gaji — CallPay Owner</title>
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <title>Kelola Pricelist — CallPay Owner</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Pacifico&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="owner.css">
   <style>
-    *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:'Nunito',sans-serif;background:#0A0A15;color:#F0EBF8;min-height:100vh;padding:20px}
-    .header{display:flex;align-items:center;gap:12px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,.08)}
-    .header h1{font-size:1.1rem;font-weight:900;flex:1}
-    .header a{font-size:.82rem;color:rgba(240,235,248,.4);text-decoration:none;font-weight:700;white-space:nowrap}
-    .period-info{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px 16px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:6px}
-    .period-label{font-size:.82rem;font-weight:800;color:#FFB800}
-    .period-sub{font-size:.72rem;color:rgba(240,235,248,.4);font-weight:600;margin-top:2px}
-    .summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
-    .summary-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px}
-    .summary-label{font-size:.65rem;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:rgba(240,235,248,.4);margin-bottom:4px}
-    .summary-value{font-size:1rem;font-weight:900}
-    .talent-list{display:flex;flex-direction:column;gap:10px}
-    .talent-row{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;padding:12px 14px;display:flex;align-items:center;gap:12px;transition:border-color .2s}
-    .talent-row.paid{border-color:rgba(61,214,140,.3);background:rgba(61,214,140,.03)}
-    .talent-row.unpaid{border-color:rgba(255,184,0,.2)}
-    .talent-img{width:42px;height:42px;border-radius:10px;object-fit:cover;flex-shrink:0;background:#1E1E35}
-    .talent-info{flex:1;min-width:0}
-    .talent-name{font-size:.88rem;font-weight:900;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .talent-meta{font-size:.72rem;color:rgba(240,235,248,.5);font-weight:600;margin-top:2px}
-    .salary-info{text-align:right;flex-shrink:0}
-    .salary-gross{font-size:.7rem;color:rgba(240,235,248,.4);font-weight:700}
-    .salary-net{font-size:.9rem;font-weight:900;color:#3DD68C}
-    .checkbox-wrap{display:flex;align-items:center;margin-left:4px}
-    .salary-checkbox{width:22px;height:22px;accent-color:#3DD68C;cursor:pointer;flex-shrink:0}
-    .empty{text-align:center;padding:48px 20px;color:rgba(240,235,248,.35)}
-    .loading{text-align:center;padding:40px;color:rgba(240,235,248,.4)}
-    /* Confirm Modal */
-    .confirm-modal{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.75);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;padding:20px}
-    .confirm-modal.open{display:flex}
-    .confirm-box{background:linear-gradient(145deg,#16162A,#1E1E35);border:1px solid rgba(61,214,140,.25);border-radius:20px;padding:28px;width:100%;max-width:340px;text-align:center}
-    .confirm-icon{font-size:2.5rem;margin-bottom:12px}
-    .confirm-title{font-size:1rem;font-weight:900;margin-bottom:8px}
-    .confirm-sub{font-size:.82rem;color:rgba(240,235,248,.6);font-weight:600;line-height:1.6;margin-bottom:20px}
-    .confirm-name{color:#3DD68C;font-weight:900}
-    .confirm-amount{font-size:1.3rem;font-weight:900;color:#3DD68C;margin-bottom:6px}
-    .confirm-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    .btn-cancel{padding:11px;border-radius:12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);color:rgba(240,235,248,.7);font-family:'Nunito',sans-serif;font-weight:800;font-size:.85rem;cursor:pointer}
-    .btn-confirm{padding:11px;border-radius:12px;background:linear-gradient(135deg,#3DD68C,#2ea870);border:none;color:#fff;font-family:'Nunito',sans-serif;font-weight:800;font-size:.85rem;cursor:pointer}
-    @media(max-width:480px){
-      .summary{grid-template-columns:1fr 1fr}
-      .summary-card:last-child{grid-column:span 2}
-      .salary-gross{display:none}
+    .agency-tabs{display:flex;gap:10px;margin-bottom:24px;flex-wrap:wrap}
+    .agency-tab{padding:9px 22px;border-radius:99px;border:2px solid var(--border-gd);background:transparent;color:var(--muted);font-family:'Nunito',sans-serif;font-weight:800;font-size:.88rem;cursor:pointer;transition:all .2s}
+    .agency-tab.active{background:linear-gradient(135deg,var(--gold-mid),var(--gold));color:#1A1108;border-color:transparent}
+    .agency-tab:hover:not(.active){border-color:var(--gold-mid);color:var(--gold-mid)}
+
+    .service-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--rl);padding:22px 24px;margin-bottom:16px;max-width:660px}
+    .service-title{font-size:.95rem;font-weight:900;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+
+    /* Durasi rows */
+    .dur-list{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+    .dur-row{display:grid;grid-template-columns:90px 1fr 32px;gap:8px;align-items:center}
+    .dur-input{padding:8px 12px;background:var(--surface2);border:1px solid var(--border);border-radius:var(--r);color:var(--text);font-family:'Nunito',sans-serif;font-size:.88rem;font-weight:700;outline:none;transition:border-color .2s;width:100%}
+    .dur-input:focus{border-color:var(--gold-mid)}
+    .dur-label{font-size:.72rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+    .btn-del-dur{width:28px;height:28px;border-radius:8px;background:rgba(255,92,92,.1);border:1px solid rgba(255,92,92,.2);color:var(--red);font-size:.85rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
+    .btn-del-dur:hover{background:rgba(255,92,92,.22)}
+
+    .dur-row-header{display:grid;grid-template-columns:90px 1fr 32px;gap:8px;margin-bottom:4px}
+    .dur-col-label{font-size:.65rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.06em}
+
+    .btn-add-dur{padding:7px 16px;border-radius:99px;background:rgba(255,209,102,.07);border:1px solid var(--border-gd);color:var(--gold-mid);font-family:'Nunito',sans-serif;font-weight:800;font-size:.78rem;cursor:pointer;transition:all .2s;margin-bottom:14px}
+    .btn-add-dur:hover{background:rgba(255,209,102,.15)}
+
+    .btn-save-svc{padding:9px 20px;border-radius:99px;background:linear-gradient(135deg,var(--gold-mid),var(--gold));border:none;color:#1A1108;font-family:'Nunito',sans-serif;font-weight:800;font-size:.85rem;cursor:pointer;transition:opacity .2s}
+    .btn-save-svc:hover{opacity:.85}
+    .btn-save-svc:disabled{opacity:.4;cursor:not-allowed}
+    .save-status{font-size:.75rem;font-weight:700;margin-left:10px;display:inline-block}
+    .loading-state{text-align:center;padding:40px;color:var(--muted);font-size:.9rem;font-weight:700}
+
+    @media(max-width:600px){
+      .service-section{padding:16px}
+      .agency-tabs{gap:8px}
+      .agency-tab{padding:8px 16px;font-size:.82rem}
+      .dur-row{grid-template-columns:80px 1fr 28px}
     }
   </style>
+<script>
+function toggleSidebar(){const sb=document.querySelector('.sidebar'),ov=document.getElementById('sidebar-overlay'),btn=document.getElementById('hamburger-btn');if(!sb||!ov||!btn)return;const open=sb.classList.toggle('open');ov.classList.toggle('open',open);btn.textContent=open?'✕':'☰';}
+function closeSidebar(){const sb=document.querySelector('.sidebar'),ov=document.getElementById('sidebar-overlay'),btn=document.getElementById('hamburger-btn');if(!sb||!ov||!btn)return;sb.classList.remove('open');ov.classList.remove('open');btn.textContent='☰';}
+</script>
+<script>
+if (sessionStorage.getItem('cp_owner') !== '1') {
+  document.addEventListener('DOMContentLoaded', function() { window.location.href = 'index.html'; });
+}
+</script>
 </head>
 <body>
-
-<div class="header">
-  <a href="index.html">← Kembali ke Owner Panel</a>
-  <h1>💰 Rekap Gaji Talent</h1>
-</div>
-
-<div class="period-info">
-  <div>
-    <div class="period-label" id="period-label">Memuat periode...</div>
-    <div class="period-sub" id="period-sub"></div>
-  </div>
-  <div style="font-size:.72rem;color:rgba(240,235,248,.4);font-weight:700">Gajian tgl 5 & 20</div>
-</div>
-
-<div class="summary">
-  <div class="summary-card">
-    <div class="summary-label">Total Kotor</div>
-    <div class="summary-value" id="sum-gross" style="color:#F0EBF8">Rp 0</div>
-  </div>
-  <div class="summary-card">
-    <div class="summary-label">Total Bersih</div>
-    <div class="summary-value" id="sum-net" style="color:#3DD68C">Rp 0</div>
-  </div>
-  <div class="summary-card">
-    <div class="summary-label">Belum Dibayar</div>
-    <div class="summary-value" id="sum-unpaid" style="color:#FFB800">0</div>
-  </div>
-</div>
-
-<div class="talent-list" id="talent-list">
-  <div class="loading">⏳ Memuat data gaji...</div>
-</div>
-
-<!-- CONFIRM MODAL -->
-<div class="confirm-modal" id="confirm-modal">
-  <div class="confirm-box">
-    <div class="confirm-icon">💸</div>
-    <div class="confirm-title">Konfirmasi Transfer Gaji</div>
-    <div class="confirm-sub">
-      Apakah gaji untuk<br>
-      <span class="confirm-name" id="confirm-name">-</span><br>
-      sudah ditransfer?
+<div class="app">
+  <div class="mobile-topbar"><span class="mobile-logo">CallPay</span><button class="hamburger" onclick="toggleSidebar()" id="hamburger-btn">☰</button></div>
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+  <aside class="sidebar">
+    <div class="sidebar-logo"><div class="sidebar-logo-text">CallPay</div><div class="sidebar-logo-sub">👑 Owner Panel</div></div>
+    <nav class="sidebar-nav">
+      <a href="index.html"         class="nav-item"><span class="nav-icon">📊</span>Dashboard</a>
+      <a href="ringkasan.html"     class="nav-item"><span class="nav-icon">📈</span>Ringkasan & Omset</a>
+      <a href="create-talent.html" class="nav-item"><span class="nav-icon">➕</span>Buat Akun Talent</a>
+      <a href="review.html"        class="nav-item"><span class="nav-icon">🔐</span>Kelola Akses Layanan</a>
+      <a href="pricelist.html"     class="nav-item active"><span class="nav-icon">💰</span>Kelola Pricelist</a>
+      <a href="settings.html"      class="nav-item"><span class="nav-icon">⚙️</span>Pengaturan</a>
+      <a href="../index.html"      class="nav-item" id="back-web"><span class="nav-icon">🌐</span>Lihat Website</a>
+    </nav>
+    <div class="sidebar-footer"><button class="logout-btn" id="logout-btn">Logout →</button></div>
+  </aside>
+  <main class="main">
+    <div class="page-header">
+      <h1>Kelola Pricelist 💰</h1>
+      <p>Atur harga layanan per agensi secara realtime</p>
     </div>
-    <div class="confirm-amount" id="confirm-amount">Rp 0</div>
-    <div style="font-size:.72rem;color:rgba(240,235,248,.4);font-weight:600;margin-bottom:20px" id="confirm-bank">-</div>
-    <div class="confirm-btns">
-      <button class="btn-cancel" onclick="cancelConfirm()">Belum</button>
-      <button class="btn-confirm" onclick="doConfirm()">✅ Sudah Transfer</button>
+
+    <div class="agency-tabs">
+      <button class="agency-tab active" id="tab-admin1" onclick="switchAgency('admin1')">🏢 CallPay</button>
+      <button class="agency-tab" id="tab-admin2" onclick="switchAgency('admin2')">🌙 SleepcallPay</button>
+      <button class="agency-tab" id="tab-admin3" onclick="switchAgency('admin3')">⚡ ScallpayZ</button>
     </div>
-  </div>
+
+    <div id="pricelist-content">
+      <div class="loading-state">⏳ Memuat pricelist...</div>
+    </div>
+  </main>
 </div>
+
+<div class="toast" id="toast"></div>
 
 <script type="module">
 import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js';
-import { getFirestore, collection, query, where, getDocs, doc, setDoc } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js';
+import { getFirestore, doc, getDoc, setDoc, collection, getDocs } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js';
 
 const FIREBASE_CONFIG = {
-  apiKey           : 'AIzaSyACJjz3XP7vbzxkeZmW_sCXKurAFXZ_vwU',
-  authDomain       : 'testweb-9b2f8.firebaseapp.com',
-  projectId        : 'testweb-9b2f8',
-  storageBucket    : 'testweb-9b2f8.firebasestorage.app',
-  messagingSenderId: '223987046525',
-  appId            : '1:223987046525:web:29d1a297746cd83d685365'
+  apiKey:'AIzaSyACJjz3XP7vbzxkeZmW_sCXKurAFXZ_vwU',
+  authDomain:'testweb-9b2f8.firebaseapp.com',
+  projectId:'testweb-9b2f8',
+  storageBucket:'testweb-9b2f8.firebasestorage.app',
+  messagingSenderId:'223987046525',
+  appId:'1:223987046525:web:29d1a297746cd83d685365'
 };
-const app = getApps().length ? getApps()[0] : initializeApp(FIREBASE_CONFIG);
-const db  = getFirestore(app);
+const _app = getApps().length ? getApps()[0] : initializeApp(FIREBASE_CONFIG);
+const _db  = getFirestore(_app);
 
-function getCurrentPeriod() {
-  const now    = new Date();
-  const year   = now.getFullYear();
-  const month  = now.getMonth();
-  const day    = now.getDate();
-  const months = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+// Default pricelist sesuai ketentuan owner
+const DEFAULT_PRICES = {
+  'Temen Call'   : {30:10000, 60:20000, 90:30000, 120:40000, 150:50000, 180:60000},
+  'Sleepcall'    : {30:10000, 60:20000, 90:30000, 120:40000, 150:50000, 180:60000},
+  'Temen Curhat' : {20:10000, 40:20000, 60:30000, 80:40000, 100:50000, 120:60000},
+  'Pacar Virtual': {15:10000, 30:20000, 45:30000, 60:40000, 75:50000, 90:60000},
+  'Video Call'   : {},
+};
 
-  if (day >= 5 && day <= 19) {
-    const start = new Date(year, month, 5);
-    const end   = new Date(year, month, 19, 23, 59, 59);
-    return {
-      id    : `${year}-${String(month+1).padStart(2,'0')}-p1`,
-      label : `5–19 ${months[month]} ${year}`,
-      start, end,
-      nextPayday: `20 ${months[month]} ${year}`
-    };
-  } else {
-    let sm = month, sy = year;
-    if (day < 5) { sm = month - 1; if (sm < 0) { sm = 11; sy = year - 1; } }
-    const em = (sm + 1) % 12;
-    const ey = em === 0 ? sy + 1 : sy;
-    const start = new Date(sy, sm, 20);
-    const end   = new Date(ey, em, 4, 23, 59, 59);
-    return {
-      id    : `${sy}-${String(sm+1).padStart(2,'0')}-p2`,
-      label : `20 ${months[sm]}–4 ${months[em]} ${ey}`,
-      start, end,
-      nextPayday: `5 ${months[em]} ${ey}`
-    };
-  }
+let _currentAgency = 'admin1';
+let _currentPrices = {}; // { 'Temen Call': { 30: 10000, ... }, ... }
+let _services      = [];
+
+function toast(msg, ok = true) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast show';
+  clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 3000);
 }
 
-const period = getCurrentPeriod();
-document.getElementById('period-label').textContent = `Periode ${period.label}`;
-document.getElementById('period-sub').textContent   = `Gajian berikutnya: ${period.nextPayday}`;
+function durLabel(min) {
+  const m = Number(min);
+  if (m < 60)  return m + ' menit';
+  if (m === 60) return '1 jam';
+  if (m % 60 === 0) return (m/60) + ' jam';
+  const jam = Math.floor(m/60);
+  const sisa = m % 60;
+  return jam + ' jam ' + sisa + ' mnt';
+}
 
-let _pendingConfirm = null;
-
-async function loadSalaryData() {
+async function loadServices() {
   try {
-    const talentsSnap = await getDocs(collection(db, 'talents'));
-    const talents = [];
-    talentsSnap.forEach(d => {
-      const t = d.data();
-      if (t.status === 'approved') talents.push({ id: d.id, ...t });
-    });
-
-    const ordersSnap = await getDocs(query(collection(db, 'orders'), where('status', '==', 'accepted')));
-    const salaryMap  = {};
-    ordersSnap.forEach(d => {
-      const order     = d.data();
-      const createdAt = order.createdAt ? new Date(order.createdAt) : null;
-      if (!createdAt || createdAt < period.start || createdAt > period.end) return;
-      const tid = order.talentId;
-      if (!salaryMap[tid]) salaryMap[tid] = { gross: 0, orders: 0 };
-      salaryMap[tid].gross  += Number(order.originalPrice || order.price || 0);
-      salaryMap[tid].orders += 1;
-    });
-
-    const paidMap = {};
-    try {
-      const salarySnap = await getDocs(query(collection(db, 'salary_periods'), where('periodId', '==', period.id)));
-      salarySnap.forEach(d => {
-        const s = d.data();
-        paidMap[s.talentId] = { status: s.status, paidAt: s.paidAt, docId: d.id };
-      });
-    } catch(e) { console.warn('No salary_periods yet'); }
-
-    let totalGross = 0, totalNet = 0, unpaidCount = 0;
-    talents.forEach(t => {
-      const s = salaryMap[t.id];
-      if (!s || s.gross === 0) return;
-      totalGross += s.gross;
-      totalNet   += Math.round(s.gross * 0.6);
-      if (paidMap[t.id]?.status !== 'paid') unpaidCount++;
-    });
-
-    document.getElementById('sum-gross').textContent  = 'Rp ' + totalGross.toLocaleString('id-ID');
-    document.getElementById('sum-net').textContent    = 'Rp ' + totalNet.toLocaleString('id-ID');
-    document.getElementById('sum-unpaid').textContent = unpaidCount + ' talent';
-
-    const rows = talents
-      .filter(t => salaryMap[t.id] && salaryMap[t.id].gross > 0)
-      .sort((a, b) => {
-        const aPaid = paidMap[a.id]?.status === 'paid' ? 1 : 0;
-        const bPaid = paidMap[b.id]?.status === 'paid' ? 1 : 0;
-        return aPaid - bPaid;
-      });
-
-    if (!rows.length) {
-      document.getElementById('talent-list').innerHTML = `
-        <div class="empty">
-          <div style="font-size:2.5rem;margin-bottom:12px">📭</div>
-          <div style="font-weight:800">Belum ada order diterima di periode ini</div>
-        </div>`;
-      return;
-    }
-
-    document.getElementById('talent-list').innerHTML = rows.map(t => {
-      const s      = salaryMap[t.id];
-      const gross  = s.gross;
-      const net    = Math.round(gross * 0.6);
-      const paid   = paidMap[t.id]?.status === 'paid';
-      const docId  = paidMap[t.id]?.docId || `${t.id}_${period.id}`;
-      const paidAt = paidMap[t.id]?.paidAt
-        ? new Date(paidMap[t.id].paidAt).toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'})
-        : '';
-      return `
-      <div class="talent-row ${paid ? 'paid' : 'unpaid'}" id="row-${t.id}">
-        <img class="talent-img" src="${t.img||''}" onerror="this.style.display='none'" alt="">
-        <div class="talent-info">
-          <div class="talent-name">${t.name||t.id}</div>
-          <div class="talent-meta">${s.orders} order · ${t.bankName||'Bank belum diisi'}</div>
-          <div class="talent-meta" style="color:rgba(240,235,248,.35)">${t.bankNumber ? t.bankNumber+' · '+(t.bankHolder||'--') : 'Rekening belum diisi'}</div>
-          ${paid && paidAt ? `<div class="talent-meta" style="color:rgba(61,214,140,.5)">✅ Dibayar ${paidAt}</div>` : ''}
-        </div>
-        <div class="salary-info">
-          <div class="salary-gross">Kotor: Rp ${gross.toLocaleString('id-ID')}</div>
-          <div class="salary-net">Rp ${net.toLocaleString('id-ID')}</div>
-        </div>
-        <div class="checkbox-wrap">
-          <input type="checkbox" class="salary-checkbox" id="cb-${t.id}"
-            ${paid ? 'checked' : ''}
-            onchange="onCheckboxChange('${t.id}','${docId}','${t.name||t.id}',${gross},${net},'${t.bankName||''}','${t.bankNumber||''}','${t.bankHolder||''}',this)">
-        </div>
-      </div>`;
-    }).join('');
-
-  } catch(e) {
-    console.error('Load salary error:', e);
-    document.getElementById('talent-list').innerHTML = `<div class="empty">❌ Gagal memuat data: ${e.message}</div>`;
-  }
+    const snap = await getDocs(collection(_db, 'services'));
+    _services = [];
+    snap.forEach(d => _services.push({ id: d.id, ...d.data() }));
+    _services.sort((a,b) => (a.order||99) - (b.order||99));
+  } catch(e) { console.warn('Gagal load services:', e); }
 }
 
-window.onCheckboxChange = function(talentId, docId, talentName, gross, net, bankName, bankNumber, bankHolder, checkbox) {
-  if (!checkbox.checked) {
-    togglePaid(talentId, docId, talentName, gross, net, false);
-    return;
-  }
-  checkbox.checked = false;
-  _pendingConfirm  = { talentId, docId, talentName, gross, net };
-  document.getElementById('confirm-name').textContent   = talentName;
-  document.getElementById('confirm-amount').textContent = 'Rp ' + net.toLocaleString('id-ID');
-  document.getElementById('confirm-bank').textContent   = bankName && bankNumber
-    ? `${bankName} · ${bankNumber} · ${bankHolder}`
-    : 'Rekening belum diisi';
-  document.getElementById('confirm-modal').classList.add('open');
-};
-
-window.cancelConfirm = function() {
-  _pendingConfirm = null;
-  document.getElementById('confirm-modal').classList.remove('open');
-};
-
-window.doConfirm = async function() {
-  if (!_pendingConfirm) return;
-  const { talentId, docId, talentName, gross, net } = _pendingConfirm;
-  document.getElementById('confirm-modal').classList.remove('open');
-  _pendingConfirm = null;
-  await togglePaid(talentId, docId, talentName, gross, net, true);
-};
-
-async function togglePaid(talentId, docId, talentName, gross, net, isPaid) {
+async function loadPrices(agency) {
   try {
-    const now = new Date().toISOString();
-    await setDoc(doc(db, 'salary_periods', docId), {
-      talentId, talentName,
-      periodId   : period.id,
-      periodLabel: period.label,
-      totalGross : gross,
-      totalNet   : net,
-      status     : isPaid ? 'paid' : 'pending',
-      paidAt     : isPaid ? now : null,
-      createdAt  : now,
-    }, { merge: true });
-
-    const cb = document.getElementById(`cb-${talentId}`);
-    if (cb) cb.checked = isPaid;
-
-    const row = document.getElementById(`row-${talentId}`);
-    if (row) {
-      row.classList.toggle('paid', isPaid);
-      row.classList.toggle('unpaid', !isPaid);
-      const list = document.getElementById('talent-list');
-      isPaid ? list.appendChild(row) : list.insertBefore(row, list.firstChild);
-    }
-
-    loadSalaryData();
-  } catch(e) {
-    alert('Gagal update: ' + e.message);
-    const cb = document.getElementById(`cb-${talentId}`);
-    if (cb) cb.checked = !isPaid;
-  }
+    const snap = await getDoc(doc(_db, 'pricelist', agency));
+    const saved = snap.exists() ? snap.data() : {};
+    const merged = {};
+    _services.forEach(s => {
+      if (saved[s.name] && Object.keys(saved[s.name]).length) {
+        merged[s.name] = saved[s.name];
+      } else if (DEFAULT_PRICES[s.name] && Object.keys(DEFAULT_PRICES[s.name]).length) {
+        merged[s.name] = { ...DEFAULT_PRICES[s.name] };
+      } else {
+        merged[s.name] = {};
+      }
+    });
+    return merged;
+  } catch(e) { console.warn('Gagal load prices:', e); return {}; }
 }
 
-loadSalaryData();
+function renderPricelist(prices) {
+  const content = document.getElementById('pricelist-content');
+  if (!_services.length) { content.innerHTML = '<div class="loading-state">Belum ada layanan. Tambahkan dulu di Kelola Layanan.</div>'; return; }
+
+  const AGENCY_LABEL = { admin1: 'CallPay', admin2: 'SleepcallPay', admin3: 'ScallpayZ' };
+  const otherAgencies = ['admin1','admin2','admin3'].filter(a => a !== _currentAgency);
+
+  content.innerHTML = `
+    <div style="display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap">
+      <button onclick="saveAllServices()" style="padding:10px 20px;border-radius:99px;background:linear-gradient(135deg,var(--gold-mid),var(--gold));border:none;color:#1A1108;font-family:'Nunito',sans-serif;font-weight:800;font-size:.88rem;cursor:pointer">
+        💾 Simpan Semua Layanan
+      </button>
+      <button onclick="copyToOtherAgencies()" style="padding:10px 20px;border-radius:99px;background:rgba(255,209,102,.08);border:2px solid var(--border-gd);color:var(--gold-mid);font-family:'Nunito',sans-serif;font-weight:800;font-size:.88rem;cursor:pointer">
+        📋 Terapkan ke Semua Agensi
+      </button>
+    </div>
+  ` + _services.map(s => {
+    const svc     = s.name;
+    const icon    = s.icon || '🎯';
+    const svcKey  = svc.replace(/\s+/g, '-');
+    const durMap  = prices[svc] || {};
+    const durRows = Object.entries(durMap).sort((a,b) => Number(a[0]) - Number(b[0]));
+    const isEmpty = durRows.length === 0;
+
+    return `
+    <div class="service-section" id="svc-${svcKey}">
+      <div class="service-title">${icon} ${svc}</div>
+      <div class="dur-row-header">
+        <div class="dur-col-label">Durasi (menit)</div>
+        <div class="dur-col-label">Harga (Rp)</div>
+        <div></div>
+      </div>
+      <div class="dur-list" id="dur-list-${svcKey}">
+        ${isEmpty
+          ? `<div style="font-size:.78rem;color:var(--muted);font-weight:600;padding:8px 0">Belum ada durasi. Klik "+ Tambah Durasi" untuk menambah.</div>`
+          : durRows.map(([dur, price]) => durRowHTML(svcKey, dur, price)).join('')
+        }
+      </div>
+      <button class="btn-add-dur" onclick="addDurRow('${svcKey}')">+ Tambah Durasi</button>
+      <div style="display:flex;align-items:center;flex-wrap:wrap;gap:8px">
+        <button class="btn-save-svc" onclick="saveService('${svc}','${svcKey}')">💾 Simpan ${svc}</button>
+        <span class="save-status" id="status-${svcKey}"></span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function durRowHTML(svcKey, dur, price) {
+  return `
+    <div class="dur-row">
+      <input type="number" class="dur-input dur-min" placeholder="menit" value="${dur}" min="1" step="1">
+      <input type="number" class="dur-input dur-price" placeholder="harga" value="${price}" min="0" step="1000">
+      <button class="btn-del-dur" onclick="this.closest('.dur-row').remove()" title="Hapus">✕</button>
+    </div>`;
+}
+
+window.addDurRow = function(svcKey) {
+  const list = document.getElementById('dur-list-' + svcKey);
+  if (!list) return;
+  // Hapus placeholder kalau ada
+  const ph = list.querySelector('div:not(.dur-row)');
+  if (ph) ph.remove();
+  const div = document.createElement('div');
+  div.innerHTML = durRowHTML(svcKey, '', '');
+  list.appendChild(div.firstElementChild);
+  list.lastElementChild?.querySelector('.dur-min')?.focus();
+};
+
+// Kumpulkan durasi dari DOM untuk 1 layanan
+function collectDurs(svcKey) {
+  const list = document.getElementById('dur-list-' + svcKey);
+  if (!list) return null;
+  const rows    = list.querySelectorAll('.dur-row');
+  const newDurs = {};
+  let valid     = true;
+  rows.forEach(row => {
+    const min   = parseInt(row.querySelector('.dur-min')?.value);
+    const price = parseInt(row.querySelector('.dur-price')?.value);
+    if (!isNaN(min) && min > 0 && !isNaN(price) && price >= 0) {
+      newDurs[min] = price;
+    } else if (row.querySelector('.dur-min')?.value || row.querySelector('.dur-price')?.value) {
+      valid = false;
+    }
+  });
+  return valid ? newDurs : null;
+}
+
+window.saveService = async function(svc, svcKey) {
+  const btn    = document.querySelector(`#svc-${svcKey} .btn-save-svc`);
+  const status = document.getElementById('status-' + svcKey);
+  btn.disabled = true; btn.textContent = 'Menyimpan...';
+
+  const newDurs = collectDurs(svcKey);
+  if (newDurs === null) { toast('❌ Ada baris yang tidak valid'); btn.disabled = false; btn.textContent = `💾 Simpan ${svc}`; return; }
+  if (!Object.keys(newDurs).length) { toast('❌ Minimal harus ada 1 durasi'); btn.disabled = false; btn.textContent = `💾 Simpan ${svc}`; return; }
+
+  try {
+    _currentPrices[svc] = newDurs;
+    await setDoc(doc(_db, 'pricelist', _currentAgency), _currentPrices);
+    status.textContent = '✅ Tersimpan!'; status.style.color = 'var(--green)';
+    toast(`✅ Harga ${svc} berhasil disimpan!`);
+    const list2 = document.getElementById('dur-list-' + svcKey);
+    list2.innerHTML = Object.entries(newDurs).sort((a,b)=>Number(a[0])-Number(b[0])).map(([d,p])=>durRowHTML(svcKey,d,p)).join('');
+  } catch(e) {
+    status.textContent = '❌ Gagal'; status.style.color = 'var(--red)';
+    toast('❌ Gagal: ' + e.message);
+  }
+  setTimeout(() => { status.textContent = ''; }, 3000);
+  btn.disabled = false; btn.textContent = `💾 Simpan ${svc}`;
+};
+
+// Simpan semua layanan sekaligus
+window.saveAllServices = async function() {
+  const allPrices = {};
+  let valid = true;
+  for (const s of _services) {
+    const svcKey = s.name.replace(/\s+/g, '-');
+    const durs   = collectDurs(svcKey);
+    if (durs === null) { toast(`❌ Ada baris tidak valid di ${s.name}`); valid = false; break; }
+    allPrices[s.name] = durs;
+  }
+  if (!valid) return;
+  try {
+    _currentPrices = allPrices;
+    await setDoc(doc(_db, 'pricelist', _currentAgency), _currentPrices);
+    toast('✅ Semua layanan berhasil disimpan!');
+  } catch(e) { toast('❌ Gagal: ' + e.message); }
+};
+
+// Terapkan pricelist saat ini ke semua agensi
+window.copyToOtherAgencies = async function() {
+  if (!confirm('Terapkan pricelist ini ke SEMUA agensi (admin1, admin2, admin3)? Data agensi lain akan diganti.')) return;
+  try {
+    const saves = ['admin1','admin2','admin3'].map(a => setDoc(doc(_db, 'pricelist', a), _currentPrices));
+    await Promise.all(saves);
+    toast('✅ Pricelist diterapkan ke semua agensi!');
+  } catch(e) { toast('❌ Gagal: ' + e.message); }
+};
+
+window.switchAgency = async function(agency) {
+  _currentAgency = agency;
+  ['admin1','admin2','admin3'].forEach(a => {
+    document.getElementById('tab-'+a).classList.toggle('active', a === agency);
+  });
+  document.getElementById('pricelist-content').innerHTML = '<div class="loading-state">⏳ Memuat pricelist...</div>';
+  _currentPrices = await loadPrices(agency);
+  renderPricelist(_currentPrices);
+};
+
+document.getElementById('logout-btn').onclick = () => { sessionStorage.removeItem('cp_owner'); window.location.href = 'index.html'; };
+document.getElementById('back-web').addEventListener('click', e => { e.preventDefault(); window.open('../index.html','_blank'); });
+
+document.addEventListener('DOMContentLoaded', async () => {
+  if (sessionStorage.getItem('cp_owner') !== '1') { window.location.href = 'index.html'; return; }
+  document.querySelectorAll('.nav-item').forEach(a => a.addEventListener('click', () => { if(window.innerWidth<=768) closeSidebar(); }));
+  await loadServices();
+  _currentPrices = await loadPrices('admin1');
+  renderPricelist(_currentPrices);
+});
 </script>
 </body>
 </html>
