@@ -495,9 +495,14 @@ function renderActivityList() {
 
   el.innerHTML = `
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
-      <button class="act-filter-btn${_activityFilter==='all'?' active-filter':''}" onclick="setActivityFilter('all',this)" style="padding:5px 12px;border-radius:99px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:rgba(240,235,248,.5);font-family:'Nunito',sans-serif;font-size:.72rem;font-weight:800;cursor:pointer">Semua</button>
-      ${Object.entries(ACTIVITY_ICONS).map(([type, icon]) =>
-        `<button class="act-filter-btn${_activityFilter===type?' active-filter':''}" onclick="setActivityFilter('${type}',this)" style="padding:5px 12px;border-radius:99px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:rgba(240,235,248,.5);font-family:'Nunito',sans-serif;font-size:.72rem;font-weight:800;cursor:pointer">${icon}</button>`
+      <button class="act-filter-btn${_activityFilter==='all'?' active-filter':''}" onclick="setActivityFilter('all',this)" style="padding:5px 14px;border-radius:99px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:rgba(240,235,248,.5);font-family:'Nunito',sans-serif;font-size:.72rem;font-weight:800;cursor:pointer">Semua</button>
+      ${[
+        ['login_admin','Login Admin'],['login_owner','Login Owner'],['login_talent','Login Talent'],
+        ['voucher_generated','Generate Voucher'],['voucher_purchase','Beli Voucher'],['voucher_deactivated','Nonaktif Voucher'],
+        ['order_accepted','Order Diterima'],['order_rejected','Order Ditolak'],['order_deleted','Hapus Order'],
+        ['point_changed','Ubah Poin'],['point_reset','Reset Poin'],['history_cleared','Hapus Riwayat'],
+      ].map(([type, label]) =>
+        `<button class="act-filter-btn${_activityFilter===type?' active-filter':''}" onclick="setActivityFilter('${type}',this)" style="padding:5px 14px;border-radius:99px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:rgba(240,235,248,.5);font-family:'Nunito',sans-serif;font-size:.72rem;font-weight:800;cursor:pointer">${label}</button>`
       ).join('')}
     </div>
     <input type="text" placeholder="🔍 Cari aktivitas..." value="${_activitySearch}"
