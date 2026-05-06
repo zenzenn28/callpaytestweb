@@ -279,5 +279,97 @@ function beliVoucher(e) {
   window.location.href = 'beli-voucher.html?admin=' + admin;
 }
 </script>
+<!-- DRAWER MENU -->
+<div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer-menu">
+  <div class="drawer-header">
+    <div class="drawer-logo">CallPay</div>
+    <button class="drawer-close" onclick="closeDrawer()">✕</button>
+  </div>
+
+  <div class="drawer-section-label">✦ Menu Utama</div>
+
+  <a href="#talent" class="drawer-item" onclick="closeDrawer()">
+    <div class="drawer-icon">👥</div>
+    <div class="drawer-text">
+      <div class="drawer-text-title">Talent</div>
+      <div class="drawer-text-sub">Pilih talent favoritmu</div>
+    </div>
+    <div class="drawer-arrow">›</div>
+  </a>
+
+  <a href="#" class="drawer-item" onclick="closeDrawer();beliVoucher(event)">
+    <div class="drawer-icon">🎟️</div>
+    <div class="drawer-text">
+      <div class="drawer-text-title">Beli Voucher</div>
+      <div class="drawer-text-sub">Top up untuk mulai call</div>
+    </div>
+    <div class="drawer-arrow">›</div>
+  </a>
+
+  <a href="#testimoni" class="drawer-item" onclick="closeDrawer()">
+    <div class="drawer-icon">💬</div>
+    <div class="drawer-text">
+      <div class="drawer-text-title">Testimoni</div>
+      <div class="drawer-text-sub">Kata mereka tentang CallPay</div>
+    </div>
+    <div class="drawer-arrow">›</div>
+  </a>
+
+  <a href="#" class="drawer-item" onclick="closeDrawer();openBantuan()">
+    <div class="drawer-icon">🎧</div>
+    <div class="drawer-text">
+      <div class="drawer-text-title">Bantuan</div>
+      <div class="drawer-text-sub">Laporkan masalah atau hubungi admin</div>
+    </div>
+    <div class="drawer-arrow">›</div>
+  </a>
+
+  <div class="drawer-section-label">✦ Legal & Kebijakan</div>
+
+  <a href="#" class="drawer-item" onclick="closeDrawer();openPolicy('terms')">
+    <div class="drawer-icon" style="background:rgba(167,139,250,.1);border-color:rgba(167,139,250,.2)">📄</div>
+    <div class="drawer-text">
+      <div class="drawer-text-title">Terms & Conditions</div>
+      <div class="drawer-text-sub">Syarat dan ketentuan penggunaan</div>
+    </div>
+    <div class="drawer-arrow">›</div>
+  </a>
+
+  <a href="#" class="drawer-item" onclick="closeDrawer();openPolicy('privacy')">
+    <div class="drawer-icon" style="background:rgba(167,139,250,.1);border-color:rgba(167,139,250,.2)">🔒</div>
+    <div class="drawer-text">
+      <div class="drawer-text-title">Privacy Policy</div>
+      <div class="drawer-text-sub">Kebijakan privasi dan data</div>
+    </div>
+    <div class="drawer-arrow">›</div>
+  </a>
+
+  <a href="#" class="drawer-item" onclick="closeDrawer();openPolicy('refund')">
+    <div class="drawer-icon" style="background:rgba(167,139,250,.1);border-color:rgba(167,139,250,.2)">💰</div>
+    <div class="drawer-text">
+      <div class="drawer-text-title">Refund Policy</div>
+      <div class="drawer-text-sub">Kebijakan refund & pengembalian</div>
+    </div>
+    <div class="drawer-arrow">›</div>
+  </a>
+
+  <div style="flex:1"></div>
+
+  <div class="drawer-footer" id="drawer-footer-wa">
+    <div class="drawer-footer-icon">🎧</div>
+    <div class="drawer-footer-text">
+      <div class="drawer-footer-title">Butuh bantuan?</div>
+      <div class="drawer-footer-sub">Tim admin siap membantu 24/7</div>
+    </div>
+    <button class="drawer-chat-btn" onclick="openBantuan()">
+      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 48 48" fill="white"><path d="M24 4C13 4 4 13 4 24c0 3.6 1 7 2.7 9.9L4 44l10.4-2.7C17.2 43 20.5 44 24 44c11 0 20-9 20-20S35 4 24 4z"/></svg>
+      Chat Admin
+    </button>
+  </div>
+
+  <div class="drawer-copyright">♥ CallPay © 2026<br>Teman ngobrol & virtual companion 🌙</div>
+</div>
+
 </body>
 </html>
