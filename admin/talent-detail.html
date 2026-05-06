@@ -80,6 +80,7 @@ async function loadPoints(talent) {
     // Jika belum ada field points, inisialisasi 100
     if (data.points === undefined) {
       await setDoc(doc(_db, 'talents', talent._docId || String(talent.id)), { points: 100 }, { merge: true });
+      await addDoc(collection(_db, 'activity_logs'), { type:'point_reset', description:`Admin reset poin talent "${talent.name||talent.id}"`, detail:`Poin direset ke 100`, createdAt: new Date().toISOString() });
     }
   } catch(e) {
     _currentPoints = 100;
@@ -149,6 +150,7 @@ async function savePoints(val, delta, reason) {
   try {
     const talentDocId = _talent._docId || String(_talent.id);
     await setDoc(doc(_db, 'talents', talentDocId), { points: val }, { merge: true });
+    await addDoc(collection(_db, 'activity_logs'), { type:'point_changed', description:`Admin mengubah poin talent`, detail:`Talent: ${talentDocId} · Poin baru: ${val}`, createdAt: new Date().toISOString() });
     // Simpan ke point_history subcollection
     await addDoc(collection(_db, 'talents', talentDocId, 'point_history'), {
       delta   : delta,
