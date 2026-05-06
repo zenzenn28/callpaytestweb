@@ -303,6 +303,7 @@ onSnapshot(collection(db, 'vouchers'), snap => {
   const aktifCount = allVouchers.filter(v => !v.used && !v.deactivated).length;
   document.getElementById('sum-voucher').textContent = aktifCount;
   if (_voucherMode) renderVoucherList();
+  else if (_activityMode) renderActivityList();
   else renderOrders();
 });
 
@@ -434,8 +435,7 @@ window.setFilter = function(filter, cardId) {
 
 // ── ACTIVITY LOG ─────────────────────────────────────────────
 const ACTIVITY_ICONS = {
-  login_admin       : '🔐', login_owner       : '👑',
-  login_talent      : '🎤', voucher_purchase  : '💳',
+  voucher_purchase  : '💳',
   voucher_generated : '🎟️', voucher_deactivated: '🚫',
   order_accepted    : '✅', order_rejected    : '❌',
   order_expired     : '⏰', order_deleted     : '🗑️',
@@ -443,7 +443,6 @@ const ACTIVITY_ICONS = {
   history_cleared   : '🧹',
 };
 const ACTIVITY_BG = {
-  login_admin:'rgba(96,165,250,.08)', login_owner:'rgba(255,184,0,.08)',
   voucher_purchase:'rgba(61,214,140,.08)', voucher_generated:'rgba(249,168,201,.08)',
   voucher_deactivated:'rgba(255,92,92,.06)', order_accepted:'rgba(61,214,140,.06)',
   order_rejected:'rgba(255,92,92,.06)', order_deleted:'rgba(255,92,92,.08)',
@@ -497,7 +496,6 @@ function renderActivityList() {
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
       <button class="act-filter-btn${_activityFilter==='all'?' active-filter':''}" onclick="setActivityFilter('all',this)" style="padding:5px 14px;border-radius:99px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:rgba(240,235,248,.5);font-family:'Nunito',sans-serif;font-size:.72rem;font-weight:800;cursor:pointer">Semua</button>
       ${[
-        ['login_admin','Login Admin'],['login_owner','Login Owner'],['login_talent','Login Talent'],
         ['voucher_generated','Generate Voucher'],['voucher_purchase','Beli Voucher'],['voucher_deactivated','Nonaktif Voucher'],
         ['order_accepted','Order Diterima'],['order_rejected','Order Ditolak'],['order_deleted','Hapus Order'],
         ['point_changed','Ubah Poin'],['point_reset','Reset Poin'],['history_cleared','Hapus Riwayat'],
