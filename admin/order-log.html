@@ -125,11 +125,11 @@
     <div class="summary-val" id="sum-voucher" style="color:#F9A8C9">0</div>
     <div class="summary-lbl">Belum Digunakan</div>
   </div>
-  <a href="aktivitas.html" class="summary-card" style="cursor:pointer;text-decoration:none;color:inherit">
+  <div class="summary-card" id="sc-activity" onclick="showActivityPanel()" style="cursor:pointer">
     <div class="summary-icon">🕐</div>
     <div class="summary-val" id="sum-activity" style="color:#60A5FA">0</div>
     <div class="summary-lbl">Aktivitas</div>
-  </a>
+  </div>
 </div>
 
 
@@ -316,10 +316,12 @@ function formatWaFull(wa) {
 
 
 
-let _voucherMode = false;
+let _voucherMode  = false;
+let _activityMode = false;
 
 window.showVoucherPanel = function() {
   _voucherMode = true;
+  _activityMode = false;
   document.querySelectorAll('.summary-card').forEach(el => el.classList.remove('active-filter'));
   document.getElementById('sc-voucher').classList.add('active-filter');
   renderVoucherList();
@@ -430,10 +432,105 @@ window.setFilter = function(filter, cardId) {
   renderOrders();
 };
 
-// Hitung jumlah aktivitas untuk badge
-onSnapshot(collection(db, 'activity_logs'), snap => {
-  document.getElementById('sum-activity').textContent = snap.size;
-});
+// ── ACTIVITY LOG ─────────────────────────────────────────────
+const ACTIVITY_ICONS = {
+  login_admin       : '🔐', login_owner       : '👑',
+  login_talent      : '🎤', voucher_purchase  : '💳',
+  voucher_generated : '🎟️', voucher_deactivated: '🚫',
+  order_accepted    : '✅', order_rejected    : '❌',
+  order_expired     : '⏰', order_deleted     : '🗑️',
+  point_changed     : '⭐', point_reset       : '🔄',
+  history_cleared   : '🧹',
+};
+const ACTIVITY_BG = {
+  login_admin:'rgba(96,165,250,.08)', login_owner:'rgba(255,184,0,.08)',
+  voucher_purchase:'rgba(61,214,140,.08)', voucher_generated:'rgba(249,168,201,.08)',
+  voucher_deactivated:'rgba(255,92,92,.06)', order_accepted:'rgba(61,214,140,.06)',
+  order_rejected:'rgba(255,92,92,.06)', order_deleted:'rgba(255,92,92,.08)',
+  point_changed:'rgba(255,184,0,.06)', history_cleared:'rgba(255,92,92,.06)',
+};
+
+let _allActivityLogs = [];
+let _activityFilter  = 'all';
+let _activitySearch  = '';
+
+function formatActDate(iso) {
+  if (!iso) return '-';
+  const d = new Date(iso);
+  return d.toLocaleDateString('id-ID',{weekday:'short',day:'2-digit',month:'short',year:'numeric'})
+    + ' · ' + d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+}
+
+window.showActivityPanel = function() {
+  _voucherMode = false;
+  _activityMode = true;
+  document.querySelectorAll('.summary-card').forEach(el => el.classList.remove('active-filter'));
+  document.getElementById('sc-activity').classList.add('active-filter');
+  renderActivityList();
+};
+
+window.setActivityFilter = function(type, btn) {
+  _activityFilter = type;
+  document.querySelectorAll('.act-filter-btn').forEach(b => b.classList.remove('active-filter'));
+  btn.classList.add('active-filter');
+  renderActivityList();
+};
+
+function renderActivityList() {
+  const el = document.getElementById('log-list');
+  let filtered = _allActivityLogs;
+  if (_activityFilter !== 'all') filtered = filtered.filter(a => a.type === _activityFilter);
+  if (_activitySearch) {
+    const q = _activitySearch.toLowerCase();
+    filtered = filtered.filter(a =>
+      (a.description||'').toLowerCase().includes(q) ||
+      (a.detail||'').toLowerCase().includes(q)
+    );
+  }
+
+  if (!filtered.length) {
+    el.innerHTML = `<div class="empty"><div style="font-size:2.5rem;margin-bottom:12px">🕐</div><div style="font-weight:800">Tidak ada aktivitas ditemukan</div></div>`;
+    return;
+  }
+
+  el.innerHTML = `
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
+      <button class="act-filter-btn${_activityFilter==='all'?' active-filter':''}" onclick="setActivityFilter('all',this)" style="padding:5px 12px;border-radius:99px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:rgba(240,235,248,.5);font-family:'Nunito',sans-serif;font-size:.72rem;font-weight:800;cursor:pointer">Semua</button>
+      ${Object.entries(ACTIVITY_ICONS).map(([type, icon]) =>
+        `<button class="act-filter-btn${_activityFilter===type?' active-filter':''}" onclick="setActivityFilter('${type}',this)" style="padding:5px 12px;border-radius:99px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:rgba(240,235,248,.5);font-family:'Nunito',sans-serif;font-size:.72rem;font-weight:800;cursor:pointer">${icon}</button>`
+      ).join('')}
+    </div>
+    <input type="text" placeholder="🔍 Cari aktivitas..." value="${_activitySearch}"
+      oninput="_activitySearch=this.value;renderActivityList()"
+      style="width:100%;padding:8px 12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#F0EBF8;font-family:'Nunito',sans-serif;font-size:.82rem;font-weight:600;outline:none;margin-bottom:10px">
+    <div style="font-size:.75rem;font-weight:800;color:rgba(240,235,248,.3);margin-bottom:10px;text-transform:uppercase;letter-spacing:.06em">
+      🕐 ${filtered.length} Aktivitas
+    </div>` +
+  filtered.map(a => {
+    const icon = ACTIVITY_ICONS[a.type] || '📌';
+    const bg   = ACTIVITY_BG[a.type]   || 'rgba(255,255,255,.03)';
+    return `
+    <div style="background:${bg};border:1px solid rgba(255,255,255,.06);border-radius:12px;padding:12px 14px;margin-bottom:8px;display:flex;align-items:flex-start;gap:10px">
+      <div style="width:34px;height:34px;border-radius:9px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:.95rem;flex-shrink:0">${icon}</div>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:.85rem;font-weight:800;color:#F0EBF8;margin-bottom:2px">${a.description || a.type}</div>
+        ${a.detail ? `<div style="font-size:.74rem;color:rgba(240,235,248,.5);font-weight:600;margin-bottom:2px">${a.detail}</div>` : ''}
+        <div style="font-size:.68rem;color:rgba(240,235,248,.3);font-weight:600">${formatActDate(a.createdAt)}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// Realtime listener aktivitas
+onSnapshot(
+  query(collection(db, 'activity_logs'), orderBy('createdAt', 'desc'), limit(500)),
+  snap => {
+    _allActivityLogs = [];
+    snap.forEach(d => _allActivityLogs.push({ id: d.id, ...d.data() }));
+    document.getElementById('sum-activity').textContent = _allActivityLogs.length;
+    if (_activityMode) renderActivityList();
+  }
+);
 
 document.getElementById('search-input').addEventListener('input', function() {
   searchQuery = this.value.trim();
