@@ -94,6 +94,19 @@ const DB = {
     } catch(e) { console.error('saveSettings error:', e); }
   },
 
+  // ── ACTIVITY LOG ──────────────────────────────────────────
+  async logActivity(type, description, detail='') {
+    try {
+      const ref = collection(_db, 'activity_logs');
+      await addDoc(ref, {
+        type,
+        description,
+        detail,
+        createdAt: new Date().toISOString(),
+      });
+    } catch(e) { console.warn('logActivity error:', e.message); }
+  },
+
   // ── ORDERS ────────────────────────────────────────────────
 
   async addOrder(order) {
