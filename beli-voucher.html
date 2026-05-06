@@ -49,6 +49,8 @@
     <option value="">— Pilih Nominal —</option>
   </select>
 
+  <div style="margin-top:-10px;margin-bottom:14px;font-size:.72rem;color:rgba(240,235,248,.35);font-weight:600">+ biaya admin Rp 3.000 per transaksi</div>
+
   <label>Nomor WhatsApp Kamu</label>
   <input type="tel" id="wa-input" placeholder="Contoh: 08123456789">
 
@@ -232,7 +234,7 @@ async function init() {
       const opt = document.createElement('option');
       opt.value = n.nominal;
       opt.dataset.bayar = n.bayar;
-      opt.textContent = `Rp ${n.nominal.toLocaleString('id-ID')} (bayar Rp ${n.bayar.toLocaleString('id-ID')})`;
+      opt.textContent = `Rp ${n.nominal.toLocaleString('id-ID')}`;
       sel.appendChild(opt);
     });
 
