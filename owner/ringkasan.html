@@ -350,7 +350,7 @@ function renderTalentTable(orders, period) {
 
 function renderAll() {
   const period = _showPrev ? getPrevPeriod() : getCurrentPeriod();
-  document.getElementById('avg-period-label').textContent = _showPrev ? '(Periode Sebelumnya)' : '(Periode Ini)';
+  // avg-period-label sudah dihapus
   renderSummary(_allOrders, period);
   renderTalentTable(_allOrders, period);
 }
