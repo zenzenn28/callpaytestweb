@@ -125,23 +125,13 @@
     <div class="summary-val" id="sum-voucher" style="color:#F9A8C9">0</div>
     <div class="summary-lbl">Belum Digunakan</div>
   </div>
-  <div class="summary-card" id="sc-activity" onclick="toggleActivityLog()" style="cursor:pointer">
+  <a href="aktivitas.html" class="summary-card" style="cursor:pointer;text-decoration:none;color:inherit">
     <div class="summary-icon">🕐</div>
     <div class="summary-val" id="sum-activity" style="color:#60A5FA">0</div>
     <div class="summary-lbl">Aktivitas</div>
-  </div>
+  </a>
 </div>
 
-<!-- Activity Log Panel -->
-<div id="activity-panel" style="display:none;margin-bottom:16px;background:rgba(96,165,250,.04);border:1px solid rgba(96,165,250,.2);border-radius:12px;padding:14px">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-    <div style="font-size:.8rem;font-weight:900;color:#60A5FA">🕐 LOG AKTIVITAS SISTEM</div>
-    <button onclick="toggleActivityLog()" style="background:none;border:none;color:rgba(240,235,248,.4);cursor:pointer;font-size:.8rem;font-weight:700">Tutup ✕</button>
-  </div>
-  <div id="activity-list" style="display:flex;flex-direction:column;gap:6px;max-height:320px;overflow-y:auto">
-    <div style="text-align:center;color:rgba(240,235,248,.4);font-size:.78rem;font-weight:600;padding:16px">⏳ Memuat aktivitas...</div>
-  </div>
-</div>
 
 
 
@@ -342,17 +332,12 @@ function renderVoucherList() {
     el.innerHTML = `<div class="empty"><div style="font-size:2.5rem;margin-bottom:12px">🎟️</div><div style="font-weight:800">Tidak ada voucher yang belum digunakan</div></div>`;
     return;
   }
-  const aktif    = unused.filter(v => !v.deactivated);
-  const nonaktif = unused.filter(v => v.deactivated);
-  // Sort masing-masing: terbaru di atas
-  const sortByDate = arr => arr.sort((a,b) => {
+  // Semua voucher urut by tanggal saja, tidak pisah aktif/nonaktif
+  const semua = unused.sort((a,b) => {
     const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0;
     const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
     return tb - ta;
   });
-  sortByDate(aktif);
-  sortByDate(nonaktif);
-  const semua = [...aktif, ...nonaktif];
 
   el.innerHTML = `
     <div style="font-size:.8rem;font-weight:800;color:rgba(240,235,248,.4);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em">
@@ -445,77 +430,16 @@ window.setFilter = function(filter, cardId) {
   renderOrders();
 };
 
+// Hitung jumlah aktivitas untuk badge
+onSnapshot(collection(db, 'activity_logs'), snap => {
+  document.getElementById('sum-activity').textContent = snap.size;
+});
+
 document.getElementById('search-input').addEventListener('input', function() {
   searchQuery = this.value.trim();
   renderOrders();
 });
 
-// ── ACTIVITY LOG ──────────────────────────────────────────────
-let _activityVisible = false;
-
-function formatActDate(iso) {
-  if (!iso) return '-';
-  const d = new Date(iso);
-  return d.toLocaleDateString('id-ID',{weekday:'short',day:'2-digit',month:'short',year:'numeric'})
-    + ' · ' + d.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-}
-
-const ACTIVITY_ICONS = {
-  'login_admin'       : '🔐',
-  'login_owner'       : '👑',
-  'login_talent'      : '🎤',
-  'voucher_purchase'  : '💳',
-  'voucher_generated' : '🎟️',
-  'order_created'     : '📋',
-  'order_accepted'    : '✅',
-  'order_rejected'    : '❌',
-  'order_expired'     : '⏰',
-  'order_deleted'     : '🗑️',
-};
-
-function loadActivityLog() {
-  const list = document.getElementById('activity-list');
-  onSnapshot(
-    query(collection(db, 'activity_logs'), orderBy('createdAt', 'desc'), limit(100)),
-    snap => {
-      const logs = [];
-      snap.forEach(d => logs.push({ id: d.id, ...d.data() }));
-      document.getElementById('sum-activity').textContent = logs.length;
-      if (!logs.length) {
-        list.innerHTML = '<div style="text-align:center;color:rgba(240,235,248,.4);font-size:.78rem;font-weight:600;padding:16px">Belum ada aktivitas tercatat.</div>';
-        return;
-      }
-      list.innerHTML = logs.map(a => {
-        const icon = ACTIVITY_ICONS[a.type] || '📌';
-        const bgMap = {
-          'login_admin': 'rgba(96,165,250,.08)', 'login_owner': 'rgba(255,184,0,.08)',
-          'login_talent': 'rgba(167,139,250,.08)', 'voucher_purchase': 'rgba(61,214,140,.08)',
-          'voucher_generated': 'rgba(249,168,201,.08)', 'order_accepted': 'rgba(61,214,140,.06)',
-          'order_rejected': 'rgba(255,92,92,.06)', 'order_deleted': 'rgba(255,92,92,.08)',
-        };
-        const bg = bgMap[a.type] || 'rgba(255,255,255,.03)';
-        return `
-        <div style="background:${bg};border:1px solid rgba(255,255,255,.06);border-radius:8px;padding:8px 12px;display:flex;align-items:flex-start;gap:10px">
-          <span style="font-size:1rem;flex-shrink:0;margin-top:1px">${icon}</span>
-          <div style="flex:1;min-width:0">
-            <div style="font-size:.8rem;font-weight:800;color:#F0EBF8">${a.description || a.type}</div>
-            ${a.detail ? `<div style="font-size:.72rem;color:rgba(240,235,248,.5);font-weight:600;margin-top:2px">${a.detail}</div>` : ''}
-            <div style="font-size:.68rem;color:rgba(240,235,248,.35);font-weight:600;margin-top:3px">${formatActDate(a.createdAt)}</div>
-          </div>
-        </div>`;
-      }).join('');
-    }
-  );
-}
-
-window.toggleActivityLog = function() {
-  _activityVisible = !_activityVisible;
-  const panel = document.getElementById('activity-panel');
-  const card  = document.getElementById('sc-activity');
-  panel.style.display = _activityVisible ? 'block' : 'none';
-  card.classList.toggle('active-filter', _activityVisible);
-  if (_activityVisible) loadActivityLog();
-};
 </script>
 </body>
 </html>
