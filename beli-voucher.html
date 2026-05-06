@@ -225,6 +225,7 @@ async function init() {
     if (priceSnap.exists()) _prices = priceSnap.data();
 
     _pgEnabled = settings.pgEnabled === true;
+    const waEnabled = settings.waEnabled !== false; // default ON
     _pgSlug    = settings.pgSlug    || 'callpay';
     _waAdmin   = settings.waNumber  || '62895400709371';
 
@@ -238,12 +239,23 @@ async function init() {
       sel.appendChild(opt);
     });
 
-    // Tampilkan/sembunyikan tombol web sesuai settings
+    // Tombol Via WA — selalu tampil, disabled kalau off
+    const btnWa = document.getElementById('btn-wa');
+    if (!waEnabled) {
+      btnWa.disabled = true;
+      btnWa.style.opacity = '.4';
+      btnWa.style.cursor = 'not-allowed';
+      btnWa.querySelector('.btn-text-sub').textContent = 'Tidak tersedia saat ini';
+    }
+
+    // Tombol Via Web — selalu tampil, disabled kalau off
     const btnWeb = document.getElementById('btn-web');
-    if (_pgEnabled) {
-      btnWeb.style.display = 'flex';
-    } else {
-      btnWeb.style.display = 'none';
+    btnWeb.style.display = 'flex';
+    if (!_pgEnabled) {
+      btnWeb.disabled = true;
+      btnWeb.style.opacity = '.4';
+      btnWeb.style.cursor = 'not-allowed';
+      btnWeb.querySelector('.btn-text-sub').textContent = 'Tidak tersedia saat ini';
     }
 
   } catch(e) {
