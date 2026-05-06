@@ -137,6 +137,8 @@ async function doLogin() {
   document.getElementById('err').style.display = 'none';
   if (u === (cfg.username || 'admin') && p === (cfg.password || 'callpay2021')) {
     setAdminLogin(true);
+    // Catat login admin ke activity log
+    DB.logActivity('login_admin', `Admin "${u}" login`, `Login berhasil`).catch(()=>{});
     showDash();
   } else {
     document.getElementById('err').style.display = 'block';
