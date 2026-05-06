@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Ringkasan Order & Omset — CallPay Owner</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Pacifico&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="owner.css">
+  <style>
+    /* Summary Cards */
+    .summary-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:16px}
+    .sum-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:16px 18px}
+    .sum-card-head{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+    .sum-card-icon{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
+    .sum-card-date{font-size:.72rem;color:var(--muted);font-weight:600;margin-top:2px}
+    .sum-card-title{font-size:.82rem;font-weight:900}
+    .sum-card-body{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .sum-stat{display:flex;flex-direction:column}
+    .sum-stat-label{font-size:.65rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:3px}
+    .sum-stat-val{font-size:1.1rem;font-weight:900}
+
+    /* Rata-rata bar */
+    .avg-bar{background:var(--surface);border:1px solid rgba(255,209,102,.25);border-radius:14px;padding:18px 20px;margin-bottom:16px;display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+    .avg-icon{width:44px;height:44px;border-radius:12px;background:rgba(255,209,102,.1);border:1px solid rgba(255,209,102,.2);display:flex;align-items:center;justify-content:center;font-size:1.3rem;flex-shrink:0}
+    .avg-info{flex:1;min-width:120px}
+    .avg-title{font-size:.85rem;font-weight:900;margin-bottom:2px}
+    .avg-sub{font-size:.72rem;color:var(--muted);font-weight:600}
+    .avg-stats{display:flex;gap:24px;flex-wrap:wrap}
+    .avg-stat{display:flex;flex-direction:column;align-items:center}
+    .avg-stat-label{font-size:.65rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px}
+    .avg-stat-val{font-size:1.2rem;font-weight:900;color:var(--gold-mid)}
+    .avg-period-badge{padding:5px 12px;border-radius:99px;background:var(--surface2);border:1px solid var(--border);font-size:.72rem;font-weight:800;color:var(--muted)}
+
+    /* Talent ranking table */
+    .table-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;margin-bottom:16px}
+    .table-title{font-size:.95rem;font-weight:900;margin-bottom:16px}
+    .rank-table{width:100%;border-collapse:collapse}
+    .rank-table th{font-size:.65rem;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;padding:0 8px 10px;text-align:left;border-bottom:1px solid var(--border)}
+    .rank-table td{padding:10px 8px;border-bottom:1px solid rgba(255,255,255,.04);font-size:.85rem;font-weight:700;vertical-align:middle}
+    .rank-table tr:last-child td{border-bottom:none}
+    .talent-cell{display:flex;align-items:center;gap:10px}
+    .talent-avatar{width:36px;height:36px;border-radius:10px;object-fit:cover;flex-shrink:0;background:var(--pink-mid);display:flex;align-items:center;justify-content:center;font-size:.9rem;font-weight:900;color:#fff}
+    .talent-name{font-weight:800;font-size:.88rem}
+    .talent-id{font-size:.68rem;color:var(--muted);font-weight:600}
+    .rank-medal{font-size:1.2rem;text-align:center}
+    .repeat-val{color:var(--red);font-weight:900}
+    .loading-state{text-align:center;padding:40px;color:var(--muted);font-weight:700}
+
+    /* Period selector */
+    .period-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px}
+    .period-bar h2{font-size:1rem;font-weight:900}
+    .period-btn{display:flex;align-items:center;gap:8px;padding:9px 16px;border-radius:10px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:'Nunito',sans-serif;font-weight:800;font-size:.82rem;cursor:pointer;transition:all .2s}
+    .period-btn:hover{border-color:var(--gold-mid);color:var(--gold-mid)}
+
+    @media(max-width:600px){
+      .summary-grid{grid-template-columns:1fr 1fr}
+      .avg-bar{flex-direction:column;align-items:flex-start}
+      .avg-stats{gap:16px}
+    }
+  </style>
+<script>
+function toggleSidebar(){const sb=document.querySelector('.sidebar'),ov=document.getElementById('sidebar-overlay'),btn=document.getElementById('hamburger-btn');if(!sb||!ov||!btn)return;const open=sb.classList.toggle('open');ov.classList.toggle('open',open);btn.textContent=open?'✕':'☰';}
+function closeSidebar(){const sb=document.querySelector('.sidebar'),ov=document.getElementById('sidebar-overlay'),btn=document.getElementById('hamburger-btn');if(!sb||!ov||!btn)return;sb.classList.remove('open');ov.classList.remove('open');btn.textContent='☰';}
+</script>
+</head>
+<body>
+<div class="app">
+  <div class="mobile-topbar"><span class="mobile-logo">CallPay</span><button class="hamburger" onclick="toggleSidebar()" id="hamburger-btn">☰</button></div>
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+  <aside class="sidebar">
+    <div class="sidebar-logo"><div class="sidebar-logo-text">CallPay</div><div class="sidebar-logo-sub">Owner Panel</div></div>
+    <nav class="sidebar-nav">
+      <a href="index.html"         class="nav-item"><span class="nav-icon">📊</span>Dashboard</a>
+      <a href="ringkasan.html"     class="nav-item active"><span class="nav-icon">📈</span>Ringkasan & Omset</a>
+      <a href="create-talent.html" class="nav-item"><span class="nav-icon">➕</span>Buat Akun Talent</a>
+      <a href="review.html"        class="nav-item"><span class="nav-icon">🔐</span>Kelola Akses Layanan</a>
+      <a href="pricelist.html"     class="nav-item"><span class="nav-icon">💰</span>Kelola Pricelist</a>
+      <a href="order-log.html"     class="nav-item"><span class="nav-icon">📋</span>Log Order</a>
+      <a href="salary.html"        class="nav-item"><span class="nav-icon">💵</span>Rekap Gaji</a>
+      <a href="settings.html"      class="nav-item"><span class="nav-icon">⚙️</span>Pengaturan</a>
+      <a href="../index.html"      class="nav-item" id="back-web"><span class="nav-icon">🌐</span>Lihat Website</a>
+    </nav>
+    <div class="sidebar-footer"><button class="logout-btn" id="logout-btn">Logout →</button></div>
+  </aside>
+
+  <main class="main">
+    <div class="period-bar">
+      <h2>📈 Ringkasan Order & Omset</h2>
+      <button class="period-btn" id="period-btn" onclick="togglePeriod()">
+        📅 <span id="period-label">Periode Ini</span> ▾
+      </button>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="summary-grid" id="summary-grid">
+      <div class="loading-state" style="grid-column:1/-1">⏳ Memuat data...</div>
+    </div>
+
+    <!-- Rata-rata -->
+    <div class="avg-bar" id="avg-bar" style="display:none">
+      <div class="avg-icon">📊</div>
+      <div class="avg-info">
+        <div class="avg-title">Rata-rata per Hari <span id="avg-period-label">(Periode Ini)</span></div>
+        <div class="avg-sub" id="avg-date-range">-</div>
+      </div>
+      <div class="avg-stats">
+        <div class="avg-stat">
+          <div class="avg-stat-label">Rata-rata Order</div>
+          <div class="avg-stat-val" id="avg-order">-</div>
+          <div style="font-size:.65rem;color:var(--muted);font-weight:600">order / hari</div>
+        </div>
+        <div class="avg-stat">
+          <div class="avg-stat-label">Rata-rata Omset</div>
+          <div class="avg-stat-val" id="avg-omset">-</div>
+          <div style="font-size:.65rem;color:var(--muted);font-weight:600">/ hari</div>
+        </div>
+      </div>
+      <div class="avg-period-badge" id="avg-days-badge">- Hari</div>
+    </div>
+
+    <!-- Ranking Talent -->
+    <div class="table-card">
+      <div class="table-title">🏆 Talent Paling Banyak Ambil Order</div>
+      <div id="talent-table-wrap">
+        <div class="loading-state">⏳ Memuat ranking...</div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script type="module">
+import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js';
+import { getFirestore, collection, getDocs, query, where } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js';
+import { DB } from './data.js';
+
+const FIREBASE_CONFIG = {
+  apiKey           : 'AIzaSyACJjz3XP7vbzxkeZmW_sCXKurAFXZ_vwU',
+  authDomain       : 'testweb-9b2f8.firebaseapp.com',
+  projectId        : 'testweb-9b2f8',
+  storageBucket    : 'testweb-9b2f8.firebasestorage.app',
+  messagingSenderId: '223987046525',
+  appId            : '1:223987046525:web:9434307a1fe9e9cc147914'
+};
+const app = getApps().length ? getApps()[0] : initializeApp(FIREBASE_CONFIG);
+const db  = getFirestore(app);
+
+function formatRp(n) { return 'Rp ' + Number(n||0).toLocaleString('id-ID'); }
+function formatDate(d) {
+  return d.toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'});
+}
+function startOfDay(d) { const x = new Date(d); x.setHours(0,0,0,0); return x; }
+function endOfDay(d)   { const x = new Date(d); x.setHours(23,59,59,999); return x; }
+
+// ── Periode logic (sama dengan talent-app.js) ────────────────
+function getCurrentPeriod() {
+  const now = new Date();
+  const d = now.getDate(), m = now.getMonth(), y = now.getFullYear();
+  if (d >= 5 && d <= 20) {
+    return { start: new Date(y,m,5,0,0,0), end: new Date(y,m,20,23,59,59), label: `5 ${now.toLocaleDateString('id-ID',{month:'short'})} - 20 ${now.toLocaleDateString('id-ID',{month:'short',year:'numeric'})}` };
+  } else if (d > 20) {
+    const end = new Date(y, m+1, 4, 23,59,59);
+    return { start: new Date(y,m,21,0,0,0), end, label: `21 ${now.toLocaleDateString('id-ID',{month:'short'})} - 4 ${end.toLocaleDateString('id-ID',{month:'short',year:'numeric'})}` };
+  } else {
+    const start = new Date(y, m-1, 21, 0,0,0);
+    return { start, end: new Date(y,m,4,23,59,59), label: `21 ${start.toLocaleDateString('id-ID',{month:'short'})} - 4 ${now.toLocaleDateString('id-ID',{month:'short',year:'numeric'})}` };
+  }
+}
+function getPrevPeriod() {
+  const cur   = getCurrentPeriod();
+  const pivot = new Date(cur.start.getTime() - 86400000);
+  const d = pivot.getDate(), m = pivot.getMonth(), y = pivot.getFullYear();
+  if (d >= 5 && d <= 20) {
+    return { start: new Date(y,m,5,0,0,0), end: new Date(y,m,20,23,59,59), label: `5 ${pivot.toLocaleDateString('id-ID',{month:'short'})} - 20 ${pivot.toLocaleDateString('id-ID',{month:'short',year:'numeric'})}` };
+  } else {
+    const end = new Date(y, m+1, 4, 23,59,59);
+    return { start: new Date(y,m,21,0,0,0), end, label: `21 ${pivot.toLocaleDateString('id-ID',{month:'short'})} - 4 ${end.toLocaleDateString('id-ID',{month:'short',year:'numeric'})}` };
+  }
+}
+
+let _showPrev = false;
+let _allOrders = [];
+let _talents   = [];
+
+window.togglePeriod = function() {
+  _showPrev = !_showPrev;
+  document.getElementById('period-label').textContent = _showPrev ? 'Periode Sebelumnya' : 'Periode Ini';
+  renderAll();
+};
+
+function ordersInPeriod(orders, period) {
+  return orders.filter(o => {
+    if (!o.createdAt) return false;
+    const t = new Date(o.createdAt);
+    return t >= period.start && t <= period.end && o.status === 'accepted' && o.type !== 'voucher_purchase';
+  });
+}
+
+function computeRepeat(orders) {
+  // Hitung frekuensi per WA
+  const freq = {};
+  orders.forEach(o => {
+    const wa = (o.custWa||'').replace(/\D/g,'');
+    if (!wa) return;
+    freq[wa] = (freq[wa]||0) + 1;
+  });
+  // Total order ulang = semua order dari WA yang frekuensi > 1, dikurangi 1 per WA (order pertama tidak dihitung)
+  let totalRepeat = 0, clientRepeat = 0;
+  Object.values(freq).forEach(cnt => {
+    if (cnt > 1) { totalRepeat += cnt - 1; clientRepeat++; }
+  });
+  return { totalRepeat, clientRepeat };
+}
+
+function renderSummary(orders, period) {
+  const now   = new Date();
+  const today = startOfDay(now);
+  const yest  = startOfDay(new Date(now - 86400000));
+  const d2ago = startOfDay(new Date(now - 2*86400000));
+
+  function dayOrders(start) {
+    return orders.filter(o => {
+      if (!o.createdAt) return false;
+      const t = new Date(o.createdAt);
+      return t >= start && t < new Date(start.getTime()+86400000) && o.status==='accepted' && o.type!=='voucher_purchase';
+    });
+  }
+
+  const todayO  = dayOrders(today);
+  const yesterO = dayOrders(yest);
+  const d2O     = dayOrders(d2ago);
+  const perO    = ordersInPeriod(orders, period);
+
+  function omset(arr) { return arr.reduce((s,o)=>s+Number(o.price||0),0); }
+
+  const grid = document.getElementById('summary-grid');
+  grid.innerHTML = [
+    { title:'Hari Ini', date: formatDate(today), icon:'📅', iconBg:'rgba(239,68,68,.12)', iconColor:'#EF4444',
+      orders: todayO.length, omset: omset(todayO), omsetColor:'var(--red)' },
+    { title:'Kemarin', date: formatDate(yest), icon:'📅', iconBg:'rgba(59,130,246,.12)', iconColor:'#3B82F6',
+      orders: yesterO.length, omset: omset(yesterO), omsetColor:'#3B82F6' },
+    { title:'2 Hari Lalu', date: formatDate(d2ago), icon:'📅', iconBg:'rgba(139,92,246,.12)', iconColor:'#8B5CF6',
+      orders: d2O.length, omset: omset(d2O), omsetColor:'#8B5CF6' },
+    { title:'Total Periode Ini', date: period.label, icon:'📅', iconBg:'rgba(16,185,129,.12)', iconColor:'#10B981',
+      orders: perO.length, omset: omset(perO), omsetColor:'#10B981' },
+  ].map(c => `
+    <div class="sum-card">
+      <div class="sum-card-head">
+        <div class="sum-card-icon" style="background:${c.iconBg};color:${c.iconColor}">${c.icon}</div>
+        <div>
+          <div class="sum-card-title" style="color:${c.iconColor}">${c.title}</div>
+          <div class="sum-card-date">${c.date}</div>
+        </div>
+      </div>
+      <div class="sum-card-body">
+        <div class="sum-stat">
+          <div class="sum-stat-label">Jumlah Order</div>
+          <div class="sum-stat-val">${c.orders}</div>
+        </div>
+        <div class="sum-stat">
+          <div class="sum-stat-label">Omset</div>
+          <div class="sum-stat-val" style="color:${c.omsetColor};font-size:.95rem">${formatRp(c.omset)}</div>
+        </div>
+      </div>
+    </div>`).join('');
+
+  // Rata-rata
+  const days = Math.max(1, Math.ceil((period.end - period.start) / 86400000));
+  const avgOrder = (perO.length / days).toFixed(2);
+  const avgOmset = Math.round(omset(perO) / days);
+  document.getElementById('avg-bar').style.display = 'flex';
+  document.getElementById('avg-date-range').textContent = period.label;
+  document.getElementById('avg-order').textContent = avgOrder;
+  document.getElementById('avg-omset').textContent = formatRp(avgOmset);
+  document.getElementById('avg-days-badge').textContent = days + ' Hari';
+}
+
+function renderTalentTable(orders, period) {
+  const perOrders = ordersInPeriod(orders, period);
+
+  // Group by talent
+  const talentMap = {};
+  perOrders.forEach(o => {
+    const id = o.talentId || o.talentName || '-';
+    if (!talentMap[id]) talentMap[id] = { name: o.talentName||id, orders: [], waSet: {} };
+    talentMap[id].orders.push(o);
+    const wa = (o.custWa||'').replace(/\D/g,'');
+    if (wa) talentMap[id].waSet[wa] = (talentMap[id].waSet[wa]||0)+1;
+  });
+
+  // Sort by jumlah order desc
+  const sorted = Object.entries(talentMap)
+    .map(([id, d]) => {
+      const { totalRepeat, clientRepeat } = computeRepeat(d.orders);
+      return { id, name: d.name, total: d.orders.length, totalRepeat, clientRepeat };
+    })
+    .sort((a,b) => b.total - a.total);
+
+  const medals = ['🥇','🥈','🥉'];
+  const wrap = document.getElementById('talent-table-wrap');
+
+  if (!sorted.length) {
+    wrap.innerHTML = '<div class="loading-state">Tidak ada order di periode ini.</div>';
+    return;
+  }
+
+  // Cari foto talent dari _talents
+  function getTalentImg(id) {
+    const t = _talents.find(x => x.id === id || x.username === id);
+    return t?.img || '';
+  }
+
+  wrap.innerHTML = `
+    <div style="overflow-x:auto">
+    <table class="rank-table">
+      <thead><tr>
+        <th style="width:40px">Rank</th>
+        <th>Talent</th>
+        <th style="text-align:right">Jumlah Order</th>
+        <th style="text-align:right">Total Order Ulang</th>
+        <th style="text-align:right">Client Order Ulang</th>
+      </tr></thead>
+      <tbody>
+        ${sorted.map((t,i) => {
+          const img = getTalentImg(t.id);
+          const avatarEl = img
+            ? `<img src="${img}" class="talent-avatar" style="border-radius:10px;width:36px;height:36px;object-fit:cover">`
+            : `<div class="talent-avatar">${(t.name||'?')[0].toUpperCase()}</div>`;
+          return `
+          <tr>
+            <td class="rank-medal">${i < 3 ? medals[i] : i+1}</td>
+            <td>
+              <div class="talent-cell">
+                ${avatarEl}
+                <div>
+                  <div class="talent-name">${t.name}</div>
+                </div>
+              </div>
+            </td>
+            <td style="text-align:right;font-weight:900">${t.total}</td>
+            <td style="text-align:right" class="repeat-val">${t.totalRepeat}</td>
+            <td style="text-align:right;font-weight:700">${t.clientRepeat}</td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+    </div>`;
+}
+
+function renderAll() {
+  const period = _showPrev ? getPrevPeriod() : getCurrentPeriod();
+  document.getElementById('avg-period-label').textContent = _showPrev ? '(Periode Sebelumnya)' : '(Periode Ini)';
+  renderSummary(_allOrders, period);
+  renderTalentTable(_allOrders, period);
+}
+
+async function loadData() {
+  const [ordersSnap, talentsSnap] = await Promise.all([
+    getDocs(collection(db, 'orders')),
+    getDocs(collection(db, 'talents')),
+  ]);
+  _allOrders = [];
+  ordersSnap.forEach(d => _allOrders.push({ _id: d.id, ...d.data() }));
+  _talents = [];
+  talentsSnap.forEach(d => _talents.push({ id: d.id, ...d.data() }));
+  renderAll();
+}
+
+document.getElementById('logout-btn').onclick = () => { sessionStorage.removeItem('cp_owner'); window.location.href = 'index.html'; };
+document.getElementById('back-web').addEventListener('click', e => { e.preventDefault(); window.open('../index.html','_blank'); });
+
+document.addEventListener('DOMContentLoaded', async () => {
+  if (sessionStorage.getItem('cp_owner') !== '1') { window.location.href = 'index.html'; return; }
+  document.querySelectorAll('.nav-item').forEach(a => a.addEventListener('click', () => { if(window.innerWidth<=768) closeSidebar(); }));
+  await loadData();
+});
+</script>
+</body>
+</html>
