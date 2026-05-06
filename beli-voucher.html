@@ -103,6 +103,7 @@ const adminParam = ADMIN_MAP[adminRaw] || adminRaw;
 
 let _prices    = {};
 let _pgEnabled = false;
+let _waEnabled = true;  // default ON — diupdate saat init()
 let _pgSlug    = 'callpay';
 let _waAdmin   = '';
 
@@ -165,8 +166,9 @@ window.updateInfo = function() {
     </div>
   `;
 
-  btnWa.disabled  = false;
-  btnWeb.disabled = false;
+  // Hanya aktifkan tombol yang memang diizinkan (tidak di-off dari panel admin/owner)
+  if (_waEnabled)  btnWa.disabled  = false;
+  if (_pgEnabled)  btnWeb.disabled = false;
 };
 
 window.beliViaWA = function() {
@@ -225,9 +227,18 @@ async function init() {
     if (priceSnap.exists()) _prices = priceSnap.data();
 
     _pgEnabled = settings.pgEnabled === true;
-    const waEnabled = settings.waEnabled !== false; // default ON
+    _waEnabled = settings.waEnabled !== false; // default ON — disimpan ke var modul
     _pgSlug    = settings.pgSlug    || 'callpay';
     _waAdmin   = settings.waNumber  || '62895400709371';
+
+    // Helper: terapkan style tombol off (pointer-events none = double lock)
+    function applyDisabled(btn, subText) {
+      btn.disabled = true;
+      btn.style.opacity       = '.4';
+      btn.style.cursor        = 'not-allowed';
+      btn.style.pointerEvents = 'none';
+      btn.querySelector('.btn-text-sub').textContent = subText;
+    }
 
     // Populate dropdown nominal
     const sel = document.getElementById('nominal-sel');
@@ -241,22 +252,12 @@ async function init() {
 
     // Tombol Via WA — selalu tampil, disabled kalau off
     const btnWa = document.getElementById('btn-wa');
-    if (!waEnabled) {
-      btnWa.disabled = true;
-      btnWa.style.opacity = '.4';
-      btnWa.style.cursor = 'not-allowed';
-      btnWa.querySelector('.btn-text-sub').textContent = 'Tidak tersedia saat ini';
-    }
+    if (!_waEnabled) applyDisabled(btnWa, 'Tidak tersedia saat ini');
 
     // Tombol Via Web — selalu tampil, disabled kalau off
     const btnWeb = document.getElementById('btn-web');
     btnWeb.style.display = 'flex';
-    if (!_pgEnabled) {
-      btnWeb.disabled = true;
-      btnWeb.style.opacity = '.4';
-      btnWeb.style.cursor = 'not-allowed';
-      btnWeb.querySelector('.btn-text-sub').textContent = 'Tidak tersedia saat ini';
-    }
+    if (!_pgEnabled) applyDisabled(btnWeb, 'Tidak tersedia saat ini');
 
   } catch(e) {
     console.error(e);
