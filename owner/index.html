@@ -123,8 +123,6 @@ async function doLogin() {
   document.getElementById('err').style.display = 'none';
   if (p === (cfg.ownerPassword || 'owner2021')) {
     setOwnerLogin(true);
-    // Catat login owner ke activity log
-    DB.logActivity('login_owner', 'Owner login', 'Login owner berhasil').catch(()=>{});
     showDash();
   } else {
     document.getElementById('err').style.display = 'block';
