@@ -76,7 +76,7 @@
 
 <script type="module">
 import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js';
-import { getFirestore, collection, doc, setDoc, getDoc, getDocs } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js';
+import { getFirestore, collection, doc, setDoc, getDoc, getDocs, addDoc } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js';
 
 const FIREBASE_CONFIG = {
   apiKey           : 'AIzaSyACJjz3XP7vbzxkeZmW_sCXKurAFXZ_vwU',
@@ -177,6 +177,8 @@ window.generateVoucher = async function() {
     });
 
     const waDisplay = wa ? ' · WA: 0' + wa.replace(/^62/,'').replace(/^0/,'') : '';
+    // Catat ke activity log
+    try { await addDoc(collection(db, 'activity_logs'), { type:'voucher_generated', description:'Admin generate voucher manual', detail:`Kode: ${code} · Rp ${nominal.toLocaleString('id-ID')}${waDisplay}`, createdAt: now }); } catch(e){}
     document.getElementById('result-code').textContent = code;
     document.getElementById('result-info').textContent =
       `Rp ${nominal.toLocaleString('id-ID')}${waDisplay}${note ? ' · ' + note : ''}`;
