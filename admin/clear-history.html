@@ -167,6 +167,11 @@ window.doDelete = async () => {
     log(`\n🎉 Total: ${totalDeleted} riwayat berhasil dihapus dari semua talent.`, 'log-done');
     document.getElementById('confirm-input').value = '';
     toast(`✅ ${totalDeleted} riwayat point berhasil dihapus!`);
+    // Catat ke activity log
+    try {
+      const { addDoc: ad, collection: col } = await import('https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js');
+      await ad(col(_db, 'activity_logs'), { type:'history_cleared', description:`Admin menghapus riwayat point`, detail:`Total ${totalDeleted} riwayat dihapus dari semua talent`, createdAt: new Date().toISOString() });
+    } catch(e){}
 
   } catch(e) {
     progressText.textContent = '❌ Gagal: ' + e.message;
