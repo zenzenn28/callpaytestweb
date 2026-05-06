@@ -263,12 +263,12 @@ function renderSummary(orders, period) {
     </div>`).join('');
 
   // Rata-rata = hari ini saja
-  const today     = new Date(); today.setHours(0,0,0,0);
-  const tomorrow  = new Date(today.getTime() + 86400000);
-  const todayAll  = orders.filter(o => {
+  const todayStart = new Date(); todayStart.setHours(0,0,0,0);
+  const tomorrow   = new Date(todayStart.getTime() + 86400000);
+  const todayAll   = orders.filter(o => {
     if (!o.createdAt || o.status !== 'accepted' || o.type === 'voucher_purchase') return false;
     const t = new Date(o.createdAt);
-    return t >= today && t < tomorrow;
+    return t >= todayStart && t < tomorrow;
   });
   const todayOmset = todayAll.reduce((s,o) => s + Number(o.price||0), 0);
   document.getElementById('avg-bar').style.display = 'flex';
