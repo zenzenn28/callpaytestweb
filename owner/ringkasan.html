@@ -130,8 +130,7 @@ function closeSidebar(){const sb=document.querySelector('.sidebar'),ov=document.
 
 <script type="module">
 import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js';
-import { getFirestore, collection, getDocs, query, where } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js';
-import { DB } from './data.js';
+import { getFirestore, collection, getDocs } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js';
 
 const FIREBASE_CONFIG = {
   apiKey           : 'AIzaSyACJjz3XP7vbzxkeZmW_sCXKurAFXZ_vwU',
@@ -354,15 +353,20 @@ function renderAll() {
 }
 
 async function loadData() {
-  const [ordersSnap, talentsSnap] = await Promise.all([
-    getDocs(collection(db, 'orders')),
-    getDocs(collection(db, 'talents')),
-  ]);
-  _allOrders = [];
-  ordersSnap.forEach(d => _allOrders.push({ _id: d.id, ...d.data() }));
-  _talents = [];
-  talentsSnap.forEach(d => _talents.push({ id: d.id, ...d.data() }));
-  renderAll();
+  try {
+    const [ordersSnap, talentsSnap] = await Promise.all([
+      getDocs(collection(db, 'orders')),
+      getDocs(collection(db, 'talents')),
+    ]);
+    _allOrders = [];
+    ordersSnap.forEach(d => _allOrders.push({ _id: d.id, ...d.data() }));
+    _talents = [];
+    talentsSnap.forEach(d => _talents.push({ id: d.id, ...d.data() }));
+    renderAll();
+  } catch(e) {
+    console.error('loadData error:', e);
+    document.getElementById('summary-grid').innerHTML = '<div class="loading-state" style="grid-column:1/-1;color:var(--red)">❌ Gagal memuat: ' + e.message + '</div>';
+  }
 }
 
 document.getElementById('logout-btn').onclick = () => { sessionStorage.removeItem('cp_owner'); window.location.href = 'index.html'; };
