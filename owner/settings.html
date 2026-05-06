@@ -94,6 +94,27 @@ if (sessionStorage.getItem('cp_owner') !== '1') {
       <div style="margin-top:14px"><button class="btn btn-pink" id="save-pg">💾 Simpan Pengaturan Payment</button></div>
     </div>
 
+    <div class="settings-section">
+      <h3>📄 Halaman Legal</h3>
+      <p class="sec-desc">Isi teks untuk halaman Terms & Conditions, Privacy Policy, dan Refund Policy yang tampil di website.</p>
+
+      <div style="margin-bottom:16px">
+        <div class="form-group">
+          <label>Terms & Conditions</label>
+          <textarea id="txt-terms" rows="6" class="form-input" style="resize:vertical;font-size:.82rem;line-height:1.6" placeholder="Isi Terms & Conditions..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>Privacy Policy</label>
+          <textarea id="txt-privacy" rows="6" class="form-input" style="resize:vertical;font-size:.82rem;line-height:1.6" placeholder="Isi Privacy Policy..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>Refund Policy</label>
+          <textarea id="txt-refund" rows="6" class="form-input" style="resize:vertical;font-size:.82rem;line-height:1.6" placeholder="Isi Refund Policy..."></textarea>
+        </div>
+      </div>
+      <button class="btn btn-pink" id="save-policy">💾 Simpan Halaman Legal</button>
+    </div>
+
     <div class="settings-section danger-zone">
       <h3>⚠️ Danger Zone</h3>
       <p class="sec-desc">Tindakan permanen dan tidak bisa dibatalkan.</p>
@@ -128,6 +149,15 @@ if (sessionStorage.getItem('cp_owner') !== '1') {
 import { DB, requireOwner } from '../admin/data.js?v=11';
 
 function toast(msg,dur=2800){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),dur);}
+
+document.getElementById('save-policy').onclick = async () => {
+  const cfg = DB.getSettings();
+  cfg.terms   = document.getElementById('txt-terms').value.trim();
+  cfg.privacy = document.getElementById('txt-privacy').value.trim();
+  cfg.refund  = document.getElementById('txt-refund').value.trim();
+  await DB.saveSettings(cfg);
+  toast('✅ Halaman legal berhasil disimpan!');
+};
 
 document.getElementById('logout-btn').onclick=()=>{sessionStorage.removeItem('cp_owner');window.location.href='index.html';};
 document.getElementById('back-web').addEventListener('click',(e)=>{e.preventDefault();window.open('../index.html','_blank');});
@@ -225,6 +255,12 @@ document.addEventListener('DOMContentLoaded',async()=>{
   updateToggleUI(pgEnabled);
   if (cfg.pgSlug)   document.getElementById('pg-slug').value   = cfg.pgSlug;
   if (cfg.pgApiKey) document.getElementById('pg-apikey').value = cfg.pgApiKey;
+
+  // Load policy texts
+  const policySnap = await DB.getSettingsAsync();
+  if (policySnap.terms)   document.getElementById('txt-terms').value   = policySnap.terms;
+  if (policySnap.privacy) document.getElementById('txt-privacy').value = policySnap.privacy;
+  if (policySnap.refund)  document.getElementById('txt-refund').value  = policySnap.refund;
 
   document.querySelectorAll('.nav-item').forEach(a=>a.addEventListener('click',()=>{if(window.innerWidth<=768)closeSidebar();}));
 });
