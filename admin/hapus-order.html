@@ -245,6 +245,16 @@ window.deleteOrder = async function(docId, price) {
 
   try {
     await deleteDoc(doc(db, 'orders', docId));
+    // Catat ke activity log
+    try {
+      const { addDoc } = await import('https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js');
+      await addDoc(collection(db, 'activity_logs'), {
+        type       : 'order_deleted',
+        description: `Admin menghapus order`,
+        detail     : `Order ID: ${docId} · Gaji talent berkurang Rp ${Math.round(Number(price)*0.6).toLocaleString('id-ID')}`,
+        createdAt  : new Date().toISOString(),
+      });
+    } catch(e){}
     toast('✅ Order berhasil dihapus! Gaji talent berkurang secara realtime.');
     // renderOrders akan otomatis update karena onSnapshot
   } catch(e) {
