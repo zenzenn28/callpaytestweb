@@ -100,19 +100,19 @@ function closeSidebar(){const sb=document.querySelector('.sidebar'),ov=document.
     <div class="avg-bar" id="avg-bar" style="display:none">
       <div class="avg-icon">📊</div>
       <div class="avg-info">
-        <div class="avg-title">Rata-rata per Hari <span id="avg-period-label">(Periode Ini)</span></div>
+        <div class="avg-title">Pendapatan Hari Ini</div>
         <div class="avg-sub" id="avg-date-range">-</div>
       </div>
       <div class="avg-stats">
         <div class="avg-stat">
-          <div class="avg-stat-label">Rata-rata Order</div>
+          <div class="avg-stat-label">Jumlah Order</div>
           <div class="avg-stat-val" id="avg-order">-</div>
-          <div style="font-size:.65rem;color:var(--muted);font-weight:600">order / hari</div>
+          <div style="font-size:.65rem;color:var(--muted);font-weight:600">order hari ini</div>
         </div>
         <div class="avg-stat">
-          <div class="avg-stat-label">Rata-rata Omset</div>
+          <div class="avg-stat-label">Total Omset</div>
           <div class="avg-stat-val" id="avg-omset">-</div>
-          <div style="font-size:.65rem;color:var(--muted);font-weight:600">/ hari</div>
+          <div style="font-size:.65rem;color:var(--muted);font-weight:600">hari ini</div>
         </div>
       </div>
       <div class="avg-period-badge" id="avg-days-badge">- Hari</div>
@@ -262,51 +262,53 @@ function renderSummary(orders, period) {
       </div>
     </div>`).join('');
 
-  // Rata-rata
-  const days = Math.max(1, Math.ceil((period.end - period.start) / 86400000));
-  const avgOrder = (perO.length / days).toFixed(2);
-  const avgOmset = Math.round(omset(perO) / days);
+  // Rata-rata = hari ini saja
+  const today     = new Date(); today.setHours(0,0,0,0);
+  const tomorrow  = new Date(today.getTime() + 86400000);
+  const todayAll  = orders.filter(o => {
+    if (!o.createdAt || o.status !== 'accepted' || o.type === 'voucher_purchase') return false;
+    const t = new Date(o.createdAt);
+    return t >= today && t < tomorrow;
+  });
+  const todayOmset = todayAll.reduce((s,o) => s + Number(o.price||0), 0);
   document.getElementById('avg-bar').style.display = 'flex';
-  document.getElementById('avg-date-range').textContent = period.label;
-  document.getElementById('avg-order').textContent = avgOrder;
-  document.getElementById('avg-omset').textContent = formatRp(avgOmset);
-  document.getElementById('avg-days-badge').textContent = days + ' Hari';
+  document.getElementById('avg-date-range').textContent = today.toLocaleDateString('id-ID',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
+  document.getElementById('avg-order').textContent = todayAll.length;
+  document.getElementById('avg-omset').textContent = formatRp(todayOmset);
+  document.getElementById('avg-days-badge').textContent = 'Hari Ini';
 }
 
 function renderTalentTable(orders, period) {
   const perOrders = ordersInPeriod(orders, period);
 
-  // Group by talent
+  // Group by talent dari _talents (tampilkan SEMUA talent)
   const talentMap = {};
+  // Init semua talent dengan 0
+  _talents.forEach(t => {
+    talentMap[t.id] = { name: t.name||t.id, img: t.img||'', orders: [] };
+  });
+  // Isi dengan order periode ini
   perOrders.forEach(o => {
-    const id = o.talentId || o.talentName || '-';
-    if (!talentMap[id]) talentMap[id] = { name: o.talentName||id, orders: [], waSet: {} };
+    const id = o.talentId || '-';
+    if (!talentMap[id]) talentMap[id] = { name: o.talentName||id, img:'', orders: [] };
     talentMap[id].orders.push(o);
-    const wa = (o.custWa||'').replace(/\D/g,'');
-    if (wa) talentMap[id].waSet[wa] = (talentMap[id].waSet[wa]||0)+1;
   });
 
-  // Sort by jumlah order desc
+  // Sort: order terbanyak dulu, kalau sama → abjad
   const sorted = Object.entries(talentMap)
     .map(([id, d]) => {
       const { totalRepeat, clientRepeat } = computeRepeat(d.orders);
-      return { id, name: d.name, total: d.orders.length, totalRepeat, clientRepeat };
+      const totalOmset = d.orders.reduce((s,o) => s + Number(o.price||0), 0);
+      const gajiTalent = Math.round(totalOmset * 0.6);
+      return { id, name: d.name, img: d.img, total: d.orders.length, totalRepeat, clientRepeat, gajiTalent };
     })
-    .sort((a,b) => b.total - a.total);
+    .sort((a,b) => {
+      if (b.total !== a.total) return b.total - a.total;
+      return (a.name||'').localeCompare(b.name||'');
+    });
 
   const medals = ['🥇','🥈','🥉'];
   const wrap = document.getElementById('talent-table-wrap');
-
-  if (!sorted.length) {
-    wrap.innerHTML = '<div class="loading-state">Tidak ada order di periode ini.</div>';
-    return;
-  }
-
-  // Cari foto talent dari _talents
-  function getTalentImg(id) {
-    const t = _talents.find(x => x.id === id || x.username === id);
-    return t?.img || '';
-  }
 
   wrap.innerHTML = `
     <div style="overflow-x:auto">
@@ -317,27 +319,28 @@ function renderTalentTable(orders, period) {
         <th style="text-align:right">Jumlah Order</th>
         <th style="text-align:right">Total Order Ulang</th>
         <th style="text-align:right">Client Order Ulang</th>
+        <th style="text-align:right">Didapat Talent</th>
       </tr></thead>
       <tbody>
         ${sorted.map((t,i) => {
-          const img = getTalentImg(t.id);
-          const avatarEl = img
-            ? `<img src="${img}" class="talent-avatar" style="border-radius:10px;width:36px;height:36px;object-fit:cover">`
+          const avatarEl = t.img
+            ? `<img src="${t.img}" class="talent-avatar" style="border-radius:10px;width:36px;height:36px;object-fit:cover">`
             : `<div class="talent-avatar">${(t.name||'?')[0].toUpperCase()}</div>`;
+          // Rank: sama-sama 0 = abjad, tidak pakai nomor rank berbeda
+          const rankDisplay = t.total === 0 ? '—' : (i < 3 && sorted[0].total > 0 ? medals[i] : i+1);
           return `
           <tr>
-            <td class="rank-medal">${i < 3 ? medals[i] : i+1}</td>
+            <td class="rank-medal">${rankDisplay}</td>
             <td>
               <div class="talent-cell">
                 ${avatarEl}
-                <div>
-                  <div class="talent-name">${t.name}</div>
-                </div>
+                <div class="talent-name">${t.name}</div>
               </div>
             </td>
             <td style="text-align:right;font-weight:900">${t.total}</td>
             <td style="text-align:right" class="repeat-val">${t.totalRepeat}</td>
             <td style="text-align:right;font-weight:700">${t.clientRepeat}</td>
+            <td style="text-align:right;font-weight:900;color:#3DD68C">${t.gajiTalent > 0 ? formatRp(t.gajiTalent) : '-'}</td>
           </tr>`;
         }).join('')}
       </tbody>
