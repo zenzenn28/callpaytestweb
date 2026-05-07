@@ -52,7 +52,7 @@
   <div style="margin-top:-10px;margin-bottom:14px;font-size:.72rem;color:rgba(240,235,248,.35);font-weight:600">+ biaya admin Rp 3.000 per transaksi</div>
 
   <label>Nomor WhatsApp Kamu</label>
-  <input type="tel" id="wa-input" placeholder="Contoh: 08123456789">
+  <input type="tel" id="wa-input" placeholder="Contoh: 08123456789" oninput="onWaInput()">
   <div style="margin-top:-10px;margin-bottom:14px;font-size:.72rem;color:rgba(240,235,248,.35);font-weight:600">📱 Talent akan menghubungi nomor ini saat voucher digunakan</div>
 
   <!-- Info detail layanan -->
@@ -132,7 +132,16 @@ function formatDur(menit) {
   return sisa > 0 ? `${jam} jam ${sisa} menit` : `${jam} jam`;
 }
 
-window.updateInfo = function() {
+let _waCheckTimer = null;
+window.onWaInput = function() {
+  clearTimeout(_waCheckTimer);
+  _waCheckTimer = setTimeout(() => {
+    const sel = document.getElementById('nominal-sel');
+    if (sel.value) updateInfo();
+  }, 600);
+};
+
+window.updateInfo = async function() {
   const sel     = document.getElementById('nominal-sel');
   const nominal = Number(sel.value);
   const bayar   = Number(sel.options[sel.selectedIndex]?.dataset?.bayar || 0);
@@ -144,6 +153,28 @@ window.updateInfo = function() {
     infoBox.style.display = 'none';
     btnWa.disabled = true; btnWeb.disabled = true;
     return;
+  }
+
+  // Cek blacklist global saat WA diisi
+  const waRaw = document.getElementById('wa-input').value.trim().replace(/\D/g, '');
+  if (waRaw && waRaw.length >= 9) {
+    let waClean = waRaw;
+    if (waClean.startsWith('0')) waClean = '62' + waClean.slice(1);
+    if (!waClean.startsWith('62')) waClean = '62' + waClean;
+    try {
+      const blRes  = await fetch(`https://callpay-order-15no.vercel.app/api/check-blacklist?custWa=${encodeURIComponent(waClean)}&global=1`);
+      const blData = await blRes.json();
+      if (blData.blocked) {
+        infoBox.style.display = 'block';
+        infoBox.innerHTML = `
+          <div style="background:rgba(255,92,92,.08);border:1px solid rgba(255,92,92,.25);border-radius:10px;padding:14px;text-align:center">
+            <div style="font-size:.9rem;font-weight:900;color:#FF5C5C;margin-bottom:4px">🚫 Nomor kamu tidak dapat melakukan pembelian</div>
+            <div style="font-size:.78rem;color:rgba(240,235,248,.5);font-weight:600">Hubungi admin untuk informasi lebih lanjut.</div>
+          </div>`;
+        btnWa.disabled = true; btnWeb.disabled = true;
+        return;
+      }
+    } catch(e) { /* lanjut */ }
   }
 
   // Baris layanan sesuai nominal — urut sesuai SVC_ORDER, layanan baru di belakang
@@ -186,10 +217,12 @@ window.updateInfo = function() {
 };
 
 window.beliViaWA = function() {
+  const wa = document.getElementById('wa-input').value.trim();
+  if (!wa) { alert('Masukkan nomor WhatsApp kamu dulu!'); return; }
   const msg = encodeURIComponent(
     `Halo Admin! 👋\nSaya ingin membeli voucher CallPay.\n\n` +
     `💰 Nominal: Rp ${Number(document.getElementById('nominal-sel').value).toLocaleString('id-ID')}\n` +
-    `📱 WA saya: ${document.getElementById('wa-input').value || '-'}\n\nMohon info selanjutnya, terima kasih! 🙏`
+    `📱 WA saya: ${wa}\n\nMohon info selanjutnya, terima kasih! 🙏`
   );
   window.open(`https://wa.me/${_waAdmin}?text=${msg}`, '_blank');
 };
