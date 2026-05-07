@@ -58,6 +58,9 @@ const DB = {
       agencyName  : 'CallPay Agency',
       instagram   : '@callpay.id',
       agencyCut   : 40,
+      pgEnabled   : false,
+      waEnabled   : true,
+      mtClientKey : '',
     };
   },
 
@@ -90,7 +93,7 @@ const DB = {
     this._settingsCache = obj;
     try {
       const ref = doc(_db, COL_SETTINGS, SETTINGS_DOC);
-      await setDoc(ref, obj);
+      await setDoc(ref, obj, { merge: true });
     } catch(e) { console.error('saveSettings error:', e); }
   },
 
