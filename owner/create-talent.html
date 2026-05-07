@@ -131,11 +131,6 @@ function closeSidebar(){const sb=document.querySelector('.sidebar'),ov=document.
         <textarea id="f-bio" placeholder="Tulis bio singkat talent..." maxlength="120"></textarea>
         <div class="form-hint"><span id="bio-count">0</span>/120 karakter</div>
       </div>
-      <div class="form-row">
-        <label>Nomor WhatsApp Talent *</label>
-        <input type="tel" id="f-wa" placeholder="Contoh: 08123456789">
-        <div class="form-hint">Digunakan untuk menerima notifikasi order masuk</div>
-      </div>
 
       <div class="form-row">
         <label>Layanan * (pilih minimal 1)</label>
@@ -201,10 +196,10 @@ window._state = {
   photoUrl         : '',   // URL dummy atau hasil upload
 };
 
-// ── Foto dummy (nanti bisa diganti owner dari portal talent) ──
+// ── Foto dummy ──
 const DUMMY_PHOTO = {
-  female: 'https://api.dicebear.com/9.x/adventurer/svg?seed=female&backgroundColor=ffb3c6',
-  male  : 'https://api.dicebear.com/9.x/adventurer/svg?seed=male&backgroundColor=b3d4ff',
+  female: 'https://res.cloudinary.com/dqjgutyts/image/upload/v1778161806/IMG-20260507-WA0059_ls00qv.jpg',
+  male  : 'https://res.cloudinary.com/dqjgutyts/image/upload/v1778161807/IMG-20260507-WA0058_nhthpe.jpg',
 };
 
 const SVC_ICON_MAP = {
@@ -314,7 +309,6 @@ document.getElementById('create-btn').onclick = async () => {
   const gender = document.getElementById('f-gender').value;
   const age    = parseInt(document.getElementById('f-age').value);
   const bio    = document.getElementById('f-bio').value.trim();
-  const wa     = document.getElementById('f-wa').value.trim().replace(/\D/g,'');
   const errEl  = document.getElementById('form-err');
   errEl.style.display = 'none';
 
@@ -366,7 +360,6 @@ document.getElementById('create-btn').onclick = async () => {
       username : docId,
       password : pass,
       name, gender, age, bio,
-      waNumber : waFinal || '',
       services : [...selected, ...locked],
       lockedServices: locked,
       img      : imgUrl,
@@ -386,7 +379,7 @@ document.getElementById('create-btn').onclick = async () => {
     }, 2000);
 
     // Reset form
-    ['f-name','f-pass','f-age','f-bio','f-wa'].forEach(id => document.getElementById(id).value='');
+    ['f-name','f-pass','f-age','f-bio'].forEach(id => document.getElementById(id).value='');
     document.getElementById('f-gender').value = '';
     document.getElementById('bio-count').textContent = '0';
     resetPhotoArea();
