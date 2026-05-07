@@ -327,15 +327,16 @@ const VERCEL_URL = 'https://callpay-order-15no.vercel.app';
 let _orderListener = null;
 
 window.switchTab = function(tab) {
-  const tabs = ['settings', 'orders'];
+  const tabs = ['settings', 'orders', 'blacklist'];
   tabs.forEach(t => {
     const section = document.getElementById(t + '-section');
     const btn     = document.getElementById('tab-' + t);
     if (section) section.style.display = t === tab ? 'block' : 'none';
     if (btn) btn.classList.toggle('active', t === tab);
   });
-  if (tab === 'orders') renderOrders();
-  if (tab === 'settings') renderSettingsPanel();
+  if (tab === 'orders')    renderOrders();
+  if (tab === 'settings')  renderSettingsPanel();
+  if (tab === 'blacklist') renderBlacklistPanel();
 };
 
 function renderOrders() {
@@ -785,6 +786,122 @@ window.submitProfile = async function() {
   btn.disabled=false;
   btn.textContent = '💾 Simpan Profil';
 };
+
+// ── BLACKLIST PANEL (talent) ───────────────────────────────
+
+function normalizeWaTalent(wa) {
+  if (!wa) return '';
+  let num = String(wa).replace(/\D/g, '');
+  if (num.startsWith('0')) num = '62' + num.slice(1);
+  if (!num.startsWith('62')) num = '62' + num;
+  return num;
+}
+
+function displayWaTalent(wa) {
+  const num = normalizeWaTalent(wa);
+  if (!num) return wa;
+  if (num.startsWith('62')) return '0' + num.slice(2);
+  return num;
+}
+
+async function renderBlacklistPanel() {
+  const el = document.getElementById('blacklist-content');
+  if (!el) return;
+  el.innerHTML = `<div style="text-align:center;padding:30px;color:rgba(240,235,248,.45)">⏳ Memuat...</div>`;
+
+  try {
+    const { collection, getDocs, doc: fsDoc, setDoc, deleteDoc } =
+      await import('https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js');
+    const snap = await getDocs(collection(db, 'talents', _docId, 'blacklist'));
+    const list = [];
+    snap.forEach(d => list.push({ id: d.id, ...d.data() }));
+    list.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+
+    el.innerHTML = `
+      <div class="setup-card">
+        <h2 style="font-size:1.1rem;font-weight:900;margin-bottom:6px">🚫 Blacklist Customer</h2>
+        <p style="font-size:.78rem;color:rgba(240,235,248,.45);font-weight:600;margin-bottom:20px;line-height:1.6">
+          Customer yang di-blacklist tidak bisa order ke kamu. Mereka masih bisa order ke talent lain.
+        </p>
+
+        <div style="margin-bottom:6px;font-size:.7rem;font-weight:900;color:rgba(240,235,248,.45);text-transform:uppercase;letter-spacing:.06em">Nomor WA Customer</div>
+        <div style="display:flex;gap:8px;margin-bottom:6px">
+          <input type="tel" id="bl-wa-input" placeholder="Contoh: 08123456789"
+            style="flex:1;padding:10px 14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:10px;color:#F0EBF8;font-family:'Nunito',sans-serif;font-size:16px;font-weight:600;outline:none;transition:border-color .2s;min-width:0"
+            onfocus="this.style.borderColor='rgba(249,168,201,.4)'" onblur="this.style.borderColor='rgba(255,255,255,.1)'">
+          <button onclick="addBlacklist()" id="bl-add-btn"
+            style="padding:10px 16px;border-radius:10px;background:linear-gradient(135deg,#E8628A,#F9A8C9);border:none;color:#fff;font-family:'Nunito',sans-serif;font-weight:900;font-size:.82rem;cursor:pointer;white-space:nowrap;flex-shrink:0">
+            🚫 Blacklist
+          </button>
+        </div>
+        <div id="bl-msg" style="font-size:.75rem;font-weight:700;margin-bottom:16px;min-height:18px"></div>
+
+        <div style="font-size:.7rem;font-weight:900;color:rgba(240,235,248,.35);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">
+          Daftar Blacklist (${list.length})
+        </div>
+        <div id="bl-list">
+          ${list.length === 0
+            ? `<div style="text-align:center;padding:24px;color:rgba(240,235,248,.3);font-size:.82rem;font-weight:700">Belum ada customer yang di-blacklist</div>`
+            : list.map(item => `
+            <div id="bl-item-${item.id}" style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:rgba(255,92,92,.04);border:1px solid rgba(255,92,92,.2);border-radius:10px;padding:10px 14px;margin-bottom:8px">
+              <div>
+                <div style="font-size:.88rem;font-weight:900;color:#F0EBF8">${displayWaTalent(item.wa || item.id)}</div>
+                ${item.note ? `<div style="font-size:.72rem;color:rgba(240,235,248,.4);font-weight:600;margin-top:2px">${item.note}</div>` : ''}
+                <div style="font-size:.68rem;color:rgba(240,235,248,.25);font-weight:600;margin-top:2px">${item.createdAt ? new Date(item.createdAt).toLocaleDateString('id-ID',{day:'2-digit',month:'short',year:'numeric'}) : ''}</div>
+              </div>
+              <button onclick="removeBlacklist('${item.id}')"
+                style="padding:6px 12px;border-radius:8px;background:rgba(255,92,92,.1);border:1px solid rgba(255,92,92,.3);color:#FF5C5C;font-family:'Nunito',sans-serif;font-weight:800;font-size:.75rem;cursor:pointer;flex-shrink:0">
+                Hapus
+              </button>
+            </div>`).join('')
+          }
+        </div>
+      </div>`;
+
+    window.addBlacklist = async function() {
+      const input = document.getElementById('bl-wa-input');
+      const msg   = document.getElementById('bl-msg');
+      const btn   = document.getElementById('bl-add-btn');
+      const wa    = normalizeWaTalent(input.value.trim());
+      if (!wa || wa.length < 10) {
+        msg.style.color = '#FF5C5C';
+        msg.textContent = '⚠️ Nomor WA tidak valid';
+        return;
+      }
+      btn.disabled = true; btn.textContent = 'Memproses...';
+      try {
+        await setDoc(fsDoc(db, 'talents', _docId, 'blacklist', wa), {
+          wa,
+          createdAt: new Date().toISOString(),
+        });
+        input.value = '';
+        msg.style.color = '#3DD68C';
+        msg.textContent = '✅ Berhasil di-blacklist!';
+        setTimeout(() => renderBlacklistPanel(), 800);
+      } catch(e) {
+        msg.style.color = '#FF5C5C';
+        msg.textContent = '❌ Gagal: ' + e.message;
+        btn.disabled = false; btn.textContent = '🚫 Blacklist';
+      }
+    };
+
+    window.removeBlacklist = async function(waId) {
+      if (!confirm('Hapus dari blacklist?')) return;
+      try {
+        const { doc: fsDoc2, deleteDoc: del2 } =
+          await import('https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js');
+        await del2(fsDoc2(db, 'talents', _docId, 'blacklist', waId));
+        const el2 = document.getElementById('bl-item-' + waId);
+        if (el2) el2.remove();
+        toast('✅ Dihapus dari blacklist');
+        renderBlacklistPanel();
+      } catch(e) { toast('❌ Gagal: ' + e.message); }
+    };
+
+  } catch(e) {
+    el.innerHTML = `<div style="text-align:center;padding:30px;color:#FF5C5C;font-weight:700">❌ Gagal memuat: ${e.message}</div>`;
+  }
+}
 
 // ── INIT ──────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
