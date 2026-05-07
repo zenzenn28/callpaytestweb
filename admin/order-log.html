@@ -6,15 +6,12 @@
   
   <link rel="stylesheet" href="admin.css?v=11">
   <style>
-    /* Override body untuk pakai layout sidebar */
-    body { display:flex; flex-direction:column; padding:0; align-items:unset; justify-content:unset; min-height:100vh; }
+    /* Layout sidebar */
+    body { font-family:'Nunito',sans-serif; background:#0A0A15; color:#F0EBF8; min-height:100vh; display:flex; flex-direction:column; padding:0; margin:0; align-items:unset; justify-content:unset; }
     .app { display:flex; flex:1; min-height:100vh; }
-    .main { flex:1; margin-left:220px; padding:32px 28px; min-height:100vh; box-sizing:border-box; }
+    .main { flex:1; margin-left:220px; padding:32px 28px; min-height:100vh; box-sizing:border-box; overflow-x:hidden; }
     @media(max-width:768px){ .main{ margin-left:0; padding:72px 16px 24px; } }
-  </style>
-  <style>
-    *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:'Nunito',sans-serif;background:#0A0A15;color:#F0EBF8;min-height:100vh;}
+
     .header{display:flex;align-items:center;gap:12px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,.08)}
     .header h1{font-size:1.1rem;font-weight:900;flex:1}
     .header a{font-size:.82rem;color:rgba(240,235,248,.4);text-decoration:none;font-weight:700;white-space:nowrap}
