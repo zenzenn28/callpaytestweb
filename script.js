@@ -560,10 +560,136 @@ async function loadApprovedTestimoni() {
   } catch(e) { console.warn('loadApprovedTestimoni:', e); }
 }
 // ============================================================
+//  MAINTENANCE PAGE
+// ============================================================
+function showMaintenancePage(waNumber) {
+  document.body.style.margin = '0';
+  document.body.style.overflow = 'hidden';
+  document.body.innerHTML = `
+  <div style="
+    position:fixed;inset:0;
+    background:linear-gradient(135deg,#FF6B9D 0%,#FF8FB1 30%,#FFB3C6 60%,#FFCCD5 100%);
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    font-family:'Nunito',sans-serif;text-align:center;padding:24px;
+    overflow:hidden;
+  ">
+
+    <!-- Bubble dekorasi -->
+    <div style="position:absolute;top:-60px;left:-60px;width:220px;height:220px;border-radius:50%;background:rgba(255,255,255,.12)"></div>
+    <div style="position:absolute;bottom:-80px;right:-80px;width:300px;height:300px;border-radius:50%;background:rgba(255,255,255,.08)"></div>
+    <div style="position:absolute;top:40px;right:30px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.15)"></div>
+    <div style="position:absolute;bottom:60px;left:20px;width:50px;height:50px;border-radius:50%;background:rgba(255,255,255,.2)"></div>
+
+    <!-- Ilustrasi SVG lucu -->
+    <svg width="160" height="160" viewBox="0 0 160 160" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-bottom:8px;filter:drop-shadow(0 8px 24px rgba(0,0,0,.15))">
+      <!-- Body kucing -->
+      <ellipse cx="80" cy="105" rx="42" ry="36" fill="#fff" opacity=".95"/>
+      <!-- Kepala -->
+      <circle cx="80" cy="68" r="34" fill="#fff" opacity=".95"/>
+      <!-- Telinga kiri -->
+      <polygon points="50,42 42,18 66,36" fill="#fff" opacity=".95"/>
+      <polygon points="52,40 46,24 64,36" fill="#FFB3C6"/>
+      <!-- Telinga kanan -->
+      <polygon points="110,42 118,18 94,36" fill="#fff" opacity=".95"/>
+      <polygon points="108,40 114,24 96,36" fill="#FFB3C6"/>
+      <!-- Mata kiri — bintang lucu -->
+      <text x="63" y="72" font-size="14" text-anchor="middle" fill="#E8628A">★</text>
+      <!-- Mata kanan — bintang lucu -->
+      <text x="97" y="72" font-size="14" text-anchor="middle" fill="#E8628A">★</text>
+      <!-- Hidung -->
+      <ellipse cx="80" cy="78" rx="4" ry="3" fill="#FFB3C6"/>
+      <!-- Mulut senyum -->
+      <path d="M72 84 Q80 92 88 84" stroke="#E8628A" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <!-- Kumis kiri -->
+      <line x1="52" y1="78" x2="72" y2="80" stroke="#E8628A" stroke-width="1.5" opacity=".6"/>
+      <line x1="50" y1="83" x2="70" y2="82" stroke="#E8628A" stroke-width="1.5" opacity=".6"/>
+      <!-- Kumis kanan -->
+      <line x1="108" y1="78" x2="88" y2="80" stroke="#E8628A" stroke-width="1.5" opacity=".6"/>
+      <line x1="110" y1="83" x2="90" y2="82" stroke="#E8628A" stroke-width="1.5" opacity=".6"/>
+      <!-- Kunci inggris (maintenance) -->
+      <g transform="translate(54,98) rotate(-30)">
+        <rect x="0" y="0" width="36" height="10" rx="5" fill="#FFB3C6"/>
+        <circle cx="34" cy="5" r="9" fill="#FFB3C6" stroke="#fff" stroke-width="2"/>
+        <circle cx="34" cy="5" r="5" fill="#fff"/>
+      </g>
+      <!-- Bintang kecil dekorasi -->
+      <text x="22" y="55" font-size="10" fill="#FF6B9D" opacity=".7">✦</text>
+      <text x="128" y="50" font-size="8" fill="#FF6B9D" opacity=".6">✦</text>
+      <text x="135" y="100" font-size="6" fill="#FF6B9D" opacity=".5">✦</text>
+    </svg>
+
+    <!-- Logo -->
+    <div style="font-family:'Pacifico',cursive;font-size:2rem;color:#fff;letter-spacing:.02em;margin-bottom:16px;text-shadow:0 2px 12px rgba(200,50,90,.25)">
+      CallPay
+    </div>
+
+    <!-- Card pesan -->
+    <div style="
+      background:rgba(255,255,255,.85);
+      backdrop-filter:blur(12px);
+      border-radius:24px;
+      padding:28px 32px;
+      max-width:360px;
+      width:100%;
+      box-shadow:0 8px 32px rgba(200,50,90,.15);
+    ">
+      <div style="font-size:1.5rem;margin-bottom:8px">🔧</div>
+      <div style="font-size:1.15rem;font-weight:900;color:#C2185B;margin-bottom:10px;line-height:1.4">
+        Maaf, kami sedang perbaikan!
+      </div>
+      <div style="font-size:.88rem;font-weight:700;color:#888;line-height:1.7;margin-bottom:20px">
+        Website sedang dalam maintenance.<br>
+        Kamu masih bisa order melalui Admin ya 😊
+      </div>
+      <a href="https://wa.me/${waNumber.replace(/\D/g,'')}"
+        target="_blank"
+        style="
+          display:block;
+          background:linear-gradient(135deg,#E8628A,#FF8FB1);
+          color:#fff;
+          text-decoration:none;
+          padding:13px 24px;
+          border-radius:99px;
+          font-weight:900;
+          font-size:.92rem;
+          box-shadow:0 4px 16px rgba(232,98,138,.35);
+          transition:opacity .2s;
+        "
+        onmouseover="this.style.opacity='.85'"
+        onmouseout="this.style.opacity='1'"
+      >
+        💬 Hubungi Admin via WhatsApp
+      </a>
+    </div>
+
+    <!-- Footer -->
+    <div style="margin-top:20px;font-size:.75rem;color:rgba(255,255,255,.7);font-weight:700">
+      Terima kasih atas kesabaranmu 🩷
+    </div>
+  </div>`;
+
+  // Load font Pacifico kalau belum ada
+  if (!document.querySelector('link[href*="Pacifico"]')) {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'https://fonts.googleapis.com/css2?family=Pacifico&display=swap';
+    document.head.appendChild(link);
+  }
+}
+
+// ============================================================
 //  INIT
 // ============================================================
 document.addEventListener('DOMContentLoaded', async () => {
   await DB.getSettingsAsync();
+  const cfg = DB.getSettings();
+
+  // ── Cek mode maintenance ──────────────────────────────────
+  if (cfg.maintenance === true) {
+    showMaintenancePage(cfg.waNumber || '62895400709371');
+    return; // stop — jangan render website
+  }
+
   loadPricesFromFirestore();
   await loadServicesFromFirestore();
   await loadAudioFromFirestore();
