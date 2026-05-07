@@ -98,6 +98,15 @@ if (sessionStorage.getItem('cp_owner') !== '1') {
     </div>
 
     <div class="settings-section">
+      <h3>📋 Aturan Talent</h3>
+      <p class="sec-desc">Teks ini akan muncul sebagai kotak "Aturan Talent" di dashboard portal talent. Kosongkan jika tidak ingin ditampilkan.</p>
+      <div class="form-group">
+        <textarea id="txt-talent-rules" rows="8" class="form-input" style="resize:vertical;font-size:.82rem;line-height:1.6" placeholder="Tulis aturan untuk talent di sini...&#10;Contoh:&#10;1. Dilarang memberikan nomor WA pribadi kepada customer&#10;2. Selalu jaga kerahasiaan identitas&#10;3. dst..."></textarea>
+      </div>
+      <button class="btn btn-pink" id="save-talent-rules">💾 Simpan Aturan Talent</button>
+    </div>
+
+    <div class="settings-section">
       <h3>📄 Halaman Legal</h3>
       <p class="sec-desc">Isi teks untuk halaman Terms & Conditions, Privacy Policy, dan Refund Policy yang tampil di website.</p>
 
@@ -169,6 +178,13 @@ if (sessionStorage.getItem('cp_owner') !== '1') {
 import { DB, requireOwner } from '../admin/data.js?v=11';
 
 function toast(msg,dur=2800){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),dur);}
+
+document.getElementById('save-talent-rules').onclick = async () => {
+  const cfg = DB.getSettings();
+  cfg.talentRules = document.getElementById('txt-talent-rules').value.trim();
+  await DB.saveSettings(cfg);
+  toast('✅ Aturan talent disimpan!');
+};
 
 document.getElementById('save-policy').onclick = async () => {
   const cfg = DB.getSettings();
@@ -300,9 +316,10 @@ document.addEventListener('DOMContentLoaded',async()=>{
 
   // Load policy texts
   const policySnap = await DB.getSettingsAsync();
-  if (policySnap.terms)   document.getElementById('txt-terms').value   = policySnap.terms;
-  if (policySnap.privacy) document.getElementById('txt-privacy').value = policySnap.privacy;
-  if (policySnap.refund)  document.getElementById('txt-refund').value  = policySnap.refund;
+  if (policySnap.terms)        document.getElementById('txt-terms').value        = policySnap.terms;
+  if (policySnap.privacy)      document.getElementById('txt-privacy').value      = policySnap.privacy;
+  if (policySnap.refund)       document.getElementById('txt-refund').value       = policySnap.refund;
+  if (policySnap.talentRules)  document.getElementById('txt-talent-rules').value = policySnap.talentRules;
 
   document.querySelectorAll('.nav-item').forEach(a=>a.addEventListener('click',()=>{if(window.innerWidth<=768)closeSidebar();}));
 });
