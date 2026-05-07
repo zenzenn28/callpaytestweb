@@ -219,11 +219,9 @@ document.getElementById('del-confirm').onclick=async()=>{
 };
 
 // Toggle payment gateway UI
-const pgToggle = document.getElementById('pg-toggle');
+const pgToggle   = document.getElementById('pg-toggle');
 const pgToggleUI = document.getElementById('pg-toggle-ui');
-const waToggle  = document.getElementById('wa-toggle');
-const waToggleUI = document.getElementById('wa-toggle-ui');
-const pgConfig  = document.getElementById('pg-config');
+const pgConfig   = document.getElementById('pg-config');
 
 function updateToggleUI(enabled) {
   const dot = pgToggleUI.querySelector('span');
@@ -231,24 +229,16 @@ function updateToggleUI(enabled) {
   dot.style.transform = enabled ? 'translateX(22px)' : 'translateX(0)';
   pgConfig.style.display = enabled ? 'grid' : 'none';
 }
-function updateWaToggleUI(enabled) {
-  const dot = waToggleUI.querySelector('span');
-  waToggleUI.style.background = enabled ? 'var(--pink-mid, #E8628A)' : 'rgba(255,255,255,.1)';
-  dot.style.transform = enabled ? 'translateX(22px)' : 'translateX(0)';
-}
 
 pgToggle.addEventListener('change', () => updateToggleUI(pgToggle.checked));
-waToggle.addEventListener('change', () => updateWaToggleUI(waToggle.checked));
 
 document.getElementById('save-pg').onclick = async () => {
-  const cfg      = DB.getSettings();
-  cfg.pgEnabled  = pgToggle.checked;
-  cfg.waEnabled  = waToggle.checked;
+  const cfg       = DB.getSettings();
+  cfg.pgEnabled   = pgToggle.checked;
   const clientKey = document.getElementById('pg-slug').value.trim();
   if (clientKey) cfg.mtClientKey = clientKey;
   await DB.saveSettings(cfg);
   toast('✅ Pengaturan pembelian voucher disimpan!');
-  // Reload agar Snap script ter-load dengan key baru
   if (clientKey) setTimeout(() => location.reload(), 1000);
 };
 
@@ -262,11 +252,8 @@ document.addEventListener('DOMContentLoaded',async()=>{
   document.getElementById('s-user').value=cfg.username||'';
   // Load payment gateway settings
   const pgEnabled = cfg.pgEnabled === true;
-  const waEnabled = cfg.waEnabled !== false; // default ON
   pgToggle.checked = pgEnabled;
-  waToggle.checked = waEnabled;
   updateToggleUI(pgEnabled);
-  updateWaToggleUI(waEnabled);
   if (cfg.mtClientKey) document.getElementById('pg-slug').value = cfg.mtClientKey;
 
   // Load policy texts
