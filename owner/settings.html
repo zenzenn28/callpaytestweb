@@ -248,6 +248,8 @@ document.getElementById('save-pg').onclick = async () => {
   if (clientKey) cfg.mtClientKey = clientKey;
   await DB.saveSettings(cfg);
   toast('✅ Pengaturan pembelian voucher disimpan!');
+  // Reload agar Snap script ter-load dengan key baru
+  if (clientKey) setTimeout(() => location.reload(), 1000);
 };
 
 document.addEventListener('DOMContentLoaded',async()=>{
