@@ -202,10 +202,10 @@ const CLOUDINARY_PRESET = 'callpay_audio';
 const _app = getApps().length ? getApps()[0] : initializeApp(FIREBASE_CONFIG);
 const _db  = getFirestore(_app);
 
-// Foto dummy berdasarkan gender — pakai DiceBear Avatars (SVG, bebas dipakai)
+// Foto dummy berdasarkan gender — SVG inline, tidak butuh request eksternal
 const DUMMY_PHOTO = {
-  female: 'https://api.dicebear.com/7.x/micah/svg?seed=female-talent&backgroundColor=ffb3c1&hair=long&hairColor=brown&eyes=eyesShadow',
-  male  : 'https://api.dicebear.com/7.x/micah/svg?seed=male-talent&backgroundColor=b3d4ff&hair=short&hairColor=black',
+  female: `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23FFB3C6'/><circle cx='50' cy='38' r='20' fill='%23FFDDE6'/><ellipse cx='50' cy='85' rx='28' ry='22' fill='%23FFDDE6'/><circle cx='50' cy='38' r='16' fill='%23F4A0B5'/><path d='M34 32 Q50 18 66 32' stroke='%23C2185B' stroke-width='3' fill='none'/><circle cx='44' cy='40' r='2.5' fill='%23333'/><circle cx='56' cy='40' r='2.5' fill='%23333'/><path d='M44 48 Q50 54 56 48' stroke='%23C2185B' stroke-width='2' fill='none'/></svg>`,
+  male  : `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23B3D4FF'/><circle cx='50' cy='38' r='20' fill='%23D6EAFF'/><ellipse cx='50' cy='85' rx='28' ry='22' fill='%23D6EAFF'/><circle cx='50' cy='38' r='16' fill='%2390C2F5'/><rect x='34' y='24' width='32' height='10' rx='5' fill='%231565C0'/><circle cx='44' cy='40' r='2.5' fill='%23333'/><circle cx='56' cy='40' r='2.5' fill='%23333'/><path d='M44 48 Q50 53 56 48' stroke='%231565C0' stroke-width='2' fill='none'/></svg>`,
 };
 
 // Update preview dummy saat gender berubah
