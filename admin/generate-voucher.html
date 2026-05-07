@@ -177,17 +177,51 @@ function generateCode() {
 
 window.generateVoucher = async function() {
   const nominal = Number(document.getElementById('nominal-select').value);
-  const wa      = document.getElementById('wa-input').value.trim().replace(/\D/g, '');
+  const waRaw   = document.getElementById('wa-input').value.trim().replace(/\D/g, '');
   const note    = document.getElementById('note-input').value.trim();
 
   if (!nominal) { alert('Pilih nominal voucher dulu!'); return; }
 
   const btn = document.getElementById('btn-generate');
-  btn.disabled = true; btn.textContent = 'Membuat voucher...';
+  btn.disabled = true; btn.textContent = 'Memeriksa...';
+
+  // ── Cek blacklist global kalau WA diisi ──────────────────
+  if (waRaw && waRaw.length >= 9) {
+    let waClean = waRaw;
+    if (waClean.startsWith('0')) waClean = '62' + waClean.slice(1);
+    if (!waClean.startsWith('62')) waClean = '62' + waClean;
+
+    try {
+      const blSnap = await getDoc(doc(db, 'blacklist_global', waClean));
+      if (blSnap.exists() && blSnap.data().active !== false) {
+        btn.disabled = false; btn.textContent = '✨ Generate Voucher';
+        // Tampilkan pesan error di result-box dengan warna merah
+        const resultBox  = document.getElementById('result-box');
+        const resultCode = document.getElementById('result-code');
+        const resultInfo = document.getElementById('result-info');
+        resultBox.style.background = 'rgba(255,92,92,.06)';
+        resultBox.style.border     = '1px solid rgba(255,92,92,.25)';
+        resultBox.style.display    = 'block';
+        resultCode.style.color     = '#FF5C5C';
+        resultCode.style.fontSize  = '1rem';
+        resultCode.textContent     = '🚫 Tidak Bisa Generate Voucher';
+        resultInfo.textContent     = `Nomor 0${waClean.slice(2)} ada di blacklist global. Hapus dari blacklist terlebih dahulu jika ingin membuat voucher.`;
+        document.querySelector('.btn-copy').style.display = 'none';
+        return;
+      }
+    } catch(e) { console.warn('Blacklist check error:', e.message); }
+  }
+
+  btn.textContent = 'Membuat voucher...';
 
   try {
     const code = generateCode();
     const now  = new Date().toISOString();
+
+    // Normalisasi WA final untuk disimpan
+    let waFinal = waRaw;
+    if (waFinal && waFinal.startsWith('0')) waFinal = '62' + waFinal.slice(1);
+    if (waFinal && !waFinal.startsWith('62')) waFinal = '62' + waFinal;
 
     await setDoc(doc(db, 'vouchers', code), {
       code,
@@ -195,18 +229,28 @@ window.generateVoucher = async function() {
       used        : false,
       createdAt   : now,
       reason      : 'admin_generated',
-      custWa      : wa || '',
+      custWa      : waFinal || '',
       note        : note || '',
       createdBy   : 'admin',
     });
 
-    const waDisplay = wa ? ' · WA: 0' + wa.replace(/^62/,'').replace(/^0/,'') : '';
+    const waDisplay = waFinal ? ' · WA: 0' + waFinal.slice(2) : '';
     // Catat ke activity log
     try { await addDoc(collection(db, 'activity_logs'), { type:'voucher_generated', description:'Admin generate voucher manual', detail:`Kode: ${code} · Rp ${nominal.toLocaleString('id-ID')}${waDisplay}`, createdAt: now }); } catch(e){}
-    document.getElementById('result-code').textContent = code;
+
+    // Reset result box ke mode sukses
+    const resultBox  = document.getElementById('result-box');
+    const resultCode = document.getElementById('result-code');
+    resultBox.style.background = '';
+    resultBox.style.border     = '';
+    resultCode.style.color     = '#3DD68C';
+    resultCode.style.fontSize  = '1.8rem';
+    document.querySelector('.btn-copy').style.display = '';
+
+    resultCode.textContent = code;
     document.getElementById('result-info').textContent =
       `Rp ${nominal.toLocaleString('id-ID')}${waDisplay}${note ? ' · ' + note : ''}`;
-    document.getElementById('result-box').style.display = 'block';
+    resultBox.style.display = 'block';
 
     document.getElementById('wa-input').value   = '';
     document.getElementById('note-input').value = '';
