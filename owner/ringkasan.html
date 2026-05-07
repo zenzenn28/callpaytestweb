@@ -46,11 +46,18 @@
     .repeat-val{color:var(--red);font-weight:900}
     .loading-state{text-align:center;padding:40px;color:var(--muted);font-weight:700}
 
-    /* Period selector */
+    /* Period dropdown */
     .period-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px}
     .period-bar h2{font-size:1rem;font-weight:900}
-    .period-btn{display:flex;align-items:center;gap:8px;padding:9px 16px;border-radius:10px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:'Nunito',sans-serif;font-weight:800;font-size:.82rem;cursor:pointer;transition:all .2s}
+    .period-btn{display:flex;align-items:center;gap:8px;padding:9px 16px;border-radius:10px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:'Nunito',sans-serif;font-weight:800;font-size:.82rem;cursor:pointer;transition:all .2s;position:relative}
     .period-btn:hover{border-color:var(--gold-mid);color:var(--gold-mid)}
+    .period-dropdown{position:absolute;top:calc(100% + 6px);right:0;background:#1A1A2E;border:1px solid rgba(255,209,102,.25);border-radius:12px;min-width:240px;max-height:320px;overflow-y:auto;z-index:999;box-shadow:0 8px 32px rgba(0,0,0,.5);display:none}
+    .period-dropdown.open{display:block}
+    .period-option{padding:10px 16px;font-size:.82rem;font-weight:700;cursor:pointer;border-bottom:1px solid rgba(255,255,255,.05);transition:background .15s;color:rgba(240,235,248,.7)}
+    .period-option:last-child{border-bottom:none}
+    .period-option:hover{background:rgba(255,209,102,.08);color:#FFD166}
+    .period-option.active{background:rgba(255,209,102,.12);color:#FFD166;font-weight:900}
+    .period-option-label{font-size:.68rem;color:rgba(240,235,248,.35);font-weight:600;display:block;margin-top:1px}
 
     @media(max-width:600px){
       .summary-grid{grid-template-columns:1fr 1fr}
@@ -87,9 +94,12 @@ function closeSidebar(){const sb=document.querySelector('.sidebar'),ov=document.
   <main class="main">
     <div class="period-bar">
       <h2>📈 Ringkasan Order & Omset</h2>
-      <button class="period-btn" id="period-btn" onclick="togglePeriod()">
-        📅 <span id="period-label">Periode Ini</span> ▾
-      </button>
+      <div style="position:relative">
+        <button class="period-btn" id="period-btn" onclick="toggleDropdown()">
+          📅 <span id="period-label">Periode Ini</span> ▾
+        </button>
+        <div class="period-dropdown" id="period-dropdown"></div>
+      </div>
     </div>
 
     <!-- Summary Cards -->
@@ -151,41 +161,93 @@ function formatDate(d) {
 function startOfDay(d) { const x = new Date(d); x.setHours(0,0,0,0); return x; }
 function endOfDay(d)   { const x = new Date(d); x.setHours(23,59,59,999); return x; }
 
-// ── Periode logic (sama dengan talent-app.js) ────────────────
-function getCurrentPeriod() {
+// ── Tanggal deploy (awal periode pertama) ────────────────────
+const DEPLOY_DATE = new Date(2025, 0, 5); // 5 Januari 2025 — sesuaikan jika perlu
+
+// Generate semua periode dari DEPLOY_DATE sampai 1 tahun ke depan dari sekarang
+function generateAllPeriods() {
+  const periods = [];
+  const endLimit = new Date();
+  endLimit.setFullYear(endLimit.getFullYear() + 1);
+
+  // Mulai dari periode yang mencakup DEPLOY_DATE
+  let cursor = new Date(DEPLOY_DATE);
+  // Snap ke awal periode terdekat (5 atau 21)
+  if (cursor.getDate() < 5) {
+    cursor = new Date(cursor.getFullYear(), cursor.getMonth() - 1, 21, 0, 0, 0);
+  } else if (cursor.getDate() <= 20) {
+    cursor = new Date(cursor.getFullYear(), cursor.getMonth(), 5, 0, 0, 0);
+  } else {
+    cursor = new Date(cursor.getFullYear(), cursor.getMonth(), 21, 0, 0, 0);
+  }
+
+  while (cursor <= endLimit) {
+    const d = cursor.getDate();
+    const m = cursor.getMonth();
+    const y = cursor.getFullYear();
+    let start, end, label;
+
+    if (d === 5) {
+      start = new Date(y, m, 5, 0, 0, 0);
+      end   = new Date(y, m, 20, 23, 59, 59);
+      label = `5 ${start.toLocaleDateString('id-ID',{month:'short'})} – 20 ${end.toLocaleDateString('id-ID',{month:'short',year:'numeric'})}`;
+      cursor = new Date(y, m, 21, 0, 0, 0);
+    } else {
+      start = new Date(y, m, 21, 0, 0, 0);
+      end   = new Date(y, m + 1, 4, 23, 59, 59);
+      label = `21 ${start.toLocaleDateString('id-ID',{month:'short'})} – 4 ${end.toLocaleDateString('id-ID',{month:'short',year:'numeric'})}`;
+      cursor = new Date(y, m + 1, 5, 0, 0, 0);
+    }
+    periods.push({ start, end, label });
+  }
+  return periods;
+}
+
+function getCurrentPeriodIndex(periods) {
   const now = new Date();
-  const d = now.getDate(), m = now.getMonth(), y = now.getFullYear();
-  if (d >= 5 && d <= 20) {
-    return { start: new Date(y,m,5,0,0,0), end: new Date(y,m,20,23,59,59), label: `5 ${now.toLocaleDateString('id-ID',{month:'short'})} - 20 ${now.toLocaleDateString('id-ID',{month:'short',year:'numeric'})}` };
-  } else if (d > 20) {
-    const end = new Date(y, m+1, 4, 23,59,59);
-    return { start: new Date(y,m,21,0,0,0), end, label: `21 ${now.toLocaleDateString('id-ID',{month:'short'})} - 4 ${end.toLocaleDateString('id-ID',{month:'short',year:'numeric'})}` };
-  } else {
-    const start = new Date(y, m-1, 21, 0,0,0);
-    return { start, end: new Date(y,m,4,23,59,59), label: `21 ${start.toLocaleDateString('id-ID',{month:'short'})} - 4 ${now.toLocaleDateString('id-ID',{month:'short',year:'numeric'})}` };
+  for (let i = 0; i < periods.length; i++) {
+    if (now >= periods[i].start && now <= periods[i].end) return i;
   }
-}
-function getPrevPeriod() {
-  const cur   = getCurrentPeriod();
-  const pivot = new Date(cur.start.getTime() - 86400000);
-  const d = pivot.getDate(), m = pivot.getMonth(), y = pivot.getFullYear();
-  if (d >= 5 && d <= 20) {
-    return { start: new Date(y,m,5,0,0,0), end: new Date(y,m,20,23,59,59), label: `5 ${pivot.toLocaleDateString('id-ID',{month:'short'})} - 20 ${pivot.toLocaleDateString('id-ID',{month:'short',year:'numeric'})}` };
-  } else {
-    const end = new Date(y, m+1, 4, 23,59,59);
-    return { start: new Date(y,m,21,0,0,0), end, label: `21 ${pivot.toLocaleDateString('id-ID',{month:'short'})} - 4 ${end.toLocaleDateString('id-ID',{month:'short',year:'numeric'})}` };
-  }
+  return 0;
 }
 
-let _showPrev = false;
-let _allOrders = [];
-let _talents   = [];
+const ALL_PERIODS = generateAllPeriods();
+let _activePeriodIdx = getCurrentPeriodIndex(ALL_PERIODS);
 
-window.togglePeriod = function() {
-  _showPrev = !_showPrev;
-  document.getElementById('period-label').textContent = _showPrev ? 'Periode Sebelumnya' : 'Periode Ini';
+function buildDropdown() {
+  const dd = document.getElementById('period-dropdown');
+  dd.innerHTML = ALL_PERIODS.slice().reverse().map((p, ri) => {
+    const i = ALL_PERIODS.length - 1 - ri; // index asli
+    const isNow = i === getCurrentPeriodIndex(ALL_PERIODS);
+    const isSel = i === _activePeriodIdx;
+    return `<div class="period-option${isSel?' active':''}" onclick="selectPeriod(${i})">
+      ${p.label}
+      ${isNow ? '<span class="period-option-label">● Periode Ini</span>' : ''}
+    </div>`;
+  }).join('');
+}
+
+window.toggleDropdown = function() {
+  const dd = document.getElementById('period-dropdown');
+  dd.classList.toggle('open');
+};
+
+window.selectPeriod = function(idx) {
+  _activePeriodIdx = idx;
+  const p = ALL_PERIODS[idx];
+  const isNow = idx === getCurrentPeriodIndex(ALL_PERIODS);
+  document.getElementById('period-label').textContent = isNow ? 'Periode Ini' : p.label;
+  document.getElementById('period-dropdown').classList.remove('open');
+  buildDropdown();
   renderAll();
 };
+
+// Tutup dropdown kalau klik di luar
+document.addEventListener('click', function(e) {
+  if (!e.target.closest('#period-btn') && !e.target.closest('#period-dropdown')) {
+    document.getElementById('period-dropdown')?.classList.remove('open');
+  }
+});
 
 function ordersInPeriod(orders, period) {
   return orders.filter(o => {
@@ -349,9 +411,11 @@ function renderTalentTable(orders, period) {
     </div>`;
 }
 
+let _allOrders = [];
+let _talents   = [];
+
 function renderAll() {
-  const period = _showPrev ? getPrevPeriod() : getCurrentPeriod();
-  // avg-period-label sudah dihapus
+  const period = ALL_PERIODS[_activePeriodIdx];
   renderSummary(_allOrders, period);
   renderTalentTable(_allOrders, period);
 }
@@ -379,6 +443,7 @@ document.getElementById('back-web').addEventListener('click', e => { e.preventDe
 document.addEventListener('DOMContentLoaded', async () => {
   if (sessionStorage.getItem('cp_owner') !== '1') { window.location.href = 'index.html'; return; }
   document.querySelectorAll('.nav-item').forEach(a => a.addEventListener('click', () => { if(window.innerWidth<=768) closeSidebar(); }));
+  buildDropdown();
   await loadData();
 });
 </script>
