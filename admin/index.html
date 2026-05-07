@@ -70,6 +70,7 @@ function closeSidebar(){const sb=document.querySelector('.sidebar'),ov=document.
       <a href="review-testimoni.html" class="nav-item"><span class="nav-icon">💬</span>Review Testimoni</a>
       <a href="hapus-order.html"      class="nav-item"><span class="nav-icon">❌</span>Hapus Order Talent</a>
       <a href="clear-history.html"    class="nav-item"><span class="nav-icon">🗑️</span>Hapus Riwayat Point</a>
+      <a href="blacklist.html"        class="nav-item "><span class="nav-icon">🚫</span>Blacklist Customer</a>
       <a href="../index.html"         class="nav-item" id="back-web"><span class="nav-icon">🌐</span>Lihat Website</a>
     </nav>
     <div class="sidebar-footer"><button class="logout-btn" id="logout-btn">Logout →</button></div>
@@ -127,6 +128,13 @@ function closeSidebar(){const sb=document.querySelector('.sidebar'),ov=document.
           <div style="font-size:2.2rem;margin-bottom:12px">💳</div>
           <div style="font-weight:900;font-size:1rem;margin-bottom:4px">Pengaturan Pembayaran</div>
           <div style="font-size:.8rem;color:var(--muted);font-weight:600">On/off metode beli voucher</div>
+        </div>
+      </a>
+      <a href="blacklist.html" style="text-decoration:none">
+        <div class="panel" style="cursor:pointer;transition:border-color .2s,transform .2s;border:1px solid rgba(255,92,92,.2);height:100%" onmouseover="this.style.borderColor='#FF5C5C';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='rgba(255,92,92,.2)';this.style.transform='translateY(0)'">
+          <div style="font-size:2.2rem;margin-bottom:12px">🚫</div>
+          <div style="font-weight:900;font-size:1rem;margin-bottom:4px">Blacklist Customer</div>
+          <div style="font-size:.8rem;color:var(--muted);font-weight:600">Blokir customer dari semua order</div>
         </div>
       </a>
     </div>
