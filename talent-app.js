@@ -903,6 +903,40 @@ async function renderBlacklistPanel() {
   }
 }
 
+
+// ── TERMS MODAL ────────────────────────────────────────────
+window.openTermsModal = function() {
+  const modal   = document.getElementById('terms-modal');
+  const content = document.getElementById('terms-content');
+  if (!modal) return;
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+
+  const cfg = DB.getSettings();
+  const text = cfg.terms || '';
+  if (text.trim()) {
+    content.textContent = text;
+    content.style.color = 'rgba(240,235,248,.75)';
+  } else {
+    content.innerHTML = `<div style="text-align:center;padding:40px 20px">
+      <div style="font-size:2rem;margin-bottom:12px">📋</div>
+      <div style="color:rgba(240,235,248,.35);font-weight:700;font-size:.85rem">Terms & Conditions belum diisi.<br>Hubungi admin untuk informasi lebih lanjut.</div>
+    </div>`;
+  }
+};
+
+window.closeTermsModal = function() {
+  const modal = document.getElementById('terms-modal');
+  if (!modal) return;
+  modal.style.display = 'none';
+  document.body.style.overflow = '';
+};
+
+// Tutup modal saat klik backdrop
+document.getElementById('terms-modal')?.addEventListener('click', function(e) {
+  if (e.target === this) closeTermsModal();
+});
+
 // ── INIT ──────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', async () => {
   await DB.getSettingsAsync();
