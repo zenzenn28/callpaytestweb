@@ -53,6 +53,7 @@
 
   <label>Nomor WhatsApp Kamu</label>
   <input type="tel" id="wa-input" placeholder="Contoh: 08123456789">
+  <div style="margin-top:-10px;margin-bottom:14px;font-size:.72rem;color:rgba(240,235,248,.35);font-weight:600">📱 Talent akan menghubungi nomor ini saat voucher digunakan</div>
 
   <!-- Info detail layanan -->
   <div class="info-box" id="info-box"></div>
@@ -121,6 +122,9 @@ const SVC_ICONS = {
   'Temen Curhat': '🫂', 'Pacar Virtual': '💕', 'Video Call': '📹',
 };
 
+// Urutan tampil layanan — layanan baru yang tidak ada di sini otomatis urut di bawah
+const SVC_ORDER = ['Temen Call', 'Sleepcall', 'Temen Curhat', 'Pacar Virtual'];
+
 function formatDur(menit) {
   const m = Number(menit);
   if (m <= 90) return m + ' menit';
@@ -142,19 +146,29 @@ window.updateInfo = function() {
     return;
   }
 
-  // Baris layanan sesuai nominal
-  const rows = [];
+  // Baris layanan sesuai nominal — urut sesuai SVC_ORDER, layanan baru di belakang
+  const matched = [];
   Object.entries(_prices).forEach(([svc, durMap]) => {
     if (typeof durMap !== 'object') return;
     const match = Object.entries(durMap).find(([, price]) => Number(price) === nominal);
-    if (match) {
-      rows.push(`
-        <div class="info-row">
-          <span class="info-svc">${SVC_ICONS[svc]||'🎯'} ${svc}</span>
-          <span class="info-dur">${formatDur(match[0])}</span>
-        </div>`);
-    }
+    if (match) matched.push({ svc, dur: match[0] });
   });
+
+  // Sort: layanan yang ada di SVC_ORDER sesuai urutannya, sisanya di belakang by nama
+  matched.sort((a, b) => {
+    const ia = SVC_ORDER.indexOf(a.svc);
+    const ib = SVC_ORDER.indexOf(b.svc);
+    if (ia === -1 && ib === -1) return a.svc.localeCompare(b.svc);
+    if (ia === -1) return 1;
+    if (ib === -1) return -1;
+    return ia - ib;
+  });
+
+  const rows = matched.map(({ svc, dur }) => `
+    <div class="info-row">
+      <span class="info-svc">${SVC_ICONS[svc]||'🎯'} ${svc}</span>
+      <span class="info-dur">${formatDur(dur)}</span>
+    </div>`);
 
   infoBox.style.display = 'block';
   infoBox.innerHTML = `
