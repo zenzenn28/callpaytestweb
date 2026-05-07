@@ -111,22 +111,22 @@ function closeSidebar(){const sb=document.querySelector('.sidebar'),ov=document.
     <div class="avg-bar" id="avg-bar" style="display:none">
       <div class="avg-icon">📊</div>
       <div class="avg-info">
-        <div class="avg-title">Pendapatan Hari Ini</div>
+        <div class="avg-title">Rata-rata per Hari</div>
         <div class="avg-sub" id="avg-date-range">-</div>
       </div>
       <div class="avg-stats">
         <div class="avg-stat">
-          <div class="avg-stat-label">Jumlah Order</div>
+          <div class="avg-stat-label">Rata-rata Order</div>
           <div class="avg-stat-val" id="avg-order">-</div>
-          <div style="font-size:.65rem;color:var(--muted);font-weight:600">order hari ini</div>
+          <div style="font-size:.65rem;color:var(--muted);font-weight:600">order / hari</div>
         </div>
         <div class="avg-stat">
-          <div class="avg-stat-label">Total Omset</div>
+          <div class="avg-stat-label">Rata-rata Omset</div>
           <div class="avg-stat-val" id="avg-omset">-</div>
-          <div style="font-size:.65rem;color:var(--muted);font-weight:600">hari ini</div>
+          <div style="font-size:.65rem;color:var(--muted);font-weight:600">omset / hari</div>
         </div>
       </div>
-      <div class="avg-period-badge" id="avg-days-badge">- Hari</div>
+      <div class="avg-period-badge" id="avg-days-badge">÷ - Hari</div>
     </div>
 
     <!-- Ranking Talent -->
@@ -325,20 +325,25 @@ function renderSummary(orders, period) {
       </div>
     </div>`).join('');
 
-  // Rata-rata = hari ini saja
-  const todayStart = new Date(); todayStart.setHours(0,0,0,0);
-  const tomorrow   = new Date(todayStart.getTime() + 86400000);
-  const todayAll   = orders.filter(o => {
-    if (!o.createdAt || o.status !== 'accepted' || o.type === 'voucher_purchase') return false;
-    const t = new Date(o.createdAt);
-    return t >= todayStart && t < tomorrow;
-  });
-  const todayOmset = todayAll.reduce((s,o) => s + Number(o.price||0), 0);
-  document.getElementById('avg-bar').style.display = 'flex';
-  document.getElementById('avg-date-range').textContent = today.toLocaleDateString('id-ID',{weekday:'long',day:'2-digit',month:'long',year:'numeric'});
-  document.getElementById('avg-order').textContent = todayAll.length;
-  document.getElementById('avg-omset').textContent = formatRp(todayOmset);
-  document.getElementById('avg-days-badge').textContent = 'Hari Ini';
+  // ── Rata-rata per hari = Total Periode ÷ Hari Berjalan ──
+  const perOrders   = ordersInPeriod(orders, period);
+  const totalOmset  = perOrders.reduce((s,o) => s + Number(o.price||0), 0);
+  const totalOrders = perOrders.length;
+
+  // Hitung hari yang sudah berjalan dalam periode ini (min 1)
+  const periodStart   = new Date(period.start); periodStart.setHours(0,0,0,0);
+  const todayMidnight = new Date(); todayMidnight.setHours(0,0,0,0);
+  const hariJalan = Math.max(1, Math.floor((todayMidnight - periodStart) / 86400000) + 1);
+
+  const avgOrder = (totalOrders / hariJalan).toFixed(1).replace('.0','');
+  const avgOmset = Math.round(totalOmset / hariJalan);
+
+  document.getElementById('avg-bar').style.display = 'flex';\
+  document.getElementById('avg-date-range').textContent =
+    `${period.label} · sudah berjalan ${hariJalan} hari`;
+  document.getElementById('avg-order').textContent = avgOrder;
+  document.getElementById('avg-omset').textContent = formatRp(avgOmset);
+  document.getElementById('avg-days-badge').textContent = `÷ ${hariJalan} Hari`;
 }
 
 function renderTalentTable(orders, period) {
