@@ -338,7 +338,7 @@ function renderSummary(orders, period) {
   const avgOrder = (totalOrders / hariJalan).toFixed(1).replace('.0','');
   const avgOmset = Math.round(totalOmset / hariJalan);
 
-  document.getElementById('avg-bar').style.display = 'flex';\
+  document.getElementById('avg-bar').style.display = 'flex';
   document.getElementById('avg-date-range').textContent =
     `${period.label} · sudah berjalan ${hariJalan} hari`;
   document.getElementById('avg-order').textContent = avgOrder;
