@@ -61,6 +61,7 @@ const DB = {
       pgEnabled   : false,
       waEnabled   : true,
       mtClientKey : '',
+      maintenance : false,
     };
   },
 
