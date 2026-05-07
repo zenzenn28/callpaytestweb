@@ -2,59 +2,34 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>Log Aktivitas Order — CallPay Admin</title>
-  
+  <title>Log Order — CallPay Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Pacifico&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="admin.css?v=11">
   <style>
-    /* Layout sidebar */
-    body { font-family:'Nunito',sans-serif; background:#0A0A15; color:#F0EBF8; min-height:100vh; display:flex; flex-direction:column; padding:0; margin:0; align-items:unset; justify-content:unset; }
-    .app { display:flex; flex:1; min-height:100vh; }
-    .main { flex:1; margin-left:220px; padding:32px 28px; min-height:100vh; box-sizing:border-box; overflow-x:hidden; }
-    @media(max-width:768px){ .main{ margin-left:0; padding:72px 16px 24px; } }
-
-    .header{display:flex;align-items:center;gap:12px;margin-bottom:20px;padding-bottom:16px;border-bottom:1px solid rgba(255,255,255,.08)}
-    .header h1{font-size:1.1rem;font-weight:900;flex:1}
-    .header a{font-size:.82rem;color:rgba(240,235,248,.4);text-decoration:none;font-weight:700;white-space:nowrap}
     .live-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 12px;border-radius:99px;background:rgba(61,214,140,.1);border:1px solid rgba(61,214,140,.3);font-size:.72rem;font-weight:800;color:#3DD68C}
     .live-dot{width:7px;height:7px;border-radius:50%;background:#3DD68C;animation:livePulse 1.5s ease-in-out infinite}
     @keyframes livePulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.8)}}
-
-    /* Summary */
-    .summary{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:14px}
-    .summary-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:8px 6px;text-align:center;transition:all .2s}
-    .summary-card:hover{background:rgba(255,255,255,.07);transform:translateY(-1px)}
-    .summary-card.active-filter{border-color:rgba(255,255,255,.3);background:rgba(255,255,255,.08)}
-    .summary-icon{font-size:1rem;margin-bottom:2px}
-    .summary-val{font-size:.95rem;font-weight:900}
-    .summary-lbl{font-size:.58rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:rgba(240,235,248,.4);margin-top:1px}
-
-    /* Filter & Search */
-    .toolbar{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap}
-    .search-input{width:100%;padding:9px 14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:10px;color:#F0EBF8;font-family:'Nunito',sans-serif;font-size:.82rem;font-weight:600;outline:none;box-sizing:border-box}
+    .search-input{width:100%;padding:9px 14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:10px;color:var(--text);font-family:'Nunito',sans-serif;font-size:.82rem;font-weight:600;outline:none;box-sizing:border-box}
     .search-input:focus{border-color:rgba(249,168,201,.4)}
     .search-input::placeholder{color:rgba(240,235,248,.3)}
-    .filter-tabs{display:flex;gap:6px;flex-wrap:wrap}
-    .filter-tab{padding:6px 14px;border-radius:99px;font-family:'Nunito',sans-serif;font-size:.75rem;font-weight:800;cursor:pointer;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:rgba(240,235,248,.5);transition:all .2s}
-    .filter-tab.active.all{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.3);color:#fff}
-    .filter-tab.active.pending{background:rgba(255,184,0,.12);border-color:rgba(255,184,0,.35);color:#FFB800}
-    .filter-tab.active.accepted{background:rgba(61,214,140,.12);border-color:rgba(61,214,140,.35);color:#3DD68C}
-    .filter-tab.active.rejected{background:rgba(255,92,92,.12);border-color:rgba(255,92,92,.35);color:#FF5C5C}
-    .filter-tab.active.expired{background:rgba(255,184,0,.08);border-color:rgba(255,184,0,.25);color:#FFB800}
-    .filter-tab.active.waiting{background:rgba(167,139,250,.12);border-color:rgba(167,139,250,.35);color:#a78bfa}
-
-    /* Order log list */
+    .summary{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px}
+    @media(max-width:600px){.summary{grid-template-columns:repeat(2,1fr)}}
+    .summary-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:10px 8px;text-align:center;cursor:pointer;transition:all .2s}
+    .summary-card:hover{background:rgba(255,255,255,.07);transform:translateY(-1px)}
+    .summary-card.active-filter{border-color:rgba(255,255,255,.3);background:rgba(255,255,255,.08)}
+    .summary-icon{font-size:1.1rem;margin-bottom:3px}
+    .summary-val{font-size:1rem;font-weight:900}
+    .summary-lbl{font-size:.6rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:rgba(240,235,248,.4);margin-top:2px}
     .log-list{display:flex;flex-direction:column;gap:10px}
-
-    .log-card{border-radius:10px;padding:8px 10px;border:1px solid;transition:border-color .3s,background .3s}
+    .log-card{border-radius:10px;padding:10px 12px;border:1px solid}
     .log-card.status-pending{background:rgba(255,184,0,.04);border-color:rgba(255,184,0,.3)}
     .log-card.status-accepted{background:rgba(61,214,140,.04);border-color:rgba(61,214,140,.35)}
     .log-card.status-rejected{background:rgba(255,92,92,.04);border-color:rgba(255,92,92,.3)}
     .log-card.status-expired{background:rgba(255,184,0,.03);border-color:rgba(255,184,0,.2)}
     .log-card.status-baru,.log-card.status-direct,.log-card.status-old{background:rgba(255,255,255,.02);border-color:rgba(255,255,255,.08)}
-    .badge-old{background:rgba(255,255,255,.08);color:rgba(240,235,248,.5);border:1px solid rgba(255,255,255,.12)}
-    .badge-waiting_payment{background:rgba(167,139,250,.12);color:#a78bfa;border:1px solid rgba(167,139,250,.3)}
     .log-card.status-waiting_payment{background:rgba(167,139,250,.04);border-color:rgba(167,139,250,.25)}
-
     .log-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:7px}
     .log-id{font-size:.65rem;font-family:monospace;color:rgba(240,235,248,.35);font-weight:600;word-break:break-all;overflow-wrap:anywhere}
     .log-badge{font-size:.68rem;font-weight:900;padding:4px 10px;border-radius:99px;white-space:nowrap;flex-shrink:0}
@@ -63,26 +38,15 @@
     .badge-rejected{background:rgba(255,92,92,.12);color:#FF5C5C;border:1px solid rgba(255,92,92,.3)}
     .badge-expired{background:rgba(255,184,0,.08);color:#FFB800;border:1px solid rgba(255,184,0,.2)}
     .badge-waiting_payment{background:rgba(167,139,250,.12);color:#a78bfa;border:1px solid rgba(167,139,250,.3)}
-    .log-card.status-expired{background:rgba(255,184,0,.03);border-color:rgba(255,184,0,.2)}
-    .log-card.status-baru,.log-card.status-direct,.log-card.status-old{background:rgba(255,255,255,.02);border-color:rgba(255,255,255,.08)}
     .badge-old{background:rgba(255,255,255,.08);color:rgba(240,235,248,.5);border:1px solid rgba(255,255,255,.12)}
-    .badge-waiting_payment{background:rgba(167,139,250,.12);color:#a78bfa;border:1px solid rgba(167,139,250,.3)}
-
     .log-main{display:grid;grid-template-columns:1fr 1fr;gap:3px 10px;margin-bottom:4px}
-    .log-field{font-size:.72rem;font-weight:700;color:rgba(240,235,248,.55);word-break:break-all;overflow-wrap:anywhere}
-    .log-field span{color:#F0EBF8;font-weight:800;font-size:.75rem;word-break:break-all;overflow-wrap:anywhere}
+    .log-field{font-size:.72rem;font-weight:700;color:rgba(240,235,248,.55);word-break:break-all}
+    .log-field span{color:var(--text);font-weight:800;font-size:.75rem}
     .log-field.full{grid-column:span 2}
     .log-time{font-size:.65rem;color:rgba(240,235,248,.3);font-weight:600;margin-top:4px;padding-top:6px;border-top:1px solid rgba(255,255,255,.05)}
-
     .empty{text-align:center;padding:48px 20px;color:rgba(240,235,248,.35)}
     .loading{text-align:center;padding:40px;color:rgba(240,235,248,.4);font-weight:700}
-
-    @media(max-width:600px){
-      .summary{grid-template-columns:repeat(3,1fr)}
-      .summary-card:nth-child(4),.summary-card:nth-child(5){grid-column:span 1}
-      .log-main{grid-template-columns:1fr}
-      .log-field.full{grid-column:span 1}
-    }
+    @media(max-width:600px){.log-main{grid-template-columns:1fr}.log-field.full{grid-column:span 1}}
   </style>
 <script>
 function toggleSidebar(){const sb=document.querySelector('.sidebar'),ov=document.getElementById('sidebar-overlay'),btn=document.getElementById('hamburger-btn');if(!sb||!ov||!btn)return;const open=sb.classList.toggle('open');ov.classList.toggle('open',open);btn.textContent=open?'✕':'☰';}
@@ -96,74 +60,73 @@ function closeSidebar(){const sb=document.querySelector('.sidebar'),ov=document.
   <aside class="sidebar">
     <div class="sidebar-logo"><div class="sidebar-logo-text">CallPay</div><div class="sidebar-logo-sub">Admin Panel</div></div>
     <nav class="sidebar-nav">
-      <a href="index.html"            class="nav-item "><span class="nav-icon">📊</span>Dashboard</a>
-      <a href="talents.html"          class="nav-item "><span class="nav-icon">⭐</span>Point Talent</a>
-      <a href="status.html"           class="nav-item "><span class="nav-icon">🟢</span>Talent Online</a>
+      <a href="index.html"            class="nav-item"><span class="nav-icon">📊</span>Dashboard</a>
+      <a href="talents.html"          class="nav-item"><span class="nav-icon">⭐</span>Point Talent</a>
+      <a href="status.html"           class="nav-item"><span class="nav-icon">🟢</span>Talent Online</a>
       <a href="order-log.html"        class="nav-item active"><span class="nav-icon">📋</span>Log Order</a>
-      <a href="generate-voucher.html" class="nav-item "><span class="nav-icon">🎟️</span>Generate Voucher</a>
-      <a href="payment-settings.html" class="nav-item "><span class="nav-icon">💳</span>Pengaturan Pembayaran</a>
-      <a href="review-testimoni.html" class="nav-item "><span class="nav-icon">💬</span>Review Testimoni</a>
-      <a href="hapus-order.html"      class="nav-item "><span class="nav-icon">❌</span>Hapus Order Talent</a>
-      <a href="clear-history.html"    class="nav-item "><span class="nav-icon">🗑️</span>Hapus Riwayat Point</a>
-      <a href="blacklist.html"        class="nav-item "><span class="nav-icon">🚫</span>Blacklist Customer</a>
+      <a href="generate-voucher.html" class="nav-item"><span class="nav-icon">🎟️</span>Generate Voucher</a>
+      <a href="payment-settings.html" class="nav-item"><span class="nav-icon">💳</span>Pengaturan Pembayaran</a>
+      <a href="review-testimoni.html" class="nav-item"><span class="nav-icon">💬</span>Review Testimoni</a>
+      <a href="hapus-order.html"      class="nav-item"><span class="nav-icon">❌</span>Hapus Order Talent</a>
+      <a href="clear-history.html"    class="nav-item"><span class="nav-icon">🗑️</span>Hapus Riwayat Point</a>
+      <a href="blacklist.html"        class="nav-item"><span class="nav-icon">🚫</span>Blacklist Customer</a>
       <a href="../index.html"         class="nav-item" id="back-web"><span class="nav-icon">🌐</span>Lihat Website</a>
     </nav>
     <div class="sidebar-footer"><button class="logout-btn" id="logout-btn">Logout →</button></div>
   </aside>
+
   <main class="main">
-LIVE</div>
-</div>
+    <div class="page-header">
+      <h1>📋 Log Order <div class="live-badge" style="display:inline-flex;vertical-align:middle;margin-left:8px"><div class="live-dot"></div> LIVE</div></h1>
+      <p>Pantau semua aktivitas order secara realtime.</p>
+    </div>
 
-<!-- Search -->
-<div style="margin-bottom:14px">
-  <input type="text" class="search-input" id="search-input" placeholder="🔍 Cari talent, layanan, WA, ID order...">
-</div>
+    <div style="margin-bottom:14px">
+      <input type="text" class="search-input" id="search-input" placeholder="🔍 Cari talent, layanan, WA, ID order...">
+    </div>
 
-<!-- Summary cards (clickable filter) -->
-<div class="summary">
-  <div class="summary-card active-filter" id="sc-all" onclick="setFilter('all','sc-all')" style="cursor:pointer;border-color:rgba(255,255,255,.3);background:rgba(255,255,255,.08)">
-    <div class="summary-icon">📋</div>
-    <div class="summary-val" id="sum-all">0</div>
-    <div class="summary-lbl">Total</div>
-  </div>
-  <div class="summary-card" id="sc-accepted" onclick="setFilter('accepted','sc-accepted')" style="cursor:pointer">
-    <div class="summary-icon">✅</div>
-    <div class="summary-val" id="sum-accepted" style="color:#3DD68C">0</div>
-    <div class="summary-lbl">Diterima</div>
-  </div>
-  <div class="summary-card" id="sc-rejected" onclick="setFilter('rejected','sc-rejected')" style="cursor:pointer">
-    <div class="summary-icon">❌</div>
-    <div class="summary-val" id="sum-rejected" style="color:#FF5C5C">0</div>
-    <div class="summary-lbl">Ditolak</div>
-  </div>
-  <div class="summary-card" id="sc-pending" onclick="setFilter('pending','sc-pending')" style="cursor:pointer">
-    <div class="summary-icon">⏳</div>
-    <div class="summary-val" id="sum-pending" style="color:#a78bfa">0</div>
-    <div class="summary-lbl">Pending</div>
-  </div>
-  <div class="summary-card" id="sc-expired" onclick="setFilter('expired','sc-expired')" style="cursor:pointer">
-    <div class="summary-icon">⏰</div>
-    <div class="summary-val" id="sum-expired" style="color:#FFB800">0</div>
-    <div class="summary-lbl">Waktu Habis</div>
-  </div>
-  <div class="summary-card" id="sc-voucher" onclick="showVoucherPanel()" style="cursor:pointer">
-    <div class="summary-icon">🎟️</div>
-    <div class="summary-val" id="sum-voucher" style="color:#F9A8C9">0</div>
-    <div class="summary-lbl">Belum Digunakan</div>
-  </div>
-  <div class="summary-card" id="sc-activity" onclick="showActivityPanel()" style="cursor:pointer">
-    <div class="summary-icon">🕐</div>
-    <div class="summary-val" id="sum-activity" style="color:#60A5FA">0</div>
-    <div class="summary-lbl">Aktivitas</div>
-  </div>
-</div>
+    <div class="summary">
+      <div class="summary-card active-filter" id="sc-all" onclick="setFilter('all','sc-all')">
+        <div class="summary-icon">📋</div>
+        <div class="summary-val" id="sum-all">0</div>
+        <div class="summary-lbl">Total</div>
+      </div>
+      <div class="summary-card" id="sc-accepted" onclick="setFilter('accepted','sc-accepted')">
+        <div class="summary-icon">✅</div>
+        <div class="summary-val" id="sum-accepted" style="color:#3DD68C">0</div>
+        <div class="summary-lbl">Diterima</div>
+      </div>
+      <div class="summary-card" id="sc-rejected" onclick="setFilter('rejected','sc-rejected')">
+        <div class="summary-icon">❌</div>
+        <div class="summary-val" id="sum-rejected" style="color:#FF5C5C">0</div>
+        <div class="summary-lbl">Ditolak</div>
+      </div>
+      <div class="summary-card" id="sc-pending" onclick="setFilter('pending','sc-pending')">
+        <div class="summary-icon">⏳</div>
+        <div class="summary-val" id="sum-pending" style="color:#a78bfa">0</div>
+        <div class="summary-lbl">Pending</div>
+      </div>
+      <div class="summary-card" id="sc-expired" onclick="setFilter('expired','sc-expired')">
+        <div class="summary-icon">⏰</div>
+        <div class="summary-val" id="sum-expired" style="color:#FFB800">0</div>
+        <div class="summary-lbl">Waktu Habis</div>
+      </div>
+      <div class="summary-card" id="sc-voucher" onclick="showVoucherPanel()">
+        <div class="summary-icon">🎟️</div>
+        <div class="summary-val" id="sum-voucher" style="color:#F9A8C9">0</div>
+        <div class="summary-lbl">Belum Digunakan</div>
+      </div>
+      <div class="summary-card" id="sc-activity" onclick="showActivityPanel()">
+        <div class="summary-icon">🕐</div>
+        <div class="summary-val" id="sum-activity" style="color:#60A5FA">0</div>
+        <div class="summary-lbl">Aktivitas</div>
+      </div>
+    </div>
 
-
-
-
-<!-- Log list -->
-<div class="log-list" id="log-list">
-  <div class="loading">⏳ Memuat log order...</div>
+    <div class="log-list" id="log-list">
+      <div class="loading">⏳ Memuat log order...</div>
+    </div>
+  </main>
 </div>
 
 <script type="module">
@@ -188,7 +151,6 @@ let searchQuery  = '';
 function formatDate(iso) {
   if (!iso) return '-';
   try {
-    // Handle Firestore Timestamp object
     let date;
     if (iso && typeof iso === 'object' && iso.seconds) {
       date = new Date(iso.seconds * 1000);
@@ -241,7 +203,6 @@ function renderOrders() {
     return true;
   });
 
-  // Update summary
   document.getElementById('sum-all').textContent      = allOrders.length;
   document.getElementById('sum-accepted').textContent = allOrders.filter(o => o.status === 'accepted').length;
   document.getElementById('sum-rejected').textContent = allOrders.filter(o => o.status === 'rejected').length;
@@ -263,7 +224,6 @@ function renderOrders() {
     const { label, cls } = badge;
     const custWa = formatWa(o.custWa);
 
-    // Tampilan khusus untuk pembelian voucher via Pak Kasir
     if (o.type === 'voucher_purchase') {
       return `
       <div class="log-card status-${o.status}" style="border-left:3px solid #FFB800">
@@ -311,11 +271,9 @@ function renderOrders() {
   }).join('');
 }
 
-// Map orderId → voucherCode (dari koleksi vouchers)
 let voucherMap = {};
 let allVouchers = [];
 
-// Load vouchers realtime
 onSnapshot(collection(db, 'vouchers'), snap => {
   voucherMap = {};
   allVouchers = [];
@@ -324,8 +282,6 @@ onSnapshot(collection(db, 'vouchers'), snap => {
     allVouchers.push(v);
     if (v.originalOrder) voucherMap[v.originalOrder] = v.code || d.id;
   });
-  // Update count voucher belum dipakai
-  const unused = allVouchers.filter(v => !v.used || v.deactivated);
   const aktifCount = allVouchers.filter(v => !v.used && !v.deactivated).length;
   document.getElementById('sum-voucher').textContent = aktifCount;
   if (_voucherMode) renderVoucherList();
@@ -333,78 +289,58 @@ onSnapshot(collection(db, 'vouchers'), snap => {
   else renderOrders();
 });
 
-function formatWaFull(wa) {
-  if (!wa) return '-';
-  let num = wa.toString().replace(/\D/g, '');
-  if (num.startsWith('62')) num = '0' + num.slice(2);
-  else if (!num.startsWith('0')) num = '0' + num;
-  return num;
-}
-
-
-
 let _voucherMode  = false;
 let _activityMode = false;
 
 window.showVoucherPanel = function() {
-  _voucherMode = true;
-  _activityMode = false;
+  _voucherMode = true; _activityMode = false;
   document.querySelectorAll('.summary-card').forEach(el => el.classList.remove('active-filter'));
   document.getElementById('sc-voucher').classList.add('active-filter');
   renderVoucherList();
 };
 
 function renderVoucherList() {
-  const unused = allVouchers.filter(v => !v.used || v.deactivated);
-  const el     = document.getElementById('log-list');
-  if (!unused.length) {
-    el.innerHTML = `<div class="empty"><div style="font-size:2.5rem;margin-bottom:12px">🎟️</div><div style="font-weight:800">Tidak ada voucher yang belum digunakan</div></div>`;
-    return;
-  }
-  // Semua voucher urut by tanggal saja, tidak pisah aktif/nonaktif
-  const semua = unused.sort((a,b) => {
+  const unused = allVouchers.filter(v => !v.used && !v.deactivated);
+  const nonaktif = allVouchers.filter(v => v.deactivated);
+  const semua  = [...unused, ...nonaktif].sort((a,b) => {
     const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0;
     const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
     return tb - ta;
   });
-
-  el.innerHTML = `
-    <div style="font-size:.8rem;font-weight:800;color:rgba(240,235,248,.4);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em">
-      🎟️ ${aktif.length} Voucher Aktif · ${nonaktif.length} Nonaktif
-    </div>` +
+  const el = document.getElementById('log-list');
+  if (!semua.length) {
+    el.innerHTML = `<div class="empty"><div style="font-size:2.5rem;margin-bottom:12px">🎟️</div><div style="font-weight:800">Tidak ada voucher yang belum digunakan</div></div>`;
+    return;
+  }
+  el.innerHTML = `<div style="font-size:.8rem;font-weight:800;color:rgba(240,235,248,.4);margin-bottom:8px;text-transform:uppercase;letter-spacing:.06em">🎟️ ${unused.length} Voucher Aktif · ${nonaktif.length} Nonaktif</div>` +
   semua.map(v => {
-    const code       = v.code || v.id;
-    const wa         = formatWaFull(v.custWa);
-    const svc        = v.service || '-';
-    const dur        = v.duration ? v.duration + ' menit' : '';
+    const code = v.code || v.id;
+    const wa   = formatWa(v.custWa);
+    const svc  = v.service || '-';
+    const dur  = v.duration ? v.duration + ' menit' : '';
     const isNonaktif = !!v.deactivated;
     return `
-    <div style="background:${isNonaktif ? 'rgba(255,255,255,.02)' : 'rgba(249,168,201,.04)'};border:1px solid ${isNonaktif ? 'rgba(255,255,255,.08)' : 'rgba(249,168,201,.2)'};border-radius:12px;padding:12px 14px;margin-bottom:8px;opacity:${isNonaktif ? '0.45' : '1'}">
+    <div style="background:${isNonaktif?'rgba(255,255,255,.02)':'rgba(249,168,201,.04)'};border:1px solid ${isNonaktif?'rgba(255,255,255,.08)':'rgba(249,168,201,.2)'};border-radius:12px;padding:12px 14px;margin-bottom:8px;opacity:${isNonaktif?'0.45':'1'}">
       <div style="display:flex;align-items:center;gap:10px">
         <div style="flex:1;min-width:0">
-          ${isNonaktif ? '<div style="font-size:.65rem;font-weight:800;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">🚫 Voucher Nonaktif</div>' : (v.createdBy === 'pakasir' ? '<div style="font-size:.65rem;font-weight:800;color:#3DD68C;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">💳 Dibeli via Pak Kasir</div>' : (v.createdBy === 'admin' ? '<div style="font-size:.65rem;font-weight:800;color:#FFB800;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">👑 Dibuat Admin</div>' : ''))}
-          <div style="font-size:.95rem;font-weight:900;color:${isNonaktif ? 'rgba(240,235,248,.4)' : '#F9A8C9'};font-family:monospace;letter-spacing:.08em;text-decoration:${isNonaktif ? 'line-through' : 'none'}">${code}</div>
-          <div style="font-size:.75rem;color:rgba(240,235,248,.5);font-weight:700;margin-top:3px">📋 ${svc} ${dur} · 📱 ${wa}</div>
-          <div style="font-size:.68rem;color:rgba(240,235,248,.3);font-weight:600;margin-top:2px">🕐 ${formatDate(v.createdAt)}</div>
+          ${isNonaktif?'<div style="font-size:.65rem;font-weight:800;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">🚫 Voucher Nonaktif</div>':(v.createdBy==='pakasir'?'<div style="font-size:.65rem;font-weight:800;color:#3DD68C;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">💳 Dibeli via Pak Kasir</div>':(v.createdBy==='admin'?'<div style="font-size:.65rem;font-weight:800;color:#FFB800;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px">👑 Dibuat Admin</div>':''))}
+          <div style="font-size:.95rem;font-weight:900;color:${isNonaktif?'rgba(240,235,248,.4)':'#F9A8C9'};font-family:monospace;letter-spacing:.08em;text-decoration:${isNonaktif?'line-through':'none'}">${code}</div>
+          <div style="font-size:.75rem;color:rgba(240,235,248,.5);font-weight:700;margin-top:3px">📱 ${wa} · 🕐 ${formatDate(v.createdAt)}</div>
         </div>
         <div style="display:flex;gap:6px;flex-shrink:0">
-          ${!isNonaktif ? `
+          ${!isNonaktif?`
           <button onclick="copyVoucherInfo('${code}','${svc} ${dur}','${wa}')" style="padding:7px 10px;border-radius:8px;background:rgba(249,168,201,.1);border:1px solid rgba(249,168,201,.3);color:#F9A8C9;font-family:'Nunito',sans-serif;font-weight:800;font-size:.72rem;cursor:pointer">📋 Salin</button>
-          <button onclick="deactivateVoucher('${code}')" style="padding:7px 10px;border-radius:8px;background:rgba(255,92,92,.1);border:1px solid rgba(255,92,92,.3);color:#FF5C5C;font-family:'Nunito',sans-serif;font-weight:800;font-size:.72rem;cursor:pointer">🚫 Nonaktifkan</button>
-          ` : ''}
+          <button onclick="deactivateVoucher('${code}')" style="padding:7px 10px;border-radius:8px;background:rgba(255,92,92,.1);border:1px solid rgba(255,92,92,.3);color:#FF5C5C;font-family:'Nunito',sans-serif;font-weight:800;font-size:.72rem;cursor:pointer">🚫 Nonaktif</button>
+          `:''}
         </div>
       </div>
     </div>`;
   }).join('');
 }
 
-// Confirm modal untuk hapus/nonaktifkan voucher
-let _pendingVoucherAction = null;
-
 window.deactivateVoucher = function(code) {
   if (!confirm(`Nonaktifkan voucher ${code}?\nVoucher tidak bisa diaktifkan kembali.`)) return;
-  const voucherDoc = doc(db, 'vouchers', code);
-  updateDoc(voucherDoc, { deactivated: true, deactivatedAt: new Date().toISOString() })
+  updateDoc(doc(db, 'vouchers', code), { deactivated: true, deactivatedAt: new Date().toISOString() })
     .then(async () => {
       window._showCopyToast('🚫 Voucher dinonaktifkan!');
       try { await addDoc(collection(db, 'activity_logs'), { type:'voucher_deactivated', description:'Admin menonaktifkan voucher', detail:`Kode: ${code}`, createdAt: new Date().toISOString() }); } catch(e){}
@@ -414,20 +350,16 @@ window.deactivateVoucher = function(code) {
 
 window.copyVoucherInfo = function(code, svc, wa) {
   const text = `Voucher: ${code}\nLayanan: ${svc}\nWA: ${wa}`;
-  navigator.clipboard.writeText(text).then(() => {
-    window._showCopyToast();
-  }).catch(() => alert(`Voucher: ${code}\nLayanan: ${svc}\nWA: ${wa}`));
+  navigator.clipboard.writeText(text).then(() => window._showCopyToast()).catch(() => alert(text));
 };
 
-// Realtime listener orders
 onSnapshot(collection(db, 'orders'), snap => {
   allOrders = [];
   snap.forEach(d => allOrders.push({ id: d.id, ...d.data() }));
-  // Sort by createdAt — handle string ISO, Firestore Timestamp, dan kosong
   function getTime(o) {
     const v = o.createdAt;
     if (!v) return 0;
-    if (typeof v === 'object' && v.seconds) return v.seconds * 1000; // Firestore Timestamp
+    if (typeof v === 'object' && v.seconds) return v.seconds * 1000;
     const d = new Date(v);
     return isNaN(d) ? 0 : d.getTime();
   }
@@ -435,7 +367,6 @@ onSnapshot(collection(db, 'orders'), snap => {
   renderOrders();
 });
 
-// Toast notif copy
 window._showCopyToast = function(msg) {
   let toast = document.getElementById('copy-toast');
   if (!toast) {
@@ -451,7 +382,7 @@ window._showCopyToast = function(msg) {
 };
 
 window.setFilter = function(filter, cardId) {
-  _voucherMode = false;
+  _voucherMode = false; _activityMode = false;
   activeFilter = filter;
   document.querySelectorAll('.summary-card').forEach(c => c.classList.remove('active-filter'));
   const activeCard = document.getElementById(cardId);
@@ -459,20 +390,19 @@ window.setFilter = function(filter, cardId) {
   renderOrders();
 };
 
-// ── ACTIVITY LOG ─────────────────────────────────────────────
+// ── ACTIVITY LOG ──────────────────────────────────────────
 const ACTIVITY_ICONS = {
-  voucher_purchase  : '💳',
-  voucher_generated : '🎟️', voucher_deactivated: '🚫',
-  order_accepted    : '✅', order_rejected    : '❌',
-  order_expired     : '⏰', order_deleted     : '🗑️',
-  point_changed     : '⭐', point_reset       : '🔄',
-  history_cleared   : '🧹',
+  voucher_purchase:'💳', voucher_generated:'🎟️', voucher_deactivated:'🚫',
+  order_accepted:'✅', order_rejected:'❌', order_expired:'⏰', order_deleted:'🗑️',
+  point_changed:'⭐', point_reset:'🔄', history_cleared:'🧹',
+  customer_blacklisted:'🚫', customer_unblacklisted:'✅',
 };
 const ACTIVITY_BG = {
   voucher_purchase:'rgba(61,214,140,.08)', voucher_generated:'rgba(249,168,201,.08)',
   voucher_deactivated:'rgba(255,92,92,.06)', order_accepted:'rgba(61,214,140,.06)',
   order_rejected:'rgba(255,92,92,.06)', order_deleted:'rgba(255,92,92,.08)',
   point_changed:'rgba(255,184,0,.06)', history_cleared:'rgba(255,92,92,.06)',
+  customer_blacklisted:'rgba(255,92,92,.08)', customer_unblacklisted:'rgba(61,214,140,.06)',
 };
 
 let _allActivityLogs = [];
@@ -487,8 +417,7 @@ function formatActDate(iso) {
 }
 
 window.showActivityPanel = function() {
-  _voucherMode = false;
-  _activityMode = true;
+  _voucherMode = false; _activityMode = true;
   document.querySelectorAll('.summary-card').forEach(el => el.classList.remove('active-filter'));
   document.getElementById('sc-activity').classList.add('active-filter');
   renderActivityList();
@@ -512,29 +441,25 @@ function renderActivityList() {
       (a.detail||'').toLowerCase().includes(q)
     );
   }
-
   if (!filtered.length) {
     el.innerHTML = `<div class="empty"><div style="font-size:2.5rem;margin-bottom:12px">🕐</div><div style="font-weight:800">Tidak ada aktivitas ditemukan</div></div>`;
     return;
   }
-
   el.innerHTML = `
     <div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px">
       <button class="act-filter-btn${_activityFilter==='all'?' active-filter':''}" onclick="setActivityFilter('all',this)" style="padding:5px 14px;border-radius:99px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:rgba(240,235,248,.5);font-family:'Nunito',sans-serif;font-size:.72rem;font-weight:800;cursor:pointer">Semua</button>
-      ${[
-        ['voucher_generated','Generate Voucher'],['voucher_purchase','Beli Voucher'],['voucher_deactivated','Nonaktif Voucher'],
-        ['order_accepted','Order Diterima'],['order_rejected','Order Ditolak'],['order_deleted','Hapus Order'],
-        ['point_changed','Ubah Poin'],['point_reset','Reset Poin'],['history_cleared','Hapus Riwayat'],
-      ].map(([type, label]) =>
+      ${[['voucher_generated','Generate Voucher'],['voucher_purchase','Beli Voucher'],['voucher_deactivated','Nonaktif Voucher'],
+         ['order_accepted','Order Diterima'],['order_rejected','Order Ditolak'],['order_deleted','Hapus Order'],
+         ['point_changed','Ubah Poin'],['point_reset','Reset Poin'],['history_cleared','Hapus Riwayat'],
+         ['customer_blacklisted','Blacklist'],
+      ].map(([type,label]) =>
         `<button class="act-filter-btn${_activityFilter===type?' active-filter':''}" onclick="setActivityFilter('${type}',this)" style="padding:5px 14px;border-radius:99px;border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);color:rgba(240,235,248,.5);font-family:'Nunito',sans-serif;font-size:.72rem;font-weight:800;cursor:pointer">${label}</button>`
       ).join('')}
     </div>
     <input type="text" placeholder="🔍 Cari aktivitas..." value="${_activitySearch}"
       oninput="_activitySearch=this.value;renderActivityList()"
       style="width:100%;padding:8px 12px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.1);border-radius:8px;color:#F0EBF8;font-family:'Nunito',sans-serif;font-size:.82rem;font-weight:600;outline:none;margin-bottom:10px">
-    <div style="font-size:.75rem;font-weight:800;color:rgba(240,235,248,.3);margin-bottom:10px;text-transform:uppercase;letter-spacing:.06em">
-      🕐 ${filtered.length} Aktivitas
-    </div>` +
+    <div style="font-size:.75rem;font-weight:800;color:rgba(240,235,248,.3);margin-bottom:10px;text-transform:uppercase;letter-spacing:.06em">🕐 ${filtered.length} Aktivitas</div>` +
   filtered.map(a => {
     const icon = ACTIVITY_ICONS[a.type] || '📌';
     const bg   = ACTIVITY_BG[a.type]   || 'rgba(255,255,255,.03)';
@@ -543,14 +468,13 @@ function renderActivityList() {
       <div style="width:34px;height:34px;border-radius:9px;background:rgba(255,255,255,.06);display:flex;align-items:center;justify-content:center;font-size:.95rem;flex-shrink:0">${icon}</div>
       <div style="flex:1;min-width:0">
         <div style="font-size:.85rem;font-weight:800;color:#F0EBF8;margin-bottom:2px">${a.description || a.type}</div>
-        ${a.detail ? `<div style="font-size:.74rem;color:rgba(240,235,248,.5);font-weight:600;margin-bottom:2px">${a.detail}</div>` : ''}
+        ${a.detail?`<div style="font-size:.74rem;color:rgba(240,235,248,.5);font-weight:600;margin-bottom:2px">${a.detail}</div>`:''}
         <div style="font-size:.68rem;color:rgba(240,235,248,.3);font-weight:600">${formatActDate(a.createdAt)}</div>
       </div>
     </div>`;
   }).join('');
 }
 
-// Realtime listener aktivitas
 onSnapshot(
   query(collection(db, 'activity_logs'), orderBy('createdAt', 'desc'), limit(500)),
   snap => {
@@ -565,7 +489,6 @@ document.getElementById('search-input').addEventListener('input', function() {
   searchQuery = this.value.trim();
   renderOrders();
 });
-
 document.getElementById('logout-btn').onclick = () => {
   sessionStorage.removeItem('cp_admin_v2');
   window.location.href = 'index.html';
@@ -576,9 +499,6 @@ document.getElementById('back-web').addEventListener('click', (e) => {
 document.querySelectorAll('.nav-item').forEach(a => a.addEventListener('click', () => {
   if(window.innerWidth<=768) closeSidebar();
 }));
-
 </script>
-  </main>
-</div>
 </body>
 </html>
