@@ -28,8 +28,28 @@
       <input type="password" id="t-pass" placeholder="Password kamu" autocomplete="current-password">
     </div>
     <p class="login-err" id="t-err"></p>
+    <p style="font-size:.75rem;font-weight:700;color:rgba(240,235,248,.4);text-align:center;margin-bottom:10px;margin-top:-4px">
+      Dengan masuk, kamu menyetujui
+      <a href="#" id="terms-link" onclick="openTermsModal();return false;" style="color:var(--pink);text-decoration:underline;cursor:pointer">Terms & Conditions</a>
+    </p>
     <button class="login-submit" id="t-login-btn">Masuk</button>
     <p class="login-hint"><a href="index.html" style="color:var(--pink)">← Kembali ke website</a></p>
+  </div>
+</div>
+
+<!-- Modal Terms & Conditions -->
+<div id="terms-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:9999;display:none;align-items:center;justify-content:center;padding:20px">
+  <div style="background:#16162A;border:1px solid rgba(249,168,201,.2);border-radius:20px;max-width:480px;width:100%;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.5)">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid rgba(255,255,255,.08)">
+      <div style="font-size:1rem;font-weight:900;color:#F0EBF8">📋 Terms & Conditions</div>
+      <button onclick="closeTermsModal()" style="background:none;border:none;color:rgba(240,235,248,.5);font-size:1.2rem;cursor:pointer;line-height:1;padding:4px">✕</button>
+    </div>
+    <div id="terms-content" style="padding:20px 24px;overflow-y:auto;font-size:.85rem;font-weight:600;color:rgba(240,235,248,.7);line-height:1.8;white-space:pre-wrap;flex:1">
+      <div style="text-align:center;color:rgba(240,235,248,.3);padding:40px 0">Memuat...</div>
+    </div>
+    <div style="padding:16px 24px;border-top:1px solid rgba(255,255,255,.08)">
+      <button onclick="closeTermsModal()" style="width:100%;padding:11px;border-radius:10px;background:linear-gradient(135deg,#E8628A,#F9A8C9);border:none;color:#fff;font-family:'Nunito',sans-serif;font-weight:900;font-size:.9rem;cursor:pointer">Mengerti ✓</button>
+    </div>
   </div>
 </div>
 
