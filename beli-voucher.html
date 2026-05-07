@@ -102,11 +102,11 @@ const adminRaw   = p.get('admin') || 'admin1';
 const ADMIN_MAP  = { 'callpay': 'admin1', 'sleepcallpay': 'admin2', 'scallpayz': 'admin3' };
 const adminParam = ADMIN_MAP[adminRaw] || adminRaw;
 
-let _prices    = {};
-let _pgEnabled = false;
-let _waEnabled = true;  // default ON — diupdate saat init()
-let _pgSlug    = 'callpay';
-let _waAdmin   = '';
+let _prices      = {};
+let _pgEnabled   = false;
+let _waEnabled   = true;
+let _mtClientKey = '';   // Midtrans Client Key — diambil dari Firebase settings
+let _waAdmin     = '';
 
 const NOMINALS = [
   { nominal: 10000, bayar: 13000 },
@@ -237,30 +237,51 @@ window.beliViaWeb = async function() {
   if (!nominal || !bayar) { alert('Pilih nominal voucher dulu!'); return; }
   if (!wa || wa.length < 9) { alert('Masukkan nomor WhatsApp yang valid!'); return; }
 
-  btn.disabled    = true;
+  // Pastikan Midtrans Snap sudah load
+  if (typeof window.snap === 'undefined') {
+    alert('Sistem pembayaran sedang dimuat. Tunggu sebentar lalu coba lagi.');
+    return;
+  }
+
+  btn.disabled = true;
   btn.querySelector('.btn-text-title').textContent = 'Memproses...';
 
   const orderId = 'VC-' + Date.now() + '-' + Math.random().toString(36).substr(2, 5).toUpperCase();
 
   try {
+    // Minta snap token dari Vercel
     const res  = await fetch('https://callpay-order-15no.vercel.app/api/create-payment', {
       method : 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body   : JSON.stringify({ orderId, nominal, bayar, custWa: wa, adminParam })
+      body   : JSON.stringify({ orderId, nominal, bayar, custWa: wa, adminParam }),
     });
     const data = await res.json();
-    if (!data.success) throw new Error(data.error || 'Gagal');
+    if (!data.success || !data.snapToken) throw new Error(data.error || 'Gagal membuat transaksi');
+
+    // Buka Midtrans Snap popup
+    window.snap.pay(data.snapToken, {
+      onSuccess: function(result) {
+        window.location.href = `payment-success.html?orderId=${orderId}&wa=${wa}`;
+      },
+      onPending: function(result) {
+        window.location.href = `payment-success.html?orderId=${orderId}&wa=${wa}`;
+      },
+      onError: function(result) {
+        alert('Pembayaran gagal. Silakan coba lagi.');
+        btn.disabled = false;
+        btn.querySelector('.btn-text-title').textContent = 'Beli via Website';
+      },
+      onClose: function() {
+        btn.disabled = false;
+        btn.querySelector('.btn-text-title').textContent = 'Beli via Website';
+      },
+    });
+
   } catch(e) {
     alert('Gagal membuat transaksi: ' + e.message);
     btn.disabled = false;
     btn.querySelector('.btn-text-title').textContent = 'Beli via Website';
-    return;
   }
-
-  const redirectUrl = encodeURIComponent(
-    `${location.origin}${location.pathname.replace('beli-voucher.html','')}payment-success.html?orderId=${orderId}&wa=${wa}`
-  );
-  window.location.href = `https://app.pakasir.com/pay/${_pgSlug}/${bayar}?order_id=${orderId}&qris_only=1&redirect=${redirectUrl}`;
 };
 
 async function init() {
@@ -273,10 +294,18 @@ async function init() {
     const settings = settingsSnap.exists() ? settingsSnap.data() : {};
     if (priceSnap.exists()) _prices = priceSnap.data();
 
-    _pgEnabled = settings.pgEnabled === true;
-    _waEnabled = settings.waEnabled !== false; // default ON — disimpan ke var modul
-    _pgSlug    = settings.pgSlug    || 'callpay';
-    _waAdmin   = settings.waNumber  || '62895400709371';
+    _pgEnabled   = settings.pgEnabled === true;
+    _waEnabled   = settings.waEnabled !== false;
+    _mtClientKey = settings.mtClientKey || '';
+    _waAdmin     = settings.waNumber  || '62895400709371';
+
+    // Load Midtrans Snap JS kalau pg enabled
+    if (_pgEnabled && _mtClientKey) {
+      const snapScript = document.createElement('script');
+      snapScript.src = 'https://app.midtrans.com/snap/snap.js';
+      snapScript.setAttribute('data-client-key', _mtClientKey);
+      document.head.appendChild(snapScript);
+    }
 
     // Helper: terapkan style tombol off (pointer-events none = double lock)
     function applyDisabled(btn, subText) {
