@@ -130,6 +130,9 @@ function updatePointDisplay(points) {
   const el = document.getElementById('talent-point-box');
   if (!el) return;
   const pct = Math.min(100, Math.round((points / POINT_MAX) * 100));
+  const cfg = DB.getSettings();
+  const rulesText = cfg.talentRules || '';
+
   el.innerHTML = `
     <div onclick="openPointModal()" style="background:rgba(167,139,250,.08);border:1px solid rgba(167,139,250,.25);border-radius:14px;padding:16px 18px;margin-bottom:16px;cursor:pointer;transition:border-color .2s" onmouseover="this.style.borderColor='rgba(167,139,250,.5)'" onmouseout="this.style.borderColor='rgba(167,139,250,.25)'">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
@@ -145,7 +148,17 @@ function updatePointDisplay(points) {
       <div style="height:6px;background:rgba(255,255,255,.08);border-radius:99px;overflow:hidden">
         <div style="height:100%;width:${pct}%;background:linear-gradient(90deg,#7c3aed,#a78bfa);border-radius:99px;transition:width .5s ease"></div>
       </div>
-    </div>`;
+    </div>
+
+    ${rulesText ? `
+    <div style="background:rgba(249,168,201,.05);border:1px solid rgba(249,168,201,.2);border-radius:14px;padding:16px 18px;margin-bottom:16px">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <div style="font-size:1.1rem">📋</div>
+        <div style="font-size:.72rem;font-weight:800;color:#F9A8C9;text-transform:uppercase;letter-spacing:.06em">Aturan Talent</div>
+      </div>
+      <div style="font-size:.82rem;font-weight:600;color:rgba(240,235,248,.65);line-height:1.75;white-space:pre-wrap">${rulesText}</div>
+    </div>` : ''}
+  `;
 }
 
 // ── SALARY SYSTEM ─────────────────────────────────────────
@@ -636,11 +649,6 @@ function buildProfileForm(t, isSettingMode) {
       <textarea id="s-bio" class="setup-input" rows="3" placeholder="Ceritakan tentang dirimu...">${t.bio||''}</textarea>
     </div>
     <div class="setup-section">
-      <div class="setup-label">📱 Nomor WhatsApp *</div>
-      <input type="tel" id="s-wa" class="setup-input" value="${t.waNumber||''}" placeholder="Contoh: 08123456789">
-      <div style="font-size:.72rem;color:var(--muted);font-weight:600;margin-top:4px">Digunakan untuk keperluan internal agensi</div>
-    </div>
-    <div class="setup-section">
       <div class="setup-label">🔔 Telegram Chat ID (untuk notifikasi order)</div>
       <input type="text" id="s-telegram" class="setup-input" value="${t.telegramChatId||''}" placeholder="Contoh: 123456789">
       <div style="font-size:.72rem;color:var(--muted);font-weight:600;margin-top:4px">
@@ -738,7 +746,6 @@ window.submitProfile = async function() {
   const name           = document.getElementById('s-name')?.value.trim();
   const age            = parseInt(document.getElementById('s-age')?.value);
   const bio            = document.getElementById('s-bio')?.value.trim();
-  const waNumber       = document.getElementById('s-wa')?.value.trim().replace(/^\+62/, '').replace(/^62/, '').replace(/^0/, '') || '';
   const telegramChatId = document.getElementById('s-telegram')?.value.trim() || '';
   const services       = [...document.querySelectorAll('.svc-ck:checked')].map(c=>c.value);
   const errEl          = document.getElementById('s-err');
@@ -767,7 +774,6 @@ window.submitProfile = async function() {
       services,
       img     : finalImg,
       audio   : finalAudio,
-      waNumber,
       telegramChatId,
       bankName,
       bankNumber,
