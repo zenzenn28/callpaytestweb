@@ -118,6 +118,23 @@ if (sessionStorage.getItem('cp_owner') !== '1') {
       <button class="btn btn-pink" id="save-policy">💾 Simpan Halaman Legal</button>
     </div>
 
+    <div class="settings-section">
+      <h3>🔧 Mode Maintenance</h3>
+      <p class="sec-desc">Saat aktif, website utama akan menampilkan halaman maintenance. Customer tidak bisa melihat talent atau melakukan order dari website.</p>
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r)">
+        <div>
+          <div style="font-weight:800;font-size:.9rem;margin-bottom:3px">Website Maintenance</div>
+          <div style="font-size:.8rem;color:var(--muted);font-weight:600" id="maintenance-status-text">Website aktif normal</div>
+        </div>
+        <label style="position:relative;display:inline-block;width:48px;height:26px;cursor:pointer">
+          <input type="checkbox" id="maintenance-toggle" style="opacity:0;width:0;height:0">
+          <span id="maintenance-toggle-ui" style="position:absolute;inset:0;border-radius:99px;background:rgba(255,255,255,.1);transition:.3s;display:flex;align-items:center;padding:3px">
+            <span style="width:20px;height:20px;border-radius:50%;background:#fff;transition:.3s;display:block"></span>
+          </span>
+        </label>
+      </div>
+    </div>
+
     <div class="settings-section danger-zone">
       <h3>⚠️ Danger Zone</h3>
       <p class="sec-desc">Tindakan permanen dan tidak bisa dibatalkan.</p>
@@ -242,6 +259,28 @@ document.getElementById('save-pg').onclick = async () => {
   if (clientKey) setTimeout(() => location.reload(), 1000);
 };
 
+// ── Maintenance toggle ──────────────────────────────────
+const maintenanceToggle   = document.getElementById('maintenance-toggle');
+const maintenanceToggleUI = document.getElementById('maintenance-toggle-ui');
+
+function updateMaintenanceUI(enabled) {
+  const dot = maintenanceToggleUI.querySelector('span');
+  maintenanceToggleUI.style.background = enabled ? '#FF5C5C' : 'rgba(255,255,255,.1)';
+  dot.style.transform = enabled ? 'translateX(22px)' : 'translateX(0)';
+  const txt = document.getElementById('maintenance-status-text');
+  txt.textContent = enabled ? '🔴 Website sedang maintenance — customer tidak bisa akses' : '🟢 Website aktif normal';
+  txt.style.color = enabled ? '#FF5C5C' : '';
+}
+
+maintenanceToggle.addEventListener('change', async () => {
+  const enabled = maintenanceToggle.checked;
+  updateMaintenanceUI(enabled);
+  const cfg = DB.getSettings();
+  cfg.maintenance = enabled;
+  await DB.saveSettings(cfg);
+  toast(enabled ? '🔧 Mode maintenance aktif!' : '✅ Website kembali aktif!');
+});
+
 document.addEventListener('DOMContentLoaded',async()=>{
   if(sessionStorage.getItem('cp_owner')!=='1'){window.location.href='index.html';return;}
   const cfg=await DB.getSettingsAsync();
@@ -255,6 +294,9 @@ document.addEventListener('DOMContentLoaded',async()=>{
   pgToggle.checked = pgEnabled;
   updateToggleUI(pgEnabled);
   if (cfg.mtClientKey) document.getElementById('pg-slug').value = cfg.mtClientKey;
+  // Load maintenance state
+  updateMaintenanceUI(cfg.maintenance === true);
+  maintenanceToggle.checked = cfg.maintenance === true;
 
   // Load policy texts
   const policySnap = await DB.getSettingsAsync();
