@@ -62,6 +62,7 @@ const DB = {
       waEnabled   : true,
       mtClientKey : '',
       maintenance : false,
+      talentRules : '',
     };
   },
 
