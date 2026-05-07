@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Blacklist Customer — CallPay Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Pacifico&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="admin.css?v=11">
+  <script>
+  function toggleSidebar(){const sb=document.querySelector('.sidebar'),ov=document.getElementById('sidebar-overlay'),btn=document.getElementById('hamburger-btn');if(!sb||!ov||!btn)return;const open=sb.classList.toggle('open');ov.classList.toggle('open',open);btn.textContent=open?'✕':'☰';}
+  function closeSidebar(){const sb=document.querySelector('.sidebar'),ov=document.getElementById('sidebar-overlay'),btn=document.getElementById('hamburger-btn');if(!sb||!ov||!btn)return;sb.classList.remove('open');ov.classList.remove('open');btn.textContent='☰';}
+  </script>
+  <script>
+  (function(){
+    var ok = sessionStorage.getItem('cp_admin_v2') === '1';
+    document.addEventListener('DOMContentLoaded', function() {
+      if (!ok) { window.location.href = 'index.html'; }
+    });
+  })();
+  </script>
+</head>
+<body>
+<div class="app" id="dashboard">
+  <div class="mobile-topbar"><span class="mobile-logo">CallPay</span><button class="hamburger" onclick="toggleSidebar()" id="hamburger-btn">☰</button></div>
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+  <aside class="sidebar">
+    <div class="sidebar-logo"><div class="sidebar-logo-text">CallPay</div><div class="sidebar-logo-sub">Admin Panel</div></div>
+    <nav class="sidebar-nav">
+      <a href="index.html"            class="nav-item"><span class="nav-icon">📊</span>Dashboard</a>
+      <a href="talents.html"          class="nav-item"><span class="nav-icon">⭐</span>Point Talent</a>
+      <a href="status.html"           class="nav-item"><span class="nav-icon">🟢</span>Talent Online</a>
+      <a href="order-log.html"        class="nav-item"><span class="nav-icon">📋</span>Log Order</a>
+      <a href="generate-voucher.html" class="nav-item"><span class="nav-icon">🎟️</span>Generate Voucher</a>
+      <a href="payment-settings.html" class="nav-item"><span class="nav-icon">💳</span>Pengaturan Pembayaran</a>
+      <a href="review-testimoni.html" class="nav-item"><span class="nav-icon">💬</span>Review Testimoni</a>
+      <a href="hapus-order.html"      class="nav-item"><span class="nav-icon">❌</span>Hapus Order Talent</a>
+      <a href="clear-history.html"    class="nav-item"><span class="nav-icon">🗑️</span>Hapus Riwayat Point</a>
+      <a href="blacklist.html"        class="nav-item active"><span class="nav-icon">🚫</span>Blacklist Customer</a>
+      <a href="../index.html"         class="nav-item" id="back-web"><span class="nav-icon">🌐</span>Lihat Website</a>
+    </nav>
+    <div class="sidebar-footer"><button class="logout-btn" id="logout-btn">Logout →</button></div>
+  </aside>
+
+  <main class="main">
+    <div class="page-header">
+      <h1>🚫 Blacklist Customer</h1>
+      <p>Blacklist admin = customer tidak bisa order siapapun & tidak bisa beli voucher.</p>
+    </div>
+
+    <!-- Add Form -->
+    <div class="panel" style="max-width:520px;margin-bottom:24px">
+      <div style="font-size:.75rem;font-weight:900;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Tambah ke Blacklist Global</div>
+      <div style="display:flex;gap:8px;margin-bottom:8px">
+        <input type="tel" id="bl-wa" placeholder="Nomor WA (contoh: 08123456789)"
+          style="flex:1;padding:10px 14px;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Nunito',sans-serif;font-size:.9rem;font-weight:600;outline:none;transition:border-color .2s;min-width:0"
+          onfocus="this.style.borderColor='var(--pink)'" onblur="this.style.borderColor='var(--border)'"
+          onkeydown="if(event.key==='Enter') addGlobalBlacklist()">
+        <button onclick="addGlobalBlacklist()" id="bl-add-btn"
+          style="padding:10px 18px;border-radius:10px;background:linear-gradient(135deg,#FF5C5C,#FF8080);border:none;color:#fff;font-family:'Nunito',sans-serif;font-weight:900;font-size:.85rem;cursor:pointer;white-space:nowrap;flex-shrink:0;transition:opacity .2s">
+          🚫 Blacklist
+        </button>
+      </div>
+      <input type="text" id="bl-note" placeholder="Alasan (opsional)"
+        style="width:100%;padding:9px 14px;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Nunito',sans-serif;font-size:.85rem;font-weight:600;outline:none;transition:border-color .2s;margin-bottom:8px"
+        onfocus="this.style.borderColor='var(--pink)'" onblur="this.style.borderColor='var(--border)'"
+        onkeydown="if(event.key==='Enter') addGlobalBlacklist()">
+      <div id="bl-msg" style="font-size:.78rem;font-weight:700;min-height:18px"></div>
+    </div>
+
+    <!-- Search -->
+    <div style="max-width:520px;margin-bottom:16px">
+      <input type="text" id="bl-search" placeholder="🔍 Cari nomor WA atau alasan..."
+        oninput="filterBlacklist(this.value)"
+        style="width:100%;padding:10px 14px;background:rgba(255,255,255,.06);border:1px solid var(--border);border-radius:10px;color:var(--text);font-family:'Nunito',sans-serif;font-size:.85rem;font-weight:600;outline:none;transition:border-color .2s"
+        onfocus="this.style.borderColor='var(--pink)'" onblur="this.style.borderColor='var(--border)'">
+    </div>
+
+    <!-- List -->
+    <div style="font-size:.72rem;font-weight:900;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px" id="bl-count">Memuat...</div>
+    <div id="bl-list" style="max-width:520px">
+      <div style="text-align:center;padding:30px;color:var(--muted)">⏳ Memuat data...</div>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js';
+import { getFirestore, collection, onSnapshot, doc, setDoc, deleteDoc, query, orderBy } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js';
+
+const FIREBASE_CONFIG = {
+  apiKey           : 'AIzaSyACJjz3XP7vbzxkeZmW_sCXKurAFXZ_vwU',
+  authDomain       : 'testweb-9b2f8.firebaseapp.com',
+  projectId        : 'testweb-9b2f8',
+  storageBucket    : 'testweb-9b2f8.firebasestorage.app',
+  messagingSenderId: '223987046525',
+  appId            : '1:223987046525:web:29d1a297746cd83d685365'
+};
+const app = getApps().length ? getApps()[0] : initializeApp(FIREBASE_CONFIG);
+const db  = getFirestore(app);
+
+function normalizeWa(wa) {
+  if (!wa) return '';
+  let num = String(wa).replace(/\D/g, '');
+  if (num.startsWith('0')) num = '62' + num.slice(1);
+  if (!num.startsWith('62')) num = '62' + num;
+  return num;
+}
+
+function displayWa(wa) {
+  const num = normalizeWa(wa);
+  if (!num) return wa;
+  return num.startsWith('62') ? '0' + num.slice(2) : num;
+}
+
+function toast(msg, color = '#3DD68C') {
+  const t = document.getElementById('toast');
+  if (!t) return;
+  t.textContent = msg;
+  t.style.background = color;
+  t.style.display = 'block';
+  clearTimeout(t._t);
+  t._t = setTimeout(() => { t.style.display = 'none'; }, 2500);
+}
+
+function formatDate(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  return d.toLocaleDateString('id-ID', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+}
+
+let _allList = [];
+
+function renderList(list) {
+  const el = document.getElementById('bl-list');
+  document.getElementById('bl-count').textContent = `Total ${list.length} Customer Diblacklist`;
+  if (!list.length) {
+    el.innerHTML = `<div style="text-align:center;padding:40px;color:var(--muted)"><div style="font-size:2.5rem;margin-bottom:12px">✅</div><div style="font-weight:800">Tidak ada customer yang diblacklist</div></div>`;
+    return;
+  }
+  el.innerHTML = list.map(item => `
+    <div id="bl-item-${item.id}" style="display:flex;align-items:center;justify-content:space-between;gap:12px;background:rgba(255,92,92,.04);border:1px solid rgba(255,92,92,.2);border-radius:12px;padding:12px 16px;margin-bottom:10px">
+      <div style="flex:1;min-width:0">
+        <div style="font-size:.95rem;font-weight:900;color:var(--text)">${displayWa(item.wa || item.id)}</div>
+        <div style="font-size:.72rem;color:rgba(255,92,92,.7);font-weight:700;margin-top:2px;font-family:monospace">${item.wa || item.id}</div>
+        ${item.note ? `<div style="font-size:.78rem;color:var(--muted);font-weight:600;margin-top:4px">📝 ${item.note}</div>` : ''}
+        <div style="font-size:.7rem;color:rgba(240,235,248,.25);font-weight:600;margin-top:4px">🕐 ${formatDate(item.createdAt)}</div>
+      </div>
+      <button onclick="removeGlobalBlacklist('${item.id}')"
+        style="padding:7px 14px;border-radius:8px;background:rgba(255,92,92,.1);border:1px solid rgba(255,92,92,.3);color:#FF5C5C;font-family:'Nunito',sans-serif;font-weight:800;font-size:.78rem;cursor:pointer;flex-shrink:0;transition:background .2s"
+        onmouseover="this.style.background='rgba(255,92,92,.2)'" onmouseout="this.style.background='rgba(255,92,92,.1)'">
+        Hapus
+      </button>
+    </div>`).join('');
+}
+
+// Realtime listener
+onSnapshot(collection(db, 'blacklist_global'), snap => {
+  _allList = [];
+  snap.forEach(d => {
+    const data = d.data();
+    if (data.active !== false) _allList.push({ id: d.id, ...data });
+  });
+  _allList.sort((a, b) => (b.createdAt || '').localeCompare(a.createdAt || ''));
+  const q = document.getElementById('bl-search')?.value || '';
+  filterBlacklist(q);
+});
+
+window.filterBlacklist = function(q) {
+  if (!q) { renderList(_allList); return; }
+  const lower = q.toLowerCase();
+  renderList(_allList.filter(item =>
+    (item.wa || item.id || '').includes(q) ||
+    (item.note || '').toLowerCase().includes(lower)
+  ));
+};
+
+window.addGlobalBlacklist = async function() {
+  const wa   = normalizeWa(document.getElementById('bl-wa').value.trim());
+  const note = document.getElementById('bl-note').value.trim();
+  const msg  = document.getElementById('bl-msg');
+  const btn  = document.getElementById('bl-add-btn');
+
+  if (!wa || wa.length < 10) {
+    msg.style.color = '#FF5C5C';
+    msg.textContent = '⚠️ Nomor WA tidak valid';
+    return;
+  }
+
+  // Cek duplikat
+  if (_allList.find(item => item.id === wa)) {
+    msg.style.color = '#FFB800';
+    msg.textContent = '⚠️ Nomor ini sudah ada di blacklist';
+    return;
+  }
+
+  btn.disabled = true; btn.textContent = 'Memproses...';
+  try {
+    await setDoc(doc(db, 'blacklist_global', wa), {
+      wa,
+      note : note || '',
+      active: true,
+      createdAt: new Date().toISOString(),
+      createdBy: 'admin',
+    });
+    document.getElementById('bl-wa').value   = '';
+    document.getElementById('bl-note').value = '';
+    msg.style.color = '#3DD68C';
+    msg.textContent = '✅ Customer berhasil diblacklist!';
+    setTimeout(() => { msg.textContent = ''; }, 3000);
+    toast('🚫 Customer diblacklist!');
+
+    // Log aktivitas
+    try {
+      await setDoc(doc(db, 'activity_logs', 'al_bl_' + Date.now()), {
+        type: 'customer_blacklisted', description: 'Admin memblacklist customer',
+        detail: `WA: ${wa}${note ? ' · Alasan: ' + note : ''}`,
+        createdAt: new Date().toISOString(),
+      });
+    } catch(e) {}
+  } catch(e) {
+    msg.style.color = '#FF5C5C';
+    msg.textContent = '❌ Gagal: ' + e.message;
+  }
+  btn.disabled = false; btn.textContent = '🚫 Blacklist';
+};
+
+window.removeGlobalBlacklist = async function(waId) {
+  if (!confirm(`Hapus ${displayWa(waId)} dari blacklist?\nCustomer ini bisa order dan beli voucher lagi.`)) return;
+  try {
+    await deleteDoc(doc(db, 'blacklist_global', waId));
+    toast('✅ Dihapus dari blacklist');
+    // Log
+    try {
+      await setDoc(doc(db, 'activity_logs', 'al_unbl_' + Date.now()), {
+        type: 'customer_unblacklisted', description: 'Admin menghapus blacklist customer',
+        detail: `WA: ${waId}`, createdAt: new Date().toISOString(),
+      });
+    } catch(e) {}
+  } catch(e) { toast('❌ Gagal: ' + e.message, '#FF5C5C'); }
+};
+
+document.getElementById('logout-btn').onclick = () => {
+  sessionStorage.removeItem('cp_admin_v2');
+  window.location.href = 'index.html';
+};
+document.getElementById('back-web').addEventListener('click', (e) => {
+  e.preventDefault(); window.open('../index.html','_blank');
+});
+document.querySelectorAll('.nav-item').forEach(a => a.addEventListener('click', () => {
+  if(window.innerWidth<=768) closeSidebar();
+}));
+</script>
+</body>
+</html>
