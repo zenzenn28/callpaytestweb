@@ -48,16 +48,21 @@ if (sessionStorage.getItem('cp_admin_v2') !== '1') {
 </head>
 <body>
 <div class="app">
-  <div class="mobile-topbar"><span class="mobile-logo">CallPay</span><button class="hamburger" onclick="toggleSidebar()" id="hamburger-btn">☰</button></div>
+    <div class="mobile-topbar"><span class="mobile-logo">CallPay</span><button class="hamburger" onclick="toggleSidebar()" id="hamburger-btn">☰</button></div>
   <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
   <aside class="sidebar">
     <div class="sidebar-logo"><div class="sidebar-logo-text">CallPay</div><div class="sidebar-logo-sub">Admin Panel</div></div>
     <nav class="sidebar-nav">
-      <a href="talents.html"       class="nav-item"><span class="nav-icon">⭐</span>Point Talent</a>
-      <a href="status.html"        class="nav-item"><span class="nav-icon">🟢</span>Talent Online</a>
-      <a href="hapus-order.html"      class="nav-item"><span class="nav-icon">🗑️</span>Hapus Order Talent</a>
-      <a href="clear-history.html" class="nav-item active"><span class="nav-icon">🗑️</span>Hapus Riwayat Point</a>
-      <a href="../index.html"      class="nav-item" id="back-web"><span class="nav-icon">🌐</span>Lihat Website</a>
+      <a href="index.html"            class="nav-item"><span class="nav-icon">📊</span>Dashboard</a>
+      <a href="talents.html"          class="nav-item"><span class="nav-icon">⭐</span>Point Talent</a>
+      <a href="status.html"           class="nav-item"><span class="nav-icon">🟢</span>Talent Online</a>
+      <a href="order-log.html"        class="nav-item"><span class="nav-icon">📋</span>Log Order</a>
+      <a href="generate-voucher.html" class="nav-item"><span class="nav-icon">🎟️</span>Generate Voucher</a>
+      <a href="payment-settings.html" class="nav-item"><span class="nav-icon">💳</span>Pengaturan Pembayaran</a>
+      <a href="review-testimoni.html" class="nav-item"><span class="nav-icon">💬</span>Review Testimoni</a>
+      <a href="hapus-order.html"      class="nav-item"><span class="nav-icon">❌</span>Hapus Order Talent</a>
+      <a href="clear-history.html"    class="nav-item active"><span class="nav-icon">🗑️</span>Hapus Riwayat Point</a>
+      <a href="../index.html"         class="nav-item" id="back-web"><span class="nav-icon">🌐</span>Lihat Website</a>
     </nav>
     <div class="sidebar-footer"><button class="logout-btn" id="logout-btn">Logout →</button></div>
   </aside>
