@@ -3,7 +3,15 @@
 <head>
   <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <title>Log Aktivitas Order — CallPay Admin</title>
-  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  
+  <link rel="stylesheet" href="admin.css?v=11">
+  <style>
+    /* Override body untuk pakai layout sidebar */
+    body { display:flex; flex-direction:column; padding:0; align-items:unset; justify-content:unset; min-height:100vh; }
+    .app { display:flex; flex:1; min-height:100vh; }
+    .main { flex:1; margin-left:220px; padding:32px 28px; min-height:100vh; box-sizing:border-box; }
+    @media(max-width:768px){ .main{ margin-left:0; padding:72px 16px 24px; } }
+  </style>
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
     body{font-family:'Nunito',sans-serif;background:#0A0A15;color:#F0EBF8;min-height:100vh;padding:20px}
@@ -79,13 +87,33 @@
       .log-field.full{grid-column:span 1}
     }
   </style>
+<script>
+function toggleSidebar(){const sb=document.querySelector('.sidebar'),ov=document.getElementById('sidebar-overlay'),btn=document.getElementById('hamburger-btn');if(!sb||!ov||!btn)return;const open=sb.classList.toggle('open');ov.classList.toggle('open',open);btn.textContent=open?'✕':'☰';}
+function closeSidebar(){const sb=document.querySelector('.sidebar'),ov=document.getElementById('sidebar-overlay'),btn=document.getElementById('hamburger-btn');if(!sb||!ov||!btn)return;sb.classList.remove('open');ov.classList.remove('open');btn.textContent='☰';}
+</script>
 </head>
 <body>
-
-<div class="header">
-  <a href="index.html">← Kembali</a>
-  <h1>📋 Log Aktivitas Order</h1>
-  <div class="live-badge"><div class="live-dot"></div> LIVE</div>
+<div class="app">
+  <div class="mobile-topbar"><span class="mobile-logo">CallPay</span><button class="hamburger" onclick="toggleSidebar()" id="hamburger-btn">☰</button></div>
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+  <aside class="sidebar">
+    <div class="sidebar-logo"><div class="sidebar-logo-text">CallPay</div><div class="sidebar-logo-sub">Admin Panel</div></div>
+    <nav class="sidebar-nav">
+      <a href="index.html"            class="nav-item "><span class="nav-icon">📊</span>Dashboard</a>
+      <a href="talents.html"          class="nav-item "><span class="nav-icon">⭐</span>Point Talent</a>
+      <a href="status.html"           class="nav-item "><span class="nav-icon">🟢</span>Talent Online</a>
+      <a href="order-log.html"        class="nav-item active"><span class="nav-icon">📋</span>Log Order</a>
+      <a href="generate-voucher.html" class="nav-item "><span class="nav-icon">🎟️</span>Generate Voucher</a>
+      <a href="payment-settings.html" class="nav-item "><span class="nav-icon">💳</span>Pengaturan Pembayaran</a>
+      <a href="review-testimoni.html" class="nav-item "><span class="nav-icon">💬</span>Review Testimoni</a>
+      <a href="hapus-order.html"      class="nav-item "><span class="nav-icon">❌</span>Hapus Order Talent</a>
+      <a href="clear-history.html"    class="nav-item "><span class="nav-icon">🗑️</span>Hapus Riwayat Point</a>
+      <a href="../index.html"         class="nav-item" id="back-web"><span class="nav-icon">🌐</span>Lihat Website</a>
+    </nav>
+    <div class="sidebar-footer"><button class="logout-btn" id="logout-btn">Logout →</button></div>
+  </aside>
+  <main class="main">
+LIVE</div>
 </div>
 
 <!-- Search -->
@@ -543,3 +571,5 @@ document.getElementById('search-input').addEventListener('input', function() {
 </script>
 </body>
 </html>
+  </main>
+</div>
