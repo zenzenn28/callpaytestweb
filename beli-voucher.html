@@ -127,7 +127,7 @@ const SVC_ORDER = ['Temen Call', 'Sleepcall', 'Temen Curhat', 'Pacar Virtual'];
 
 function formatDur(menit) {
   const m = Number(menit);
-  if (m <= 90) return m + ' menit';
+  if (m < 60) return m + ' menit';
   const jam = Math.floor(m / 60), sisa = m % 60;
   return sisa > 0 ? `${jam} jam ${sisa} menit` : `${jam} jam`;
 }
