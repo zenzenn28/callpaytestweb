@@ -182,6 +182,19 @@ window.generateVoucher = async function() {
 
   if (!nominal) { alert('Pilih nominal voucher dulu!'); return; }
 
+  // Reset result box dulu setiap kali generate
+  const resultBox  = document.getElementById('result-box');
+  const resultCode = document.getElementById('result-code');
+  const resultInfo = document.getElementById('result-info');
+  resultBox.style.display    = 'none';
+  resultBox.style.background = '';
+  resultBox.style.border     = '';
+  resultCode.style.color     = '#3DD68C';
+  resultCode.style.fontSize  = '1.8rem';
+  resultCode.textContent     = '';
+  resultInfo.textContent     = '';
+  document.querySelector('.btn-copy').style.display = '';
+
   const btn = document.getElementById('btn-generate');
   btn.disabled = true; btn.textContent = 'Memeriksa...';
 
