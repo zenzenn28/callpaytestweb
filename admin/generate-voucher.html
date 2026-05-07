@@ -89,7 +89,7 @@ function closeSidebar(){const sb=document.querySelector('.sidebar'),ov=document.
   <button class="btn-generate" id="btn-generate" onclick="generateVoucher()">✨ Generate Voucher</button>
 
   <div class="result-box" id="result-box">
-    <div style="font-size:.78rem;font-weight:800;color:#3DD68C;margin-bottom:4px">✅ Voucher Berhasil Dibuat!</div>
+    <div id="result-header" style="font-size:.78rem;font-weight:800;color:#3DD68C;margin-bottom:4px">✅ Voucher Berhasil Dibuat!</div>
     <div class="result-code" id="result-code">VC-XXXXXXXX</div>
     <div class="result-info" id="result-info"></div>
     <button class="btn-copy" onclick="copyCode()">📋 Salin Kode</button>
@@ -186,13 +186,17 @@ window.generateVoucher = async function() {
   const resultBox  = document.getElementById('result-box');
   const resultCode = document.getElementById('result-code');
   const resultInfo = document.getElementById('result-info');
+  const resultHdr  = document.getElementById('result-header');
   resultBox.style.display    = 'none';
   resultBox.style.background = '';
   resultBox.style.border     = '';
   resultCode.style.color     = '#3DD68C';
   resultCode.style.fontSize  = '1.8rem';
+  resultCode.style.display   = '';
   resultCode.textContent     = '';
   resultInfo.textContent     = '';
+  resultHdr.style.color      = '#3DD68C';
+  resultHdr.textContent      = '✅ Voucher Berhasil Dibuat!';
   document.querySelector('.btn-copy').style.display = '';
 
   const btn = document.getElementById('btn-generate');
@@ -208,17 +212,13 @@ window.generateVoucher = async function() {
       const blSnap = await getDoc(doc(db, 'blacklist_global', waClean));
       if (blSnap.exists() && blSnap.data().active !== false) {
         btn.disabled = false; btn.textContent = '✨ Generate Voucher';
-        // Tampilkan pesan error di result-box dengan warna merah
-        const resultBox  = document.getElementById('result-box');
-        const resultCode = document.getElementById('result-code');
-        const resultInfo = document.getElementById('result-info');
-        resultBox.style.background = 'rgba(255,92,92,.06)';
-        resultBox.style.border     = '1px solid rgba(255,92,92,.25)';
-        resultBox.style.display    = 'block';
-        resultCode.style.color     = '#FF5C5C';
-        resultCode.style.fontSize  = '1rem';
-        resultCode.textContent     = '🚫 Tidak Bisa Generate Voucher';
-        resultInfo.textContent     = `Nomor 0${waClean.slice(2)} ada di blacklist global. Hapus dari blacklist terlebih dahulu jika ingin membuat voucher.`;
+        resultBox.style.background        = 'rgba(255,92,92,.06)';
+        resultBox.style.border            = '1px solid rgba(255,92,92,.25)';
+        resultBox.style.display           = 'block';
+        document.getElementById('result-header').style.color = '#FF5C5C';
+        document.getElementById('result-header').textContent = '🚫 Tidak Bisa Generate Voucher';
+        resultCode.style.display          = 'none';
+        resultInfo.textContent            = `Nomor 0${waClean.slice(2)} ada di blacklist global. Hapus dari blacklist terlebih dahulu jika ingin membuat voucher.`;
         document.querySelector('.btn-copy').style.display = 'none';
         return;
       }
@@ -252,12 +252,13 @@ window.generateVoucher = async function() {
     try { await addDoc(collection(db, 'activity_logs'), { type:'voucher_generated', description:'Admin generate voucher manual', detail:`Kode: ${code} · Rp ${nominal.toLocaleString('id-ID')}${waDisplay}`, createdAt: now }); } catch(e){}
 
     // Reset result box ke mode sukses
-    const resultBox  = document.getElementById('result-box');
-    const resultCode = document.getElementById('result-code');
-    resultBox.style.background = '';
-    resultBox.style.border     = '';
-    resultCode.style.color     = '#3DD68C';
-    resultCode.style.fontSize  = '1.8rem';
+    resultBox.style.background        = '';
+    resultBox.style.border            = '';
+    resultHdr.style.color             = '#3DD68C';
+    resultHdr.textContent             = '✅ Voucher Berhasil Dibuat!';
+    resultCode.style.color            = '#3DD68C';
+    resultCode.style.fontSize         = '1.8rem';
+    resultCode.style.display          = '';
     document.querySelector('.btn-copy').style.display = '';
 
     resultCode.textContent = code;
