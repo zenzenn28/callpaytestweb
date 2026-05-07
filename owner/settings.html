@@ -78,11 +78,11 @@ if (sessionStorage.getItem('cp_owner') !== '1') {
 
     <div class="settings-section">
       <h3>💳 Payment Gateway</h3>
-      <p class="sec-desc">Aktifkan Pak Kasir sebagai payment gateway untuk pembelian voucher. Jika dimatikan, customer konfirmasi pembelian via WhatsApp admin.</p>
+      <p class="sec-desc">Aktifkan Midtrans sebagai payment gateway untuk pembelian voucher. Jika dimatikan, customer konfirmasi pembelian via WhatsApp admin.</p>
       <div style="display:flex;align-items:center;justify-content:space-between;padding:16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r);margin-bottom:16px">
         <div>
-          <div style="font-weight:800;font-size:.9rem;margin-bottom:3px">Pak Kasir Payment Gateway</div>
-          <div style="font-size:.8rem;color:var(--muted);font-weight:600">Customer bisa bayar voucher langsung via QRIS/VA</div>
+          <div style="font-weight:800;font-size:.9rem;margin-bottom:3px">Midtrans Payment Gateway</div>
+          <div style="font-size:.8rem;color:var(--muted);font-weight:600">Customer bisa bayar voucher via Snap (QRIS, VA, dll)</div>
         </div>
         <label style="position:relative;display:inline-block;width:48px;height:26px;cursor:pointer">
           <input type="checkbox" id="pg-toggle" style="opacity:0;width:0;height:0">
@@ -92,8 +92,7 @@ if (sessionStorage.getItem('cp_owner') !== '1') {
         </label>
       </div>
       <div class="form-grid" id="pg-config" style="display:none">
-        <div class="form-group"><label>Slug Proyek Pak Kasir</label><input type="text" id="pg-slug" placeholder="callpay"><p class="form-note">Terlihat di halaman Detail Proyek → Integrasi</p></div>
-        <div class="form-group"><label>API Key Pak Kasir</label><input type="password" id="pg-apikey" placeholder="••••••••••••••••"><p class="form-note">Jangan share API Key ke siapapun</p></div>
+        <div class="form-group"><label>Client Key (Production)</label><input type="text" id="pg-slug" placeholder="Mid-client-xxxxxxxxxxxx"><p class="form-note">Ambil dari dashboard Midtrans → Settings → Access Keys</p></div>
       </div>
       <div style="margin-top:14px"><button class="btn btn-pink" id="save-pg">💾 Simpan Pengaturan Payment</button></div>
     </div>
@@ -242,13 +241,11 @@ pgToggle.addEventListener('change', () => updateToggleUI(pgToggle.checked));
 waToggle.addEventListener('change', () => updateWaToggleUI(waToggle.checked));
 
 document.getElementById('save-pg').onclick = async () => {
-  const cfg    = DB.getSettings();
-  cfg.pgEnabled = pgToggle.checked;
-  cfg.waEnabled = waToggle.checked;
-  const slug   = document.getElementById('pg-slug').value.trim();
-  const apikey = document.getElementById('pg-apikey').value.trim();
-  if (slug)   cfg.pgSlug   = slug;
-  if (apikey) cfg.pgApiKey = apikey;
+  const cfg      = DB.getSettings();
+  cfg.pgEnabled  = pgToggle.checked;
+  cfg.waEnabled  = waToggle.checked;
+  const clientKey = document.getElementById('pg-slug').value.trim();
+  if (clientKey) cfg.mtClientKey = clientKey;
   await DB.saveSettings(cfg);
   toast('✅ Pengaturan pembelian voucher disimpan!');
 };
@@ -268,8 +265,7 @@ document.addEventListener('DOMContentLoaded',async()=>{
   waToggle.checked = waEnabled;
   updateToggleUI(pgEnabled);
   updateWaToggleUI(waEnabled);
-  if (cfg.pgSlug)   document.getElementById('pg-slug').value   = cfg.pgSlug;
-  if (cfg.pgApiKey) document.getElementById('pg-apikey').value = cfg.pgApiKey;
+  if (cfg.mtClientKey) document.getElementById('pg-slug').value = cfg.mtClientKey;
 
   // Load policy texts
   const policySnap = await DB.getSettingsAsync();
