@@ -14,7 +14,7 @@
   </style>
   <style>
     *{margin:0;padding:0;box-sizing:border-box}
-    body{font-family:'Nunito',sans-serif;background:#0A0A15;color:#F0EBF8;min-height:100vh;padding:20px;display:flex;flex-direction:column;align-items:center;justify-content:center}
+    body{font-family:'Nunito',sans-serif;background:#0A0A15;color:#F0EBF8;min-height:100vh;}
     .header{width:100%;max-width:480px;display:flex;align-items:center;gap:12px;margin-bottom:24px}
     .header h1{font-size:1.1rem;font-weight:900;flex:1}
     .header a{font-size:.82rem;color:rgba(240,235,248,.4);text-decoration:none;font-weight:700}
@@ -242,8 +242,19 @@ async function init() {
   buildNominals();
 }
 init();
+
+document.getElementById('logout-btn').onclick = () => {
+  sessionStorage.removeItem('cp_admin_v2');
+  window.location.href = 'index.html';
+};
+document.getElementById('back-web').addEventListener('click', (e) => {
+  e.preventDefault(); window.open('../index.html','_blank');
+});
+document.querySelectorAll('.nav-item').forEach(a => a.addEventListener('click', () => {
+  if(window.innerWidth<=768) closeSidebar();
+}));
 </script>
-</body>
-</html>
   </main>
 </div>
+</body>
+</html>
