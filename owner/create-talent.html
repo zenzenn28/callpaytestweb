@@ -52,18 +52,11 @@
     @media(max-width:600px){
       .form-card{padding:20px 16px}
       .services-grid{grid-template-columns:1fr}
-      .form-card > div[style*="grid-template-columns:1fr 1fr"]{grid-template-columns:1fr !important}
-      .account-list{margin-top:24px}
     }
   </style>
 <script>
 function toggleSidebar(){const sb=document.querySelector('.sidebar'),ov=document.getElementById('sidebar-overlay'),btn=document.getElementById('hamburger-btn');if(!sb||!ov||!btn)return;const open=sb.classList.toggle('open');ov.classList.toggle('open',open);btn.textContent=open?'✕':'☰';}
 function closeSidebar(){const sb=document.querySelector('.sidebar'),ov=document.getElementById('sidebar-overlay'),btn=document.getElementById('hamburger-btn');if(!sb||!ov||!btn)return;sb.classList.remove('open');ov.classList.remove('open');btn.textContent='☰';}
-</script>
-<script>
-if (sessionStorage.getItem('cp_owner') !== '1') {
-  document.addEventListener('DOMContentLoaded', function() { window.location.href = 'index.html'; });
-}
 </script>
 </head>
 <body>
@@ -72,10 +65,10 @@ if (sessionStorage.getItem('cp_owner') !== '1') {
   <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
   <aside class="sidebar">
     <div class="sidebar-logo"><div class="sidebar-logo-text">CallPay</div><div class="sidebar-logo-sub">👑 Owner Panel</div></div>
-        <nav class="sidebar-nav">
+    <nav class="sidebar-nav">
       <a href="index.html"         class="nav-item"><span class="nav-icon">📊</span>Dashboard</a>
       <a href="ringkasan.html"     class="nav-item"><span class="nav-icon">📈</span>Ringkasan & Omset</a>
-      <a href="create-talent.html" class="nav-item"><span class="nav-icon">➕</span active>Buat Akun Talent</a>
+      <a href="create-talent.html" class="nav-item active"><span class="nav-icon">➕</span>Buat Akun Talent</a>
       <a href="review.html"        class="nav-item"><span class="nav-icon">🔐</span>Kelola Akses Layanan</a>
       <a href="services.html"      class="nav-item"><span class="nav-icon">🎯</span>Kelola Layanan</a>
       <a href="pricelist.html"     class="nav-item"><span class="nav-icon">💲</span>Kelola Pricelist</a>
@@ -122,11 +115,10 @@ if (sessionStorage.getItem('cp_owner') !== '1') {
       <div class="form-section-title">🌟 Profil Talent</div>
 
       <div class="form-row">
-        <label>Foto Profil *</label>
+        <label>Foto Profil (opsional)</label>
         <div class="upload-area" id="photo-area" onclick="document.getElementById('f-photo').click()">
           <input type="file" id="f-photo" accept="image/jpeg,image/png,image/webp" onchange="previewPhoto(this)" style="display:none">
           <div id="photo-preview-wrap">
-            <img id="photo-dummy-preview" class="upload-preview" src="" style="display:none">
             <div class="upload-icon" id="photo-icon">📷</div>
             <div class="upload-label-text" id="photo-label">Klik untuk pilih foto (opsional)</div>
             <div style="font-size:.72rem;color:rgba(240,235,248,.3);font-weight:600;margin-top:4px" id="photo-hint">Jika tidak diupload, foto dummy sesuai gender akan digunakan</div>
@@ -137,12 +129,12 @@ if (sessionStorage.getItem('cp_owner') !== '1') {
       <div class="form-row">
         <label>Bio / Deskripsi</label>
         <textarea id="f-bio" placeholder="Tulis bio singkat talent..." maxlength="120"></textarea>
+        <div class="form-hint"><span id="bio-count">0</span>/120 karakter</div>
       </div>
       <div class="form-row">
         <label>Nomor WhatsApp Talent *</label>
         <input type="tel" id="f-wa" placeholder="Contoh: 08123456789">
-        <small style="color:var(--muted);font-size:.72rem;font-weight:600">Digunakan untuk menerima notifikasi order masuk</small>
-        <div class="form-hint"><span id="bio-count">0</span>/120 karakter</div>
+        <div class="form-hint">Digunakan untuk menerima notifikasi order masuk</div>
       </div>
 
       <div class="form-row">
@@ -180,13 +172,11 @@ if (sessionStorage.getItem('cp_owner') !== '1') {
     </div>
   </main>
 </div>
-
 <div class="toast" id="toast"></div>
 
 <script type="module">
-import { DB } from '../admin/data.js?v=11';
 import { initializeApp, getApps } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-app.js';
-import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot, deleteDoc } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js';
+import { getFirestore, doc, setDoc, getDoc, getDocs, collection, onSnapshot, deleteDoc } from 'https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js';
 
 const FIREBASE_CONFIG = {
   apiKey:'AIzaSyACJjz3XP7vbzxkeZmW_sCXKurAFXZ_vwU',
@@ -202,74 +192,24 @@ const CLOUDINARY_PRESET = 'callpay_audio';
 const _app = getApps().length ? getApps()[0] : initializeApp(FIREBASE_CONFIG);
 const _db  = getFirestore(_app);
 
-// Expose variabel ke window agar bisa diakses dari onclick HTML
-window._selectedServices = [];
-window._allServices      = [];
-window._photoFile        = null;
-window._audioFile        = null;
+// ── State (expose ke window agar bisa diakses dari onclick HTML) ──
+window._state = {
+  selectedServices : [],
+  allServices      : [],
+  photoFile        : null,
+  audioFile        : null,
+  photoUrl         : '',   // URL dummy atau hasil upload
+};
 
-// Foto dummy berdasarkan gender — base64 PNG sederhana
-const DUMMY_FEMALE = 'https://ui-avatars.com/api/?name=Talent&background=FFB3C6&color=C2185B&size=200&rounded=true&bold=true&font-size=0.4';
-const DUMMY_MALE   = 'https://ui-avatars.com/api/?name=Talent&background=B3D4FF&color=1565C0&size=200&rounded=true&bold=true&font-size=0.4';
-
+// ── Foto dummy (nanti bisa diganti owner dari portal talent) ──
 const DUMMY_PHOTO = {
-  female: DUMMY_FEMALE,
-  male  : DUMMY_MALE,
-};
-  const gender = document.getElementById('f-gender').value;
-  const dummyEl = document.getElementById('photo-dummy-preview');
-  if (gender) {
-    dummyEl.src = DUMMY_PHOTO[gender] || DUMMY_PHOTO.female;
-    dummyEl.style.display = 'block';
-    document.getElementById('photo-icon').style.display  = 'none';
-    document.getElementById('photo-label').textContent   = 'Foto dummy ' + (gender === 'female' ? 'wanita' : 'pria') + ' · Klik untuk ganti';
-    document.getElementById('photo-hint').textContent    = 'Klik untuk upload foto asli (opsional)';
-  } else {
-    dummyEl.style.display = 'none';
-    document.getElementById('photo-icon').style.display  = '';
-    document.getElementById('photo-label').textContent   = 'Klik untuk pilih foto (opsional)';
-    document.getElementById('photo-hint').textContent    = 'Jika tidak diupload, foto dummy sesuai gender akan digunakan';
-  }
-};
-// Update preview dummy saat gender berubah
-window.onGenderChange = function() {
-  if (window._photoFile) return;
-  const gender  = document.getElementById('f-gender').value;
-  const dummyEl = document.getElementById('photo-dummy-preview');
-  if (gender) {
-    dummyEl.src = DUMMY_PHOTO[gender] || DUMMY_PHOTO.female;
-    dummyEl.style.display = 'block';
-    document.getElementById('photo-icon').style.display  = 'none';
-    document.getElementById('photo-label').textContent   = 'Foto dummy ' + (gender === 'female' ? 'wanita' : 'pria') + ' · Klik untuk ganti';
-    document.getElementById('photo-hint').textContent    = 'Klik untuk upload foto asli (opsional)';
-  } else {
-    dummyEl.style.display = 'none';
-    document.getElementById('photo-icon').style.display  = '';
-    document.getElementById('photo-label').textContent   = 'Klik untuk pilih foto (opsional)';
-    document.getElementById('photo-hint').textContent    = 'Jika tidak diupload, foto dummy sesuai gender akan digunakan';
-  }
+  female: 'https://api.dicebear.com/9.x/adventurer/svg?seed=female&backgroundColor=ffb3c6',
+  male  : 'https://api.dicebear.com/9.x/adventurer/svg?seed=male&backgroundColor=b3d4ff',
 };
 
 const SVC_ICON_MAP = {
-  'Temen Call':'📞','Sleepcall':'🌙','Temen Curhat':'🫂',
-  'Pacar Virtual':'💕','Video Call':'📹',
+  'Temen Call':'📞','Sleepcall':'🌙','Temen Curhat':'🫂','Pacar Virtual':'💕','Video Call':'📹',
 };
-
-function renderServicesGrid() {
-  const grid = document.getElementById('services-grid');
-  if (!grid) return;
-  if (!window._allServices.length) {
-    grid.innerHTML = '<div style="color:rgba(240,235,248,.4);font-size:.82rem;font-weight:600">Belum ada layanan tersedia.</div>';
-    return;
-  }
-  grid.innerHTML = window._allServices.map(s => {
-    const icon = s.icon || SVC_ICON_MAP[s.name] || '🎯';
-    return `<div class="svc-check" id="svc-${s.id}" onclick="toggleService(this,'${s.name}')">
-      <div class="svc-check-dot"></div>
-      <span class="svc-check-label">${icon} ${s.name}</span>
-    </div>`;
-  }).join('');
-}
 
 function toast(msg) {
   const t = document.getElementById('toast');
@@ -277,11 +217,31 @@ function toast(msg) {
   clearTimeout(t._t); t._t = setTimeout(() => t.classList.remove('show'), 3500);
 }
 
+function resetPhotoArea() {
+  document.getElementById('photo-preview-wrap').innerHTML = `
+    <div class="upload-icon" id="photo-icon">📷</div>
+    <div class="upload-label-text" id="photo-label">Klik untuk pilih foto (opsional)</div>
+    <div style="font-size:.72rem;color:rgba(240,235,248,.3);font-weight:600;margin-top:4px" id="photo-hint">Jika tidak diupload, foto dummy sesuai gender akan digunakan</div>`;
+  document.getElementById('photo-area').classList.remove('has-file');
+}
+
+// ── Gender change → tampilkan preview dummy ──
+window.onGenderChange = function() {
+  const gender = document.getElementById('f-gender').value;
+  window._state.photoUrl = gender ? (DUMMY_PHOTO[gender] || DUMMY_PHOTO.female) : '';
+  if (window._state.photoFile) return; // sudah upload manual, jangan override
+  if (!gender) { resetPhotoArea(); return; }
+  document.getElementById('photo-preview-wrap').innerHTML = `
+    <img class="upload-preview" src="${window._state.photoUrl}" onerror="this.style.display='none'">
+    <div class="upload-label-text" id="photo-label" style="margin-top:6px">Foto dummy ${gender==='female'?'wanita':'pria'} · Klik untuk ganti</div>
+    <div style="font-size:.72rem;color:rgba(240,235,248,.3);font-weight:600;margin-top:4px" id="photo-hint">Upload foto asli jika ada (opsional)</div>`;
+};
+
+// ── Upload foto manual ──
 window.previewPhoto = function(input) {
   const file = input.files[0]; if (!file) return;
-  window._photoFile = file;
+  window._state.photoFile = file;
   const url = URL.createObjectURL(file);
-  document.getElementById('photo-dummy-preview').style.display = 'none';
   document.getElementById('photo-preview-wrap').innerHTML =
     `<img class="upload-preview" src="${url}"><div class="upload-filename">✅ ${file.name}</div>`;
   document.getElementById('photo-area').classList.add('has-file');
@@ -289,7 +249,7 @@ window.previewPhoto = function(input) {
 
 window.previewAudio = function(input) {
   const file = input.files[0]; if (!file) return;
-  window._audioFile = file;
+  window._state.audioFile = file;
   document.getElementById('audio-filename').textContent = '✅ ' + file.name;
   document.getElementById('audio-label-text').textContent = 'File terpilih:';
   document.getElementById('audio-area').classList.add('has-file');
@@ -300,17 +260,32 @@ window.previewAudio = function(input) {
 window.toggleService = function(el, svc) {
   el.classList.toggle('active');
   if (el.classList.contains('active')) {
-    if (!window._selectedServices.includes(svc)) window._selectedServices.push(svc);
+    if (!window._state.selectedServices.includes(svc)) window._state.selectedServices.push(svc);
   } else {
-    window._selectedServices = window._selectedServices.filter(s => s !== svc);
+    window._state.selectedServices = window._state.selectedServices.filter(s => s !== svc);
   }
 };
+
+function renderServicesGrid() {
+  const grid = document.getElementById('services-grid');
+  if (!window._state.allServices.length) {
+    grid.innerHTML = '<div style="color:rgba(240,235,248,.4);font-size:.82rem;font-weight:600">Belum ada layanan tersedia.</div>';
+    return;
+  }
+  grid.innerHTML = window._state.allServices.map(s => {
+    const icon = s.icon || SVC_ICON_MAP[s.name] || '🎯';
+    return `<div class="svc-check" onclick="toggleService(this,'${s.name}')">
+      <div class="svc-check-dot"></div>
+      <span class="svc-check-label">${icon} ${s.name}</span>
+    </div>`;
+  }).join('');
+}
 
 document.getElementById('f-bio').addEventListener('input', function() {
   document.getElementById('bio-count').textContent = this.value.length;
 });
 document.getElementById('f-name').addEventListener('input', function() {
-  this.value = this.value.replace(/\s+/g, '');
+  this.value = this.value.replace(/\s+/g, '').toLowerCase();
 });
 
 async function uploadCloudinary(file, type) {
@@ -339,12 +314,13 @@ document.getElementById('create-btn').onclick = async () => {
   const gender = document.getElementById('f-gender').value;
   const age    = parseInt(document.getElementById('f-age').value);
   const bio    = document.getElementById('f-bio').value.trim();
+  const wa     = document.getElementById('f-wa').value.trim().replace(/\D/g,'');
   const errEl  = document.getElementById('form-err');
   errEl.style.display = 'none';
 
   if (!name||!pass||!gender||!age) { errEl.textContent='Nama, password, gender, dan umur wajib diisi.'; errEl.style.display='block'; return; }
   if (age<18||age>35)              { errEl.textContent='Umur harus antara 18–35 tahun.'; errEl.style.display='block'; return; }
-  if (!window._selectedServices.length)  { errEl.textContent='Pilih minimal 1 layanan.'; errEl.style.display='block'; return; }
+  if (!window._state.selectedServices.length) { errEl.textContent='Pilih minimal 1 layanan.'; errEl.style.display='block'; return; }
 
   const docId = name.toLowerCase();
   const btn   = document.getElementById('create-btn');
@@ -359,51 +335,61 @@ document.getElementById('create-btn').onclick = async () => {
 
     document.getElementById('upload-progress').style.display = 'block';
 
-    // Foto: upload manual atau pakai dummy sesuai gender
+    // Foto: upload manual → Cloudinary, tidak upload → pakai URL dummy
     let imgUrl = DUMMY_PHOTO[gender] || DUMMY_PHOTO.female;
-    if (window._photoFile) {
+    if (window._state.photoFile) {
       document.getElementById('progress-text').textContent = 'Mengupload foto...';
-      imgUrl = await uploadCloudinary(window._photoFile, 'image');
+      imgUrl = await uploadCloudinary(window._state.photoFile, 'image');
     } else {
-      document.getElementById('progress-text').textContent = 'Menggunakan foto dummy...';
+      document.getElementById('progress-text').textContent = 'Menyiapkan foto...';
     }
 
     let audioUrl = '';
-    if (window._audioFile) {
+    if (window._state.audioFile) {
       document.getElementById('progress-fill').style.width = '0%';
       document.getElementById('progress-text').textContent = 'Mengupload audio...';
-      audioUrl = await uploadCloudinary(window._audioFile, 'video');
+      audioUrl = await uploadCloudinary(window._state.audioFile, 'video');
     }
 
     document.getElementById('progress-text').textContent = 'Menyimpan ke database...';
     document.getElementById('progress-fill').style.width = '95%';
 
-    // Layanan yang tidak dipilih → lockedServices (terkunci di landing page)
-    const lockedServices = window._allServices.map(s => s.name).filter(s => !_selectedServices.includes(s));
+    // Layanan tidak dipilih → lockedServices
+    const selected = window._state.selectedServices;
+    const locked   = window._state.allServices.map(s => s.name).filter(s => !selected.includes(s));
+
+    // Normalisasi WA
+    let waFinal = wa;
+    if (waFinal.startsWith('0')) waFinal = '62' + waFinal.slice(1);
 
     await setDoc(doc(_db, 'talents', docId), {
-      username:docId, password:pass, name, gender, age, bio,
-      services: [...window._selectedServices, ...lockedServices], // semua layanan ada, tapi locked yg tidak dipilih
-      lockedServices,
-      img:imgUrl, audio:audioUrl,
-      online:false, active:true, status:'approved', points:50,
-      createdAt:new Date().toISOString(),
+      username : docId,
+      password : pass,
+      name, gender, age, bio,
+      waNumber : waFinal || '',
+      services : [...selected, ...locked],
+      lockedServices: locked,
+      img      : imgUrl,
+      audio    : audioUrl,
+      online   : false,
+      active   : true,
+      status   : 'approved',
+      points   : 50,
+      createdAt: new Date().toISOString(),
     });
 
     document.getElementById('progress-fill').style.width = '100%';
     document.getElementById('progress-text').textContent = '✅ Berhasil!';
-    setTimeout(() => { document.getElementById('upload-progress').style.display='none'; document.getElementById('progress-fill').style.width='0%'; }, 2000);
+    setTimeout(() => {
+      document.getElementById('upload-progress').style.display='none';
+      document.getElementById('progress-fill').style.width='0%';
+    }, 2000);
 
     // Reset form
-    ['f-name','f-pass','f-age','f-bio'].forEach(id => document.getElementById(id).value='');
+    ['f-name','f-pass','f-age','f-bio','f-wa'].forEach(id => document.getElementById(id).value='');
     document.getElementById('f-gender').value = '';
     document.getElementById('bio-count').textContent = '0';
-    document.getElementById('photo-preview-wrap').innerHTML = `
-      <img id="photo-dummy-preview" class="upload-preview" src="" style="display:none">
-      <div class="upload-icon" id="photo-icon">📷</div>
-      <div class="upload-label-text" id="photo-label">Klik untuk pilih foto (opsional)</div>
-      <div style="font-size:.72rem;color:rgba(240,235,248,.3);font-weight:600;margin-top:4px" id="photo-hint">Jika tidak diupload, foto dummy sesuai gender akan digunakan</div>`;
-    document.getElementById('photo-area').classList.remove('has-file');
+    resetPhotoArea();
     document.getElementById('audio-filename').textContent = '';
     document.getElementById('audio-label-text').textContent = 'Klik untuk pilih file audio';
     document.getElementById('audio-area').classList.remove('has-file');
@@ -411,9 +397,12 @@ document.getElementById('create-btn').onclick = async () => {
     document.getElementById('f-photo').value = '';
     document.getElementById('f-audio').value = '';
     document.querySelectorAll('.svc-check').forEach(el => el.classList.remove('active'));
-    window._selectedServices=[]; window._photoFile=null; window._audioFile=null;
-    document.querySelectorAll('.svc-check.active').forEach(el => el.classList.remove('active'));
-    toast('✅ Talent "'+name+'" berhasil dibuat dan langsung aktif di website!');
+    window._state.selectedServices = [];
+    window._state.photoFile = null;
+    window._state.audioFile = null;
+    window._state.photoUrl  = '';
+
+    toast(`✅ Talent "${name}" berhasil dibuat!`);
 
   } catch(e) {
     errEl.textContent = 'Gagal: '+e.message; errEl.style.display='block';
@@ -428,24 +417,27 @@ window.deleteAccount = async (docId) => {
   toast('🗑️ Akun dihapus');
 };
 
+// ── Realtime list talent ──
 onSnapshot(collection(_db, 'talents'), snap => {
   const list = [];
   snap.forEach(d => list.push({id:d.id,...d.data()}));
   list.sort((a,b) => (a.name||'').localeCompare(b.name||''));
-  if (!list.length) { document.getElementById('accounts-list').innerHTML='<p style="color:var(--muted);font-size:.85rem">Belum ada akun talent.</p>'; return; }
-  document.getElementById('accounts-list').innerHTML = list.map(t => {
+  const el = document.getElementById('accounts-list');
+  if (!list.length) { el.innerHTML='<p style="color:var(--muted);font-size:.85rem">Belum ada akun talent.</p>'; return; }
+  el.innerHTML = list.map(t => {
     const sc = t.status==='approved'?'var(--green)':t.status==='pending'?'var(--yellow)':t.status==='rejected'?'var(--red)':'var(--muted)';
     const sl = t.status==='approved'?'✅ Aktif':t.status==='pending'?'⏳ Review':t.status==='rejected'?'❌ Ditolak':'📝 Draft';
+    const activeServices = (t.services||[]).filter(s => !(t.lockedServices||[]).includes(s));
     return `<div class="account-row">
       <div style="display:flex;align-items:center;gap:12px;flex:1">
-        ${t.img?`<img src="${t.img}" style="width:44px;height:44px;border-radius:8px;object-fit:cover;object-position:top">`:`<div style="width:44px;height:44px;border-radius:8px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:1.2rem">👤</div>`}
+        ${t.img ? `<img src="${t.img}" style="width:44px;height:44px;border-radius:8px;object-fit:cover;object-position:top">` : `<div style="width:44px;height:44px;border-radius:8px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:1.2rem">👤</div>`}
         <div>
           <div style="display:flex;align-items:center;gap:7px;flex-wrap:wrap">
             <span class="acc-name">${t.name||t.id}</span>
             <span class="badge-gender ${t.gender==='female'?'bg-f':'bg-m'}">${t.gender==='female'?'Wanita':'Pria'}</span>
             <span style="color:${sc};font-size:.72rem;font-weight:800">${sl}</span>
           </div>
-          <div class="acc-user">@${t.id} · ${t.age||'-'} thn · ${(t.services||[]).join(', ')||'-'}</div>
+          <div class="acc-user">@${t.id} · ${t.age||'-'} thn · ${activeServices.join(', ')||'-'}</div>
         </div>
       </div>
       <div class="acc-actions"><button class="btn-danger" onclick="deleteAccount('${t.id}')">Hapus</button></div>
@@ -453,26 +445,23 @@ onSnapshot(collection(_db, 'talents'), snap => {
   }).join('');
 });
 
+// ── Init ──
 document.getElementById('logout-btn').onclick = () => { sessionStorage.removeItem('cp_owner'); window.location.href='index.html'; };
-document.getElementById('back-web').addEventListener('click', (e) => { e.preventDefault(); window.open('../index.html','_blank'); });
-document.addEventListener('DOMContentLoaded', async () => {
-  if (sessionStorage.getItem('cp_owner') !== '1') { window.location.href='index.html'; return; }
-  document.querySelectorAll('.nav-item').forEach(a => a.addEventListener('click', () => { if(window.innerWidth<=768) closeSidebar(); }));
+document.getElementById('back-web').addEventListener('click', e => { e.preventDefault(); window.open('../index.html','_blank'); });
+document.querySelectorAll('.nav-item').forEach(a => a.addEventListener('click', () => { if(window.innerWidth<=768) closeSidebar(); }));
 
-  // Load layanan dari Firebase — dinamis
-  try {
-    const { getDocs, collection: col } = await import('https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js');
-    const snap = await getDocs(col(_db, 'services'));
-    window._allServices = [];
-    snap.forEach(d => window._allServices.push({ id: d.id, ...d.data() }));
-    window._allServices.sort((a,b) => (a.order||99) - (b.order||99));
+if (sessionStorage.getItem('cp_owner') !== '1') { window.location.href='index.html'; }
+else {
+  // Load layanan dari Firebase
+  getDocs(collection(_db, 'services')).then(snap => {
+    window._state.allServices = [];
+    snap.forEach(d => window._state.allServices.push({ id: d.id, ...d.data() }));
+    window._state.allServices.sort((a,b) => (a.order||99) - (b.order||99));
     renderServicesGrid();
-  } catch(e) {
-    console.error('Gagal load services:', e);
-    document.getElementById('services-grid').innerHTML =
-      '<div style="color:#FF5C5C;font-size:.82rem;font-weight:700">❌ Gagal memuat layanan</div>';
-  }
-});
+  }).catch(e => {
+    document.getElementById('services-grid').innerHTML = '<div style="color:#FF5C5C;font-size:.82rem;font-weight:700">❌ Gagal memuat layanan</div>';
+  });
+}
 </script>
 </body>
 </html>
