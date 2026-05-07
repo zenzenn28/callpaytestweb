@@ -202,15 +202,20 @@ const CLOUDINARY_PRESET = 'callpay_audio';
 const _app = getApps().length ? getApps()[0] : initializeApp(FIREBASE_CONFIG);
 const _db  = getFirestore(_app);
 
-// Foto dummy berdasarkan gender — SVG inline, tidak butuh request eksternal
-const DUMMY_PHOTO = {
-  female: `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23FFB3C6'/><circle cx='50' cy='38' r='20' fill='%23FFDDE6'/><ellipse cx='50' cy='85' rx='28' ry='22' fill='%23FFDDE6'/><circle cx='50' cy='38' r='16' fill='%23F4A0B5'/><path d='M34 32 Q50 18 66 32' stroke='%23C2185B' stroke-width='3' fill='none'/><circle cx='44' cy='40' r='2.5' fill='%23333'/><circle cx='56' cy='40' r='2.5' fill='%23333'/><path d='M44 48 Q50 54 56 48' stroke='%23C2185B' stroke-width='2' fill='none'/></svg>`,
-  male  : `data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' fill='%23B3D4FF'/><circle cx='50' cy='38' r='20' fill='%23D6EAFF'/><ellipse cx='50' cy='85' rx='28' ry='22' fill='%23D6EAFF'/><circle cx='50' cy='38' r='16' fill='%2390C2F5'/><rect x='34' y='24' width='32' height='10' rx='5' fill='%231565C0'/><circle cx='44' cy='40' r='2.5' fill='%23333'/><circle cx='56' cy='40' r='2.5' fill='%23333'/><path d='M44 48 Q50 53 56 48' stroke='%231565C0' stroke-width='2' fill='none'/></svg>`,
-};
+// Expose variabel ke window agar bisa diakses dari onclick HTML
+window._selectedServices = [];
+window._allServices      = [];
+window._photoFile        = null;
+window._audioFile        = null;
 
-// Update preview dummy saat gender berubah
-window.onGenderChange = function() {
-  if (_photoFile) return; // kalau sudah upload manual, jangan override
+// Foto dummy berdasarkan gender — base64 PNG sederhana
+const DUMMY_FEMALE = 'https://ui-avatars.com/api/?name=Talent&background=FFB3C6&color=C2185B&size=200&rounded=true&bold=true&font-size=0.4';
+const DUMMY_MALE   = 'https://ui-avatars.com/api/?name=Talent&background=B3D4FF&color=1565C0&size=200&rounded=true&bold=true&font-size=0.4';
+
+const DUMMY_PHOTO = {
+  female: DUMMY_FEMALE,
+  male  : DUMMY_MALE,
+};
   const gender = document.getElementById('f-gender').value;
   const dummyEl = document.getElementById('photo-dummy-preview');
   if (gender) {
@@ -226,9 +231,24 @@ window.onGenderChange = function() {
     document.getElementById('photo-hint').textContent    = 'Jika tidak diupload, foto dummy sesuai gender akan digunakan';
   }
 };
-let _allServices      = []; // semua layanan dari Firebase
-let _photoFile = null;
-let _audioFile = null;
+// Update preview dummy saat gender berubah
+window.onGenderChange = function() {
+  if (window._photoFile) return;
+  const gender  = document.getElementById('f-gender').value;
+  const dummyEl = document.getElementById('photo-dummy-preview');
+  if (gender) {
+    dummyEl.src = DUMMY_PHOTO[gender] || DUMMY_PHOTO.female;
+    dummyEl.style.display = 'block';
+    document.getElementById('photo-icon').style.display  = 'none';
+    document.getElementById('photo-label').textContent   = 'Foto dummy ' + (gender === 'female' ? 'wanita' : 'pria') + ' · Klik untuk ganti';
+    document.getElementById('photo-hint').textContent    = 'Klik untuk upload foto asli (opsional)';
+  } else {
+    dummyEl.style.display = 'none';
+    document.getElementById('photo-icon').style.display  = '';
+    document.getElementById('photo-label').textContent   = 'Klik untuk pilih foto (opsional)';
+    document.getElementById('photo-hint').textContent    = 'Jika tidak diupload, foto dummy sesuai gender akan digunakan';
+  }
+};
 
 const SVC_ICON_MAP = {
   'Temen Call':'📞','Sleepcall':'🌙','Temen Curhat':'🫂',
@@ -238,11 +258,11 @@ const SVC_ICON_MAP = {
 function renderServicesGrid() {
   const grid = document.getElementById('services-grid');
   if (!grid) return;
-  if (!_allServices.length) {
+  if (!window._allServices.length) {
     grid.innerHTML = '<div style="color:rgba(240,235,248,.4);font-size:.82rem;font-weight:600">Belum ada layanan tersedia.</div>';
     return;
   }
-  grid.innerHTML = _allServices.map(s => {
+  grid.innerHTML = window._allServices.map(s => {
     const icon = s.icon || SVC_ICON_MAP[s.name] || '🎯';
     return `<div class="svc-check" id="svc-${s.id}" onclick="toggleService(this,'${s.name}')">
       <div class="svc-check-dot"></div>
@@ -259,7 +279,7 @@ function toast(msg) {
 
 window.previewPhoto = function(input) {
   const file = input.files[0]; if (!file) return;
-  _photoFile = file;
+  window._photoFile = file;
   const url = URL.createObjectURL(file);
   document.getElementById('photo-dummy-preview').style.display = 'none';
   document.getElementById('photo-preview-wrap').innerHTML =
@@ -269,7 +289,7 @@ window.previewPhoto = function(input) {
 
 window.previewAudio = function(input) {
   const file = input.files[0]; if (!file) return;
-  _audioFile = file;
+  window._audioFile = file;
   document.getElementById('audio-filename').textContent = '✅ ' + file.name;
   document.getElementById('audio-label-text').textContent = 'File terpilih:';
   document.getElementById('audio-area').classList.add('has-file');
@@ -280,9 +300,9 @@ window.previewAudio = function(input) {
 window.toggleService = function(el, svc) {
   el.classList.toggle('active');
   if (el.classList.contains('active')) {
-    if (!_selectedServices.includes(svc)) _selectedServices.push(svc);
+    if (!window._selectedServices.includes(svc)) window._selectedServices.push(svc);
   } else {
-    _selectedServices = _selectedServices.filter(s => s !== svc);
+    window._selectedServices = window._selectedServices.filter(s => s !== svc);
   }
 };
 
@@ -324,7 +344,7 @@ document.getElementById('create-btn').onclick = async () => {
 
   if (!name||!pass||!gender||!age) { errEl.textContent='Nama, password, gender, dan umur wajib diisi.'; errEl.style.display='block'; return; }
   if (age<18||age>35)              { errEl.textContent='Umur harus antara 18–35 tahun.'; errEl.style.display='block'; return; }
-  if (!_selectedServices.length)  { errEl.textContent='Pilih minimal 1 layanan.'; errEl.style.display='block'; return; }
+  if (!window._selectedServices.length)  { errEl.textContent='Pilih minimal 1 layanan.'; errEl.style.display='block'; return; }
 
   const docId = name.toLowerCase();
   const btn   = document.getElementById('create-btn');
@@ -341,29 +361,29 @@ document.getElementById('create-btn').onclick = async () => {
 
     // Foto: upload manual atau pakai dummy sesuai gender
     let imgUrl = DUMMY_PHOTO[gender] || DUMMY_PHOTO.female;
-    if (_photoFile) {
+    if (window._photoFile) {
       document.getElementById('progress-text').textContent = 'Mengupload foto...';
-      imgUrl = await uploadCloudinary(_photoFile, 'image');
+      imgUrl = await uploadCloudinary(window._photoFile, 'image');
     } else {
       document.getElementById('progress-text').textContent = 'Menggunakan foto dummy...';
     }
 
     let audioUrl = '';
-    if (_audioFile) {
+    if (window._audioFile) {
       document.getElementById('progress-fill').style.width = '0%';
       document.getElementById('progress-text').textContent = 'Mengupload audio...';
-      audioUrl = await uploadCloudinary(_audioFile, 'video');
+      audioUrl = await uploadCloudinary(window._audioFile, 'video');
     }
 
     document.getElementById('progress-text').textContent = 'Menyimpan ke database...';
     document.getElementById('progress-fill').style.width = '95%';
 
     // Layanan yang tidak dipilih → lockedServices (terkunci di landing page)
-    const lockedServices = _allServices.map(s => s.name).filter(s => !_selectedServices.includes(s));
+    const lockedServices = window._allServices.map(s => s.name).filter(s => !_selectedServices.includes(s));
 
     await setDoc(doc(_db, 'talents', docId), {
       username:docId, password:pass, name, gender, age, bio,
-      services: [..._selectedServices, ...lockedServices], // semua layanan ada, tapi locked yg tidak dipilih
+      services: [...window._selectedServices, ...lockedServices], // semua layanan ada, tapi locked yg tidak dipilih
       lockedServices,
       img:imgUrl, audio:audioUrl,
       online:false, active:true, status:'approved', points:50,
@@ -391,7 +411,7 @@ document.getElementById('create-btn').onclick = async () => {
     document.getElementById('f-photo').value = '';
     document.getElementById('f-audio').value = '';
     document.querySelectorAll('.svc-check').forEach(el => el.classList.remove('active'));
-    _selectedServices=[]; _photoFile=null; _audioFile=null;
+    window._selectedServices=[]; window._photoFile=null; window._audioFile=null;
     document.querySelectorAll('.svc-check.active').forEach(el => el.classList.remove('active'));
     toast('✅ Talent "'+name+'" berhasil dibuat dan langsung aktif di website!');
 
@@ -443,9 +463,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   try {
     const { getDocs, collection: col } = await import('https://www.gstatic.com/firebasejs/12.10.0/firebase-firestore.js');
     const snap = await getDocs(col(_db, 'services'));
-    _allServices = [];
-    snap.forEach(d => _allServices.push({ id: d.id, ...d.data() }));
-    _allServices.sort((a,b) => (a.order||99) - (b.order||99));
+    window._allServices = [];
+    snap.forEach(d => window._allServices.push({ id: d.id, ...d.data() }));
+    window._allServices.sort((a,b) => (a.order||99) - (b.order||99));
     renderServicesGrid();
   } catch(e) {
     console.error('Gagal load services:', e);
