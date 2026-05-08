@@ -352,9 +352,7 @@ document.getElementById('create-btn').onclick = async () => {
     const selected = window._state.selectedServices;
     const locked   = window._state.allServices.map(s => s.name).filter(s => !selected.includes(s));
 
-    // Normalisasi WA
-    let waFinal = wa;
-    if (waFinal.startsWith('0')) waFinal = '62' + waFinal.slice(1);
+    // Normalisasi WA sudah dihapus — tidak perlu lagi
 
     await setDoc(doc(_db, 'talents', docId), {
       username : docId,
