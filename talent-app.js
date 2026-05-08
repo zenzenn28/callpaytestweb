@@ -151,14 +151,13 @@ function updatePointDisplay(points) {
     </div>
 
     ${rulesText ? `
-    <div style="background:rgba(249,168,201,.05);border:1px solid rgba(249,168,201,.2);border-radius:14px;padding:16px 18px;margin-bottom:16px">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
-        <div style="font-size:1.1rem">📋</div>
-        <div style="font-size:.72rem;font-weight:800;color:#F9A8C9;text-transform:uppercase;letter-spacing:.06em">Aturan Talent</div>
+    <div onclick="openRulesModal()" style="display:flex;align-items:center;justify-content:space-between;gap:10px;background:rgba(249,168,201,.05);border:1px solid rgba(249,168,201,.2);border-radius:12px;padding:12px 16px;margin-bottom:16px;cursor:pointer;transition:all .2s" onmouseover="this.style.borderColor='rgba(249,168,201,.45)';this.style.background='rgba(249,168,201,.09)'" onmouseout="this.style.borderColor='rgba(249,168,201,.2)';this.style.background='rgba(249,168,201,.05)'">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span style="font-size:1rem">📋</span>
+        <span style="font-size:.82rem;font-weight:800;color:#F9A8C9">Klik di sini untuk baca Aturan Talent</span>
       </div>
-      <div style="font-size:.82rem;font-weight:600;color:rgba(240,235,248,.65);line-height:1.75;white-space:pre-wrap">${rulesText}</div>
-    </div>` : ''}
-  `;
+      <span style="font-size:.75rem;color:rgba(249,168,201,.6);font-weight:700">Baca →</span>
+    </div>` : ''}`;
 }
 
 // ── SALARY SYSTEM ─────────────────────────────────────────
@@ -909,6 +908,35 @@ async function renderBlacklistPanel() {
   }
 }
 
+
+// ── RULES MODAL (Aturan Talent) ────────────────────────────
+window.openRulesModal = function() {
+  const cfg   = DB.getSettings();
+  const rules = cfg.talentRules || '';
+  // Buat modal dinamis kalau belum ada
+  let modal = document.getElementById('rules-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'rules-modal';
+    modal.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);z-index:9999;align-items:center;justify-content:center;padding:20px';
+    modal.innerHTML = `
+      <div style="background:#16162A;border:1px solid rgba(249,168,201,.2);border-radius:20px;max-width:480px;width:100%;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.5)">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 24px;border-bottom:1px solid rgba(255,255,255,.08)">
+          <div style="font-size:1rem;font-weight:900;color:#F0EBF8">📋 Aturan Talent</div>
+          <button onclick="document.getElementById('rules-modal').style.display='none';document.body.style.overflow=''" style="background:none;border:none;color:rgba(240,235,248,.5);font-size:1.2rem;cursor:pointer;line-height:1;padding:4px">✕</button>
+        </div>
+        <div id="rules-modal-content" style="padding:20px 24px;overflow-y:auto;font-size:.85rem;font-weight:600;color:rgba(240,235,248,.7);line-height:1.8;white-space:pre-wrap;flex:1"></div>
+        <div style="padding:16px 24px;border-top:1px solid rgba(255,255,255,.08)">
+          <button onclick="document.getElementById('rules-modal').style.display='none';document.body.style.overflow=''" style="width:100%;padding:11px;border-radius:10px;background:linear-gradient(135deg,#E8628A,#F9A8C9);border:none;color:#fff;font-family:'Nunito',sans-serif;font-weight:900;font-size:.9rem;cursor:pointer">Mengerti ✓</button>
+        </div>
+      </div>`;
+    modal.addEventListener('click', e => { if (e.target === modal) { modal.style.display='none'; document.body.style.overflow=''; } });
+    document.body.appendChild(modal);
+  }
+  document.getElementById('rules-modal-content').textContent = rules || 'Belum ada aturan yang ditetapkan.';
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+};
 
 // ── TERMS MODAL ────────────────────────────────────────────
 window.openTermsModal = function() {
